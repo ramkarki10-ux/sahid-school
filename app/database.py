@@ -1,10 +1,23 @@
 import sqlite3
 import os
 import json
+import shutil
 from pathlib import Path
 from datetime import datetime
 
-DB_PATH = Path(__file__).resolve().parent.parent / "school.db"
+SOURCE_DB_PATH = Path(__file__).resolve().parent.parent / "school.db"
+
+# On Vercel / Serverless environments, copy database to /tmp so read and write operations succeed
+if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    TMP_DB_PATH = Path("/tmp/school.db")
+    if not TMP_DB_PATH.exists() and SOURCE_DB_PATH.exists():
+        try:
+            shutil.copy2(SOURCE_DB_PATH, TMP_DB_PATH)
+        except Exception:
+            pass
+    DB_PATH = TMP_DB_PATH if TMP_DB_PATH.exists() else SOURCE_DB_PATH
+else:
+    DB_PATH = SOURCE_DB_PATH
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
