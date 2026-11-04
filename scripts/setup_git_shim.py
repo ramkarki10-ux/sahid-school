@@ -7,3 +7,4 @@ with open(shim_path, 'w', encoding='utf-8') as f:
     f.write(content)
 
 print("git.bat shim created at", shim_path)
+
