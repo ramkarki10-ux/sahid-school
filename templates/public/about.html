@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}हाम्रो विद्यालय परिचय | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-100 py-6 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="flex items-center gap-2 text-xs text-slate-500">
+            <a href="/" class="hover:text-instBlue">गृहपृष्ठ</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <span class="text-slate-800 font-semibold">हाम्रो विद्यालय</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-instBlue mt-2">विद्यालयको विस्तृत परिचय तथा इतिहास</h1>
+    </div>
+</div>
+
+<div class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            
+            <div class="lg:col-span-8 space-y-6 text-sm text-slate-700 leading-relaxed text-justify">
+                <div class="bg-blue-50/60 border-l-4 border-instBlue p-5 rounded-r-lg">
+                    <h2 class="text-base font-bold text-instBlue mb-2">ऐतिहासिक पृष्ठभूमि (Historical Background)</h2>
+                    <p>
+                        सहिद स्मृति आवासीय माध्यमिक विद्यालय वि.सं. २०६६ सालमा सहिद प्रतिष्ठान नेपालद्वारा सहिद परिवार, घाइते, अपाङ्गता भएका, द्वन्द्वपीडित तथा विपन्न समुदायका बालबालिकाहरूलाई सर्वसुलभ र गुणस्तरीय शिक्षा प्रदान गर्ने पवित्र उद्देश्यका साथ इटहरी–१९, भवानीपुर (सुनसरी) मा स्थापना गरिएको हो।
+                    </p>
+                </div>
+
+                <h3 class="text-lg font-bold text-slate-900 border-b pb-2">हाम्रो दूरदृष्टि र ध्येय (Vision & Mission)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="border border-slate-200 p-4 rounded-lg bg-slate-50">
+                        <div class="flex items-center gap-2 text-instBlue font-bold mb-1">
+                            <i data-lucide="compass" class="w-4 h-4"></i>
+                            <span>दूरदृष्टि (Vision)</span>
+                        </div>
+                        <p class="text-xs text-slate-600">
+                            सहिदहरूको बलिदान र सपनालाई आत्मसात् गर्दै हरेक बालबालिकालाई संस्कारयुक्त, प्राविधिक र राष्ट्रप्रेमी नेतृत्वदायी नागरिक बनाउने नमुना आवासीय विद्यालय बन्नु।
+                        </p>
+                    </div>
+
+                    <div class="border border-slate-200 p-4 rounded-lg bg-slate-50">
+                        <div class="flex items-center gap-2 text-instGold font-bold mb-1">
+                            <i data-lucide="target" class="w-4 h-4"></i>
+                            <span>ध्येय (Mission)</span>
+                        </div>
+                        <p class="text-xs text-slate-600">
+                            कक्षा १ देखि १२ सम्म व्यावहारिक, प्रविधिमैत्री र अनुसन्धानमा आधारित शिक्षा प्रदान गर्दै सुरक्षित आवासीय वातावरणमा सम्पूर्ण विकास गर्नु।
+                        </p>
+                    </div>
+                </div>
+
+                <h3 class="text-lg font-bold text-slate-900 border-b pb-2">विद्यालयका प्रमुख विशेषताहरू</h3>
+                <ul class="space-y-2 text-xs sm:text-sm list-disc pl-5 text-slate-700">
+                    <li>अनुभवी, तालिमप्राप्त र विषयगत दक्ष शिक्षकहरूको समूह।</li>
+                    <li>छात्र र छात्राका लागि छुट्टाछुट्टै पारिवारिक वातावरणयुक्त सुरक्षित छात्रावास।</li>
+                    <li>कक्षा ११ र १२ मा विज्ञान (Science), कम्प्युटर विज्ञान (Computer Science) र व्यवस्थापन (Management) संकाय।</li>
+                    <li>आधुनिक भौतिक, रसायन तथा जीवविज्ञान प्रयोगशाला र प्रविधिमैत्री कम्प्युटर ल्याब।</li>
+                    <li>अतिरिक्त क्रियाकलाप, खेलकुद मैदान, पुस्तकालय, शुद्ध खानेपानी र स्वास्थ्य उपचार।</li>
+                </ul>
+
+                <!-- School Management Committee Section -->
+                <div class="mt-8 pt-6 border-t border-slate-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-instBlue flex items-center gap-2">
+                                <i data-lucide="users" class="w-5 h-5 text-instGold"></i>
+                                <span>विद्यालय व्यवस्थापन समिति (School Management Committee)</span>
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-0.5">विद्यालय सञ्चालन, सुशासन तथा विकासका लागि जिम्मेवार आधिकारिक समिति</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                        {% for member in committee %}
+                        <div class="p-3.5 rounded-lg border {% if member.role == 'अध्यक्ष' %}bg-blue-50/70 border-blue-200 shadow-sm{% else %}bg-slate-50 border-slate-200{% endif %} flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-full {% if member.role == 'अध्यक्ष' %}bg-instBlue text-white{% else %}bg-slate-200 text-slate-700{% endif %} flex items-center justify-center font-bold text-xs">
+                                    {{ member.role[:2] }}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-sm text-slate-800">{{ member.name }}</div>
+                                    <div class="text-xs font-semibold {% if member.role == 'अध्यक्ष' %}text-instBlue{% else %}text-slate-500{% endif %}">
+                                        {{ member.role }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% if member.phone %}
+                            <div class="text-right">
+                                <span class="text-[11px] font-mono text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">{{ member.phone }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-5">
+                    <h3 class="font-bold text-sm text-slate-900 mb-3 border-b pb-2">तथ्य र विवरण</h3>
+                    <div class="space-y-2.5 text-xs">
+                        <div class="flex justify-between py-1 border-b border-slate-200/60">
+                            <span class="text-slate-500">स्थापना वर्ष:</span>
+                            <span class="font-bold text-slate-800">{{ settings.established_ne }} वि.सं.</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-200/60">
+                            <span class="text-slate-500">तह:</span>
+                            <span class="font-bold text-slate-800">कक्षा १ देखि १२</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-200/60">
+                            <span class="text-slate-500">प्रकृति:</span>
+                            <span class="font-bold text-slate-800">आवासीय तथा दिवा</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-200/60">
+                            <span class="text-slate-500">स्थान:</span>
+                            <span class="font-bold text-slate-800">{{ settings.address_ne }}</span>
+                        </div>
+                        <div class="flex justify-between py-1">
+                            <span class="text-slate-500">सम्बन्धन:</span>
+                            <span class="font-bold text-slate-800">राष्ट्रिय परीक्षा बोर्ड (NEB)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-instBlue text-white rounded-lg p-5">
+                    <h3 class="font-bold text-sm mb-2">नयाँ भर्ना खुला सम्बन्धी</h3>
+                    <p class="text-xs text-slate-200 mb-3 leading-relaxed">
+                        शैक्षिक सत्र २०८३ का लागि नयाँ भर्ना फाराम खुला भइसकेको छ। अनलाइन वा विद्यालय प्रशासनमा आएर आवेदन दिनुहोस्।
+                    </p>
+                    <a href="/admission" class="inline-flex items-center gap-1.5 bg-instGold hover:bg-instGold-dark text-white font-semibold px-4 py-2 rounded text-xs transition">
+                        <span>अनलाइन आवेदन फाराम</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}दैनिक गृहकार्य तथा प्रश्नावली पोर्टल | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<!-- Top Header Banner -->
+<div class="bg-gradient-to-r from-instBlue-dark via-instBlue to-slate-900 text-white py-10 border-b border-blue-900 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="flex items-center gap-2 text-xs text-blue-200">
+            <a href="/" class="hover:text-white transition">गृहपृष्ठ</a>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            <a href="/students" class="hover:text-white transition">विद्यार्थी</a>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            <span class="text-amber-400 font-bold">दैनिक गृहकार्य तथा प्रश्नावली</span>
+        </div>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mt-4">
+            <div class="space-y-1.5 max-w-2xl">
+                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-white flex items-center gap-3">
+                    <i data-lucide="book-open" class="w-8 h-8 text-amber-400 flex-shrink-0"></i>
+                    <span>दैनिक गृहकार्य तथा प्रश्नावली पोर्टल</span>
+                </h1>
+                <p class="text-xs sm:text-sm text-blue-100 leading-relaxed">
+                    कक्षा १ देखि १२ सम्मका विद्यार्थीहरूका लागि विषयगत दैनिक अभ्यास, प्रश्नावली तथा परियोजना कार्य हेर्ने आधिकारिक प्रणाली।
+                </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <a href="/parent/login" class="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs sm:text-sm font-black px-5 py-2.5 rounded-xl shadow-lg transition">
+                    <i data-lucide="user-check" class="w-4 h-4"></i>
+                    <span>अभिभावक पोर्टल लगइन</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="py-10 bg-slate-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 space-y-8">
+
+        <!-- Search & Filter Card with Class to Subject Cascading -->
+        <div class="bg-white border-2 border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="filter" class="w-4 h-4 text-instBlue"></i>
+                    <span>गृहकार्य खोज्नुहोस् (Filter by Class & Subject)</span>
+                </h2>
+                <span class="text-xs text-slate-500">कक्षा छनौट गरेपछि सोही कक्षामा पढाइ हुने विषयहरू मात्र देखिन्छन्।</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-800 mb-1">कक्षा छनौट गर्नुहोस् (Select Class):</label>
+                    <select id="pubClassSelect" onchange="onPubClassChange()" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none font-bold text-slate-800">
+                        <option value="">सबै कक्षाहरू (All Classes)</option>
+                        {% for c in classes %}
+                        <option value="{{ c.id }}" data-name="{{ c.class_name_ne }}">{{ c.class_name_ne }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-800 mb-1">विषय छनौट गर्नुहोस् (Select Subject):</label>
+                    <select id="pubSubjSelect" onchange="filterPubHomework()" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none font-bold text-amber-900">
+                        <option value="">सबै विषयहरू (All Subjects)</option>
+                    </select>
+                </div>
+
+                <div class="flex items-end">
+                    <button type="button" onclick="resetPubFilter()" class="w-full p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl border border-slate-300 transition flex items-center justify-center gap-2">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                        <span>फिल्टर रिसेट गर्नुहोस्</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Homework Cards Grid -->
+        <div id="hwCardsGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {% for hw in homework_list %}
+            <div class="pub-hw-card bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4"
+                data-class-id="{{ hw.class_id }}"
+                data-subject="{{ hw.subject_name }}"
+            >
+                <div>
+                    <!-- Badge Header -->
+                    <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                        <div class="flex items-center gap-2">
+                            <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-900 font-black text-xs">
+                                {{ hw.class_name_ne }}
+                            </span>
+                            <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-950 font-bold text-xs border border-amber-300">
+                                {{ hw.subject_name }}
+                            </span>
+                        </div>
+                        <div class="text-right text-[11px]">
+                            <span class="text-slate-400">बुझाउने मिति:</span>
+                            <span class="font-mono font-bold text-red-600 block sm:inline ml-1">{{ hw.due_date }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Title & Instructions -->
+                    <div class="mt-3.5 space-y-1.5">
+                        <h3 class="text-base font-black text-slate-900 leading-snug">{{ hw.title }}</h3>
+                        {% if hw.description %}
+                        <p class="text-xs text-slate-600 leading-relaxed">{{ hw.description }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Questionnaire (Questions List) -->
+                    {% if hw.question_list and hw.question_list | length > 0 %}
+                    <div class="mt-4 bg-amber-50/50 border border-amber-200/80 rounded-xl p-3.5 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-black text-slate-900 text-xs flex items-center gap-1.5 text-amber-900">
+                                <i data-lucide="check-circle" class="w-3.5 h-3.5 text-amber-600"></i>
+                                <span>गृहकार्यका प्रश्नावलीहरू ({{ hw.question_list | length }} वटा प्रश्नहरू):</span>
+                            </h4>
+                            <span class="text-[10px] text-slate-500 font-medium">गृहकार्य कापीमा समाधान गर्नुहोस्</span>
+                        </div>
+                        <ol class="space-y-1.5 text-xs text-slate-800">
+                            {% for q in hw.question_list %}
+                            <li class="flex items-start gap-2 bg-white p-2 rounded-lg border border-amber-100">
+                                <span class="font-black text-amber-800 min-w-[50px]">प्रश्न {{ loop.index }}:</span>
+                                <span class="font-medium text-slate-800 leading-relaxed">{{ q }}</span>
+                            </li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                    {% endif %}
+
+                    {% if hw.attachment %}
+                    <div class="mt-3">
+                        <a href="{{ hw.attachment }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline">
+                            <i data-lucide="file-text" class="w-4 h-4"></i>
+                            <span>वर्कसिट / अभ्यास फाइल डाउनलोड गर्नुहोस्</span>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Footer Teacher & Date -->
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <div class="flex items-center gap-1.5">
+                        <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span>शिक्षक: <strong class="text-slate-700">{{ hw.teacher_name }}</strong></span>
+                    </div>
+                    <div class="font-mono text-[11px] text-slate-500">
+                        तोकिएको: {{ hw.assigned_date }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div id="noHwMsg" class="hidden py-16 text-center text-slate-400 bg-white border border-slate-200 rounded-2xl">
+            <i data-lucide="book-open" class="w-12 h-12 mx-auto text-slate-300 mb-3"></i>
+            <h3 class="text-base font-bold text-slate-700">छनौट गरिएको कक्षा वा विषयमा कुनै गृहकार्य फेला परेन।</h3>
+            <p class="text-xs text-slate-500 mt-1">कृपया अर्को कक्षा वा विषय छनौट गर्नुहोस् अथवा फिल्टर रिसेट गर्नुहोस्।</p>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const pubSubjects = {{ subjects | tojson | safe }};
+
+function onPubClassChange() {
+    const classId = document.getElementById('pubClassSelect').value;
+    const subjSelect = document.getElementById('pubSubjSelect');
+
+    subjSelect.innerHTML = '<option value="">सबै विषयहरू (All Subjects)</option>';
+
+    if (classId) {
+        const filtered = pubSubjects.filter(s => String(s.class_id) === String(classId));
+        filtered.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.subject_name_ne;
+            opt.textContent = `${s.subject_name_ne}`;
+            subjSelect.appendChild(opt);
+        });
+    } else {
+        const uniqueNames = Array.from(new Set(pubSubjects.map(s => s.subject_name_ne)));
+        uniqueNames.forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            subjSelect.appendChild(opt);
+        });
+    }
+
+    filterPubHomework();
+}
+
+function filterPubHomework() {
+    const cVal = document.getElementById('pubClassSelect').value;
+    const sVal = (document.getElementById('pubSubjSelect').value || '').trim();
+
+    const cards = document.querySelectorAll('.pub-hw-card');
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+        const cId = card.dataset.classId || '';
+        const sName = (card.dataset.subject || '').trim();
+
+        const matchClass = !cVal || cId === cVal;
+        const matchSubj = !sVal || sName === sVal;
+
+        if (matchClass && matchSubj) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const noMsg = document.getElementById('noHwMsg');
+    if (visibleCount === 0) {
+        noMsg.classList.remove('hidden');
+    } else {
+        noMsg.classList.add('hidden');
+    }
+}
+
+function resetPubFilter() {
+    document.getElementById('pubClassSelect').value = '';
+    onPubClassChange();
+    filterPubHomework();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    onPubClassChange();
+    if (window.lucide) lucide.createIcons();
+});
+</script>
+{% endblock %}

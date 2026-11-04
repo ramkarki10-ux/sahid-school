@@ -1,0 +1,201 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}कक्षा बढुवा (Promotion) | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue flex items-center gap-2">
+                <i data-lucide="arrow-up-circle" class="w-5 h-5 text-amber-500"></i>
+                <span>स्वचालित कक्षा बढुवा प्रणाली (Automatic Student Promotion)</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">
+                नयाँ शैक्षिक सत्रमा विद्यार्थीहरूलाई स्वतः माथिल्लो कक्षामा बढुवा गर्नुहोस्। ऐतिहासिक अभिलेख सुरक्षित रहनेछ।
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg text-xs">
+            <div>
+                <span class="text-slate-500 block text-[10px]">हालको सत्र:</span>
+                <strong class="text-instBlue text-sm">{{ current_academic_year.year_ne }}</strong>
+            </div>
+            <i data-lucide="arrow-right" class="w-4 h-4 text-instBlue"></i>
+            <div>
+                <span class="text-slate-500 block text-[10px]">बढुवा गरिने नयाँ सत्र:</span>
+                <strong class="text-green-700 text-sm">{{ target_academic_year.year_ne if target_academic_year else '२०८४' }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sequence Preview Table -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-200 bg-slate-50/60 flex items-center justify-between">
+            <h2 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                <i data-lucide="layers" class="w-4 h-4 text-instBlue"></i>
+                <span>कक्षागत बढुवा अनुक्रम (Class Progression 1 → 12)</span>
+            </h2>
+            <span class="text-xs text-slate-500">क्रमबद्ध अटो-प्रमोशन</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4">हालको कक्षा ({{ current_academic_year.year_ne }})</th>
+                        <th class="py-3 px-4 text-center">कुल विद्यार्थी</th>
+                        <th class="py-3 px-4">लक्षित कक्षा ({{ target_academic_year.year_ne if target_academic_year else '२०८४' }})</th>
+                        <th class="py-3 px-4">संकाय (Stream for +2)</th>
+                        <th class="py-3 px-4 text-center">कार्य (Action)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200" id="promotionTableBody">
+                    {% for p in preview_data %}
+                    <tr class="hover:bg-slate-50 transition" data-from-class="{{ p.from_class_id }}">
+                        <td class="py-3 px-4 font-bold text-slate-900">
+                            {{ p.from_class_name }}
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="font-bold text-instBlue bg-blue-50 px-2.5 py-1 rounded-full">{{ p.total_students }} जना</span>
+                        </td>
+                        <td class="py-3 px-4 font-bold text-green-700">
+                            {{ p.to_class_name }}
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if p.has_stream %}
+                            <select class="stream-select px-2.5 py-1 text-xs border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                                <option value="">संकाय छनोट (Stream)</option>
+                                {% for st in streams %}
+                                <option value="{{ st.id }}">{{ st.name_ne }}</option>
+                                {% endfor %}
+                            </select>
+                            {% else %}
+                            <span class="text-slate-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <select class="action-select px-2.5 py-1 text-xs border border-slate-300 rounded font-semibold focus:ring-2 focus:ring-instBlue focus:outline-none">
+                                {% if p.from_class_numeric == 12 %}
+                                <option value="GRADUATE" selected>उत्तीर्ण (Graduate)</option>
+                                <option value="HOLD">कक्षा दोहोर्याउने (Hold)</option>
+                                {% elif p.from_class_numeric == 10 %}
+                                <option value="PROMOTE" selected>कक्षा ११ मा बढुवा</option>
+                                <option value="HOLD">होल्ड (Hold)</option>
+                                <option value="TRANSFER">स्थानान्तरण (Transfer)</option>
+                                {% else %}
+                                <option value="PROMOTE" selected>बढुवा (Promote)</option>
+                                <option value="HOLD">होल्ड (Hold)</option>
+                                {% endif %}
+                            </select>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer Action Button -->
+        <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+            <p class="text-xs text-slate-600">
+                कुल विद्यार्थी: <strong class="text-instBlue">{{ total_students_all }} जना</strong> बढुवा प्रक्रियामा छन्।
+            </p>
+            <button type="button" onclick="openConfirmModal()" class="bg-instGold hover:bg-instGold-dark text-white font-bold text-xs px-6 py-2.5 rounded-lg shadow transition flex items-center gap-2">
+                <i data-lucide="zap" class="w-4 h-4"></i>
+                <span>सबै Promote गर्नुहोस्</span>
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- CONFIRMATION MODAL (Section 24) -->
+<div id="confirmPromotionModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+        <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
+            <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+        </div>
+        
+        <h3 class="text-center font-bold text-base text-slate-900">कक्षा बढुवा सम्बन्धी पूर्वपुष्टि (Confirmation)</h3>
+        
+        <p class="text-xs text-slate-600 leading-relaxed text-center" id="confirmModalText">
+            "{{ current_academic_year.year_ne }} का विद्यार्थीहरूलाई {{ target_academic_year.year_ne if target_academic_year else '२०८४' }} का माथिल्लो कक्षामा बढुवा गर्न लागिएको छ।"
+        </p>
+
+        <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-[11px] text-blue-900 leading-relaxed">
+            <strong>नोट:</strong> कुनै पनि ऐतिहासिक अभिलेख मेटिने छैन। विद्यार्थीहरूको अघिल्लो वर्षको कक्षा तथा नतिजा विवरण <code>student_class_history</code> मा सुरक्षित रहनेछ।
+        </div>
+
+        <div class="pt-2 flex justify-center gap-3">
+            <button type="button" onclick="closeConfirmModal()" class="px-5 py-2 border border-slate-300 rounded font-semibold text-xs text-slate-700 hover:bg-slate-100">
+                रद्द गर्नुहोस्
+            </button>
+            <button type="button" id="executePromotionBtn" onclick="executePromotion()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded shadow transition flex items-center gap-1.5">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                <span>पुष्टि गर्नुहोस् (Execute)</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openConfirmModal() {
+        document.getElementById('confirmPromotionModal').classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function closeConfirmModal() {
+        document.getElementById('confirmPromotionModal').classList.add('hidden');
+    }
+
+    async function executePromotion() {
+        const btn = document.getElementById('executePromotionBtn');
+        btn.disabled = true;
+        btn.innerHTML = 'बढुवा गरिँदैछ...';
+
+        const rows = document.querySelectorAll('#promotionTableBody tr');
+        const promotions = [];
+
+        rows.forEach(tr => {
+            const fromClassId = parseInt(tr.getAttribute('data-from-class'));
+            const action = tr.querySelector('.action-select').value;
+            const streamEl = tr.querySelector('.stream-select');
+            const streamId = (streamEl && streamEl.value) ? parseInt(streamEl.value) : null;
+
+            promotions.push({
+                from_class_id: fromClassId,
+                to_class_id: null, // calculated on backend
+                action: action,
+                stream_id: streamId
+            });
+        });
+
+        const payload = {
+            current_academic_year_id: {{ current_academic_year.id }},
+            new_academic_year_id: {{ target_academic_year.id if target_academic_year else 1 }},
+            promotions: promotions
+        };
+
+        try {
+            const res = await fetch('/api/promotions/execute', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message);
+                window.location.href = '/admin/students';
+            } else {
+                alert(data.detail || 'बढुवा गर्न सकिएन।');
+            }
+        } catch (e) {
+            alert('प्रणालीगत त्रुटि भयो।');
+        } finally {
+            btn.disabled = false;
+            closeConfirmModal();
+        }
+    }
+</script>
+{% endblock %}

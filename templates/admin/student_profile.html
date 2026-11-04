@@ -1,0 +1,230 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}विद्यार्थी प्रोफाइल | {{ student.name_nepali }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Top Bar -->
+    <div class="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex items-center gap-3">
+            <a href="/admin/students" class="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            </a>
+            <div>
+                <h1 class="text-lg font-bold text-slate-900">{{ student.name_nepali }}</h1>
+                <p class="text-xs text-slate-500 font-medium">
+                    Admission No: <strong class="font-mono text-instBlue">{{ student.admission_no }}</strong> | Roll No: <strong>{{ student.roll_no }}</strong> | {{ student.class_name_ne }} ({{ student.section_name or 'A' }})
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button onclick="window.print()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-xs font-semibold">
+                <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                <span>प्रिन्ट गर्नुहोस्</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 18. STUDENT PROFILE TABS -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <!-- Tabs Header -->
+        <div class="flex border-b border-slate-200 text-xs font-bold overflow-x-auto custom-scrollbar bg-slate-50">
+            <button onclick="switchTab('tab-personal')" class="tab-btn px-4 py-3 border-b-2 border-instBlue text-instBlue flex items-center gap-1.5" data-tab="tab-personal">
+                <i data-lucide="user" class="w-4 h-4"></i>
+                <span>व्यक्तिगत विवरण</span>
+            </button>
+            <button onclick="switchTab('tab-guardian')" class="tab-btn px-4 py-3 border-b-2 border-transparent text-slate-600 hover:text-instBlue flex items-center gap-1.5" data-tab="tab-guardian">
+                <i data-lucide="users" class="w-4 h-4"></i>
+                <span>अभिभावक विवरण</span>
+            </button>
+            <button onclick="switchTab('tab-history')" class="tab-btn px-4 py-3 border-b-2 border-transparent text-slate-600 hover:text-instBlue flex items-center gap-1.5" data-tab="tab-history">
+                <i data-lucide="history" class="w-4 h-4"></i>
+                <span>शैक्षिक इतिहास</span>
+            </button>
+            <button onclick="switchTab('tab-attendance')" class="tab-btn px-4 py-3 border-b-2 border-transparent text-slate-600 hover:text-instBlue flex items-center gap-1.5" data-tab="tab-attendance">
+                <i data-lucide="calendar" class="w-4 h-4"></i>
+                <span>हाजिरी रेकर्ड</span>
+            </button>
+            <button onclick="switchTab('tab-hostel')" class="tab-btn px-4 py-3 border-b-2 border-transparent text-slate-600 hover:text-instBlue flex items-center gap-1.5" data-tab="tab-hostel">
+                <i data-lucide="bed-double" class="w-4 h-4"></i>
+                <span>छात्रावास (Hostel)</span>
+            </button>
+            <button onclick="switchTab('tab-transport')" class="tab-btn px-4 py-3 border-b-2 border-transparent text-slate-600 hover:text-instBlue flex items-center gap-1.5" data-tab="tab-transport">
+                <i data-lucide="bus" class="w-4 h-4"></i>
+                <span>यातायात (Transport)</span>
+            </button>
+            <button onclick="switchTab('tab-results')" class="tab-btn px-4 py-3 border-b-2 border-transparent text-slate-600 hover:text-instBlue flex items-center gap-1.5" data-tab="tab-results">
+                <i data-lucide="award" class="w-4 h-4"></i>
+                <span>नतिजा (Results)</span>
+            </button>
+            <button onclick="switchTab('tab-docs')" class="tab-btn px-4 py-3 border-b-2 border-transparent text-slate-600 hover:text-instBlue flex items-center gap-1.5" data-tab="tab-docs">
+                <i data-lucide="file-text" class="w-4 h-4"></i>
+                <span>Documents</span>
+            </button>
+        </div>
+
+        <!-- Tab 1: व्यक्तिगत विवरण -->
+        <div id="tab-personal" class="tab-content p-6 space-y-6 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div><span class="text-slate-400 block mb-1">पूरा नाम (नेपाली):</span><strong class="text-sm text-slate-800">{{ student.name_nepali }}</strong></div>
+                <div><span class="text-slate-400 block mb-1">Full Name (English):</span><strong class="text-sm text-slate-800">{{ student.name_english }}</strong></div>
+                <div><span class="text-slate-400 block mb-1">Student ID:</span><span class="font-mono font-bold text-instBlue">{{ student.student_id }}</span></div>
+                
+                <div><span class="text-slate-400 block mb-1">Admission No:</span><span class="font-mono font-bold">{{ student.admission_no }}</span></div>
+                <div><span class="text-slate-400 block mb-1">Registration No:</span><span>{{ student.registration_no or '-' }}</span></div>
+                <div><span class="text-slate-400 block mb-1">लिङ्ग (Gender):</span><span class="font-semibold">{{ student.gender }}</span></div>
+
+                <div><span class="text-slate-400 block mb-1">जन्म मिति:</span><span class="font-semibold">{{ student.date_of_birth }}</span></div>
+                <div><span class="text-slate-400 block mb-1">कक्षा तथा रोल नं.:</span><span class="font-bold text-slate-800">{{ student.class_name_ne }} (रोल नं. {{ student.roll_no }})</span></div>
+                <div><span class="text-slate-400 block mb-1">आवासीय स्थिति:</span><span class="px-2 py-0.5 rounded font-bold {% if student.residential_status == 'आवासीय' %}bg-amber-100 text-amber-900{% else %}bg-blue-100 text-blue-900{% endif %}">{{ student.residential_status }}</span></div>
+
+                <div class="sm:col-span-2"><span class="text-slate-400 block mb-1">ठेगाना:</span><span class="font-medium text-slate-800">{{ student.address }} ({{ student.municipality }}-{{ student.ward }}, {{ student.district }})</span></div>
+                <div><span class="text-slate-400 block mb-1">स्थिति (Status):</span><span class="bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full font-bold">{{ student.status }}</span></div>
+            </div>
+        </div>
+
+        <!-- Tab 2: अभिभावक -->
+        <div id="tab-guardian" class="tab-content p-6 hidden space-y-4 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div><span class="text-slate-400 block mb-1">बुबाको नाम:</span><strong class="text-slate-800">{{ student.father_name or '-' }}</strong></div>
+                <div><span class="text-slate-400 block mb-1">आमाको नाम:</span><strong class="text-slate-800">{{ student.mother_name or '-' }}</strong></div>
+                <div><span class="text-slate-400 block mb-1">मुख्य अभिभावक:</span><strong class="text-slate-800 text-sm">{{ student.guardian_name }}</strong> ({{ student.guardian_relation }})</div>
+
+                <div><span class="text-slate-400 block mb-1">अभिभावक सम्पर्क नम्बर:</span><strong class="font-mono text-instBlue text-sm">{{ student.guardian_phone }}</strong></div>
+                <div><span class="text-slate-400 block mb-1">आकस्मिक सम्पर्क:</span><span class="font-mono">{{ student.emergency_contact or '-' }}</span></div>
+            </div>
+        </div>
+
+        <!-- Tab 3: शैक्षिक इतिहास (Section 25: student_class_history) -->
+        <div id="tab-history" class="tab-content p-6 hidden space-y-4 text-xs">
+            <h3 class="font-bold text-slate-800 text-sm mb-2">विद्यार्थीको ऐतिहासिक कक्षा अभिलेख (Preserved Class History)</h3>
+            <table class="w-full text-left border border-slate-200">
+                <thead class="bg-slate-100 font-bold border-b border-slate-200">
+                    <tr>
+                        <th class="p-2.5">शैक्षिक वर्ष</th>
+                        <th class="p-2.5">कक्षा</th>
+                        <th class="p-2.5">Section</th>
+                        <th class="p-2.5">रोल नं.</th>
+                        <th class="p-2.5">संकाय (Stream)</th>
+                        <th class="p-2.5">बढुवा स्थिति</th>
+                        <th class="p-2.5">कैफियत</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    {% for h in student.class_history %}
+                    <tr>
+                        <td class="p-2.5 font-bold text-instBlue">{{ h.year_ne }}</td>
+                        <td class="p-2.5 font-semibold">{{ h.class_name_ne }}</td>
+                        <td class="p-2.5">{{ h.section_name or 'A' }}</td>
+                        <td class="p-2.5 font-bold">{{ h.roll_no }}</td>
+                        <td class="p-2.5">{{ h.stream_name or '-' }}</td>
+                        <td class="p-2.5"><span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-[10px] font-bold">{{ h.promotion_status }}</span></td>
+                        <td class="p-2.5 text-slate-500">{{ h.remarks or '-' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="p-4 text-center text-slate-400">कुनै अघिल्लो इतिहास फेला परेन।</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tab 4: हाजिरी -->
+        <div id="tab-attendance" class="tab-content p-6 hidden space-y-4 text-xs">
+            <div class="grid grid-cols-3 gap-4 mb-4">
+                <div class="bg-green-50 border border-green-200 p-3 rounded-lg text-center">
+                    <span class="text-green-700 font-bold text-lg">{{ student.attendance_stats.get('PRESENT', 0) }} दिन</span>
+                    <span class="block text-slate-600">उपस्थित (Present)</span>
+                </div>
+                <div class="bg-red-50 border border-red-200 p-3 rounded-lg text-center">
+                    <span class="text-red-700 font-bold text-lg">{{ student.attendance_stats.get('ABSENT', 0) }} दिन</span>
+                    <span class="block text-slate-600">अनुपस्थित (Absent)</span>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg text-center">
+                    <span class="text-amber-700 font-bold text-lg">{{ student.attendance_stats.get('LEAVE', 0) }} दिन</span>
+                    <span class="block text-slate-600">बिदा (Leave)</span>
+                </div>
+            </div>
+            <p class="text-slate-500">हालको महिनाका दैनिक हाजिरी विवरणहरू सुरक्षित छन्।</p>
+        </div>
+
+        <!-- Tab 5: छात्रावास -->
+        <div id="tab-hostel" class="tab-content p-6 hidden space-y-4 text-xs">
+            {% if student.residential_status == 'आवासीय' %}
+            <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg space-y-2">
+                <h4 class="font-bold text-amber-900 text-sm">आवासीय छात्रावास विवरण</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                    <div><span class="text-slate-500 block">छात्रावास नाम:</span><strong class="text-slate-800">{{ student.hostel_name or 'सहिद स्मृति छात्रावास' }}</strong></div>
+                    <div><span class="text-slate-500 block">कोठा नं. (Room No):</span><strong class="text-slate-800">{{ student.room_number or student.room_id or '101' }}</strong></div>
+                    <div><span class="text-slate-500 block">बेड नं. (Bed No):</span><strong class="text-slate-800">{{ student.bed_no or 'Bed-A' }}</strong></div>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-slate-500 py-4">यो विद्यार्थी दिवा (Day Scholar) हुनुहुन्छ। छात्रावासमा दर्ता छैन।</p>
+            {% endif %}
+        </div>
+
+        <!-- Tab 6: यातायात -->
+        <div id="tab-transport" class="tab-content p-6 hidden space-y-4 text-xs">
+            {% if student.bus_number %}
+            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
+                <h4 class="font-bold text-instBlue text-sm">विद्यालय बस सेवा विवरण</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                    <div><span class="text-slate-500 block">बस नम्बर:</span><strong class="text-slate-800">{{ student.bus_number }}</strong></div>
+                    <div><span class="text-slate-500 block">रुट:</span><strong class="text-slate-800">{{ student.bus_route or 'इटहरी - तरहरा' }}</strong></div>
+                    <div><span class="text-slate-500 block">पिकअप पोइन्ट:</span><strong class="text-slate-800">{{ student.pickup_point or student.address }}</strong></div>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-slate-500 py-4">विद्यार्थीले यातायात सुविधा लिएको छैन।</p>
+            {% endif %}
+        </div>
+
+        <!-- Tab 7: नतिजा -->
+        <div id="tab-results" class="tab-content p-6 hidden space-y-4 text-xs">
+            <h4 class="font-bold text-slate-800 text-sm">शैक्षिक परीक्षा नतिजा तथा ग्रेड सिट</h4>
+            <div class="p-4 border border-slate-200 rounded-lg bg-slate-50 text-slate-600">
+                त्रैमासिक तथा अर्धवार्षिक परीक्षा नतिजा ग्रेडिङ प्रणाली अनुसार सुरक्षित राखिन्छ।
+            </div>
+        </div>
+
+        <!-- Tab 8: Documents -->
+        <div id="tab-docs" class="tab-content p-6 hidden space-y-4 text-xs">
+            <h4 class="font-bold text-slate-800 text-sm">संलग्न कागजातहरू</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="p-3 border border-slate-200 rounded-lg flex items-center justify-between">
+                    <span class="font-medium text-slate-700">जन्म दर्ता प्रमाणपत्र</span>
+                    <span class="text-green-700 font-bold">प्रमाणित</span>
+                </div>
+                <div class="p-3 border border-slate-200 rounded-lg flex items-center justify-between">
+                    <span class="font-medium text-slate-700">अघिल्लो कक्षाको चारित्रिक प्रमाणपत्र</span>
+                    <span class="text-green-700 font-bold">संलग्न</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('border-instBlue', 'text-instBlue');
+            btn.classList.add('border-transparent', 'text-slate-600');
+        });
+
+        const activeContent = document.getElementById(tabId);
+        if (activeContent) activeContent.classList.remove('hidden');
+
+        const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+        if (activeBtn) {
+            activeBtn.classList.remove('border-transparent', 'text-slate-600');
+            activeBtn.classList.add('border-instBlue', 'text-instBlue');
+        }
+        lucide.createIcons();
+    }
+</script>
+{% endblock %}

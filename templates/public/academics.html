@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}शैक्षिक कार्यक्रम | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-100 py-6 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="flex items-center gap-2 text-xs text-slate-500">
+            <a href="/" class="hover:text-instBlue">गृहपृष्ठ</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <span class="text-slate-800 font-semibold">शैक्षिक कार्यक्रम</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-instBlue mt-2">शैक्षिक कार्यक्रम तथा संकायहरू (Academic Programs)</h1>
+        <p class="text-xs text-slate-600 mt-1">कक्षा १ देखि १२ सम्म गुणस्तरीय, प्रविधिमैत्री तथा आवासीय शिक्षा</p>
+    </div>
+</div>
+
+<div class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 space-y-12">
+        
+        <!-- Academic Levels Grid (नर्सरी देखि १० सम्म) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            <!-- Early Childhood Nursery to KG -->
+            <div class="border border-slate-200 rounded-xl p-6 bg-slate-50/50 hover:shadow-md transition">
+                <span class="bg-purple-100 text-purple-900 text-[11px] font-bold px-2.5 py-1 rounded">प्रारम्भिक बाल विकास</span>
+                <h2 class="text-base font-bold text-slate-900 mt-2">नर्सरी, एलकेजी र केजी (ECD)</h2>
+                <p class="text-xs text-slate-600 mt-2 leading-relaxed">
+                    शिशु मैत्री वातावरण, खेलकुद तथा रचनात्मक क्रियाकलापबाट अक्षराम्भ, संस्कार र आधारभूत भाषा तथा गणित विकास।
+                </p>
+                <div class="mt-4 pt-3 border-t border-slate-200 text-xs text-slate-500">
+                    <strong>तहहरू:</strong> नर्सरी (Nursery), एल.के.जी. (LKG), यु.के.जी. / केजी (UKG/KG)।
+                </div>
+            </div>
+
+            <!-- Basic Level 1-5 -->
+            <div class="border border-slate-200 rounded-xl p-6 bg-slate-50/50 hover:shadow-md transition">
+                <span class="bg-blue-100 text-instBlue text-[11px] font-bold px-2.5 py-1 rounded">आधारभूत तह</span>
+                <h2 class="text-base font-bold text-slate-900 mt-2">कक्षा १ देखि ५ (प्राथमिक)</h2>
+                <p class="text-xs text-slate-600 mt-2 leading-relaxed">
+                    बालमैत्री वातावरण, व्यावहारिक नेपाली तथा अंग्रेजी भाषा विकास र नैतिक संस्कारयुक्त आधारभूत ज्ञान।
+                </p>
+                <div class="mt-4 pt-3 border-t border-slate-200 text-xs text-slate-500">
+                    <strong>प्रमुख विषयहरू:</strong> नेपाली, अंग्रेजी, गणित, विज्ञान, सामाजिक अध्ययन।
+                </div>
+            </div>
+
+            <!-- Basic Level 6-8 -->
+            <div class="border border-slate-200 rounded-xl p-6 bg-slate-50/50 hover:shadow-md transition">
+                <span class="bg-amber-100 text-amber-900 text-[11px] font-bold px-2.5 py-1 rounded">निम्न माध्यमिक तह</span>
+                <h2 class="text-base font-bold text-slate-900 mt-2">कक्षा ६ देखि ८ (निमावि)</h2>
+                <p class="text-xs text-slate-600 mt-2 leading-relaxed">
+                    सैद्धान्तिक ज्ञानका साथै कम्प्युटर शिक्षा, विज्ञान प्रयोगात्मक कार्य र नेतृत्व विकास।
+                </p>
+                <div class="mt-4 pt-3 border-t border-slate-200 text-xs text-slate-500">
+                    <strong>प्रमुख विषयहरू:</strong> गणित, विज्ञान, प्रविधि, कम्प्युटर, सामाजिक, नेपाली, अंग्रेजी।
+                </div>
+            </div>
+
+            <!-- Secondary 9-10 -->
+            <div class="border border-slate-200 rounded-xl p-6 bg-slate-50/50 hover:shadow-md transition">
+                <span class="bg-green-100 text-green-800 text-[11px] font-bold px-2.5 py-1 rounded">माध्यमिक तह (SEE)</span>
+                <h2 class="text-base font-bold text-slate-900 mt-2">कक्षा ९ र १० (माध्यमिक)</h2>
+                <p class="text-xs text-slate-600 mt-2 leading-relaxed">
+                    माध्यमिक शिक्षा परीक्षा (SEE) को विशेष तयारी, नियमित परीक्षा तथा मूल्याङ्कन र प्रयोगशालामा अभ्यास।
+                </p>
+                <div class="mt-4 pt-3 border-t border-slate-200 text-xs text-slate-500">
+                    <strong>प्रमुख विषयहरू:</strong> गणित, विज्ञान, ऐच्छिक कम्प्युटर, सामाजिक, नेपाली, अंग्रेजी।
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Class 11-12 Higher Secondary Streams -->
+        <div class="bg-gradient-to-r from-instBlue-dark via-instBlue to-instBlue-light rounded-2xl p-6 sm:p-10 text-white shadow-lg">
+            <div class="max-w-2xl mb-8">
+                <span class="bg-instGold text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                    कक्षा ११ र १२ (NEB Affiliated)
+                </span>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-3">उच्च माध्यमिक संकायहरू (+२ Programs)</h2>
+                <p class="text-xs sm:text-sm text-slate-200 mt-2">
+                    राष्ट्रिय परीक्षा बोर्ड (NEB) को पाठ्यक्रम अनुसार विज्ञान, व्यवस्थापन, कम्प्युटर र होटल व्यवस्थापनका दक्ष प्राध्यापकहरूबाट पठनपाठन।
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 text-slate-800">
+                
+                <!-- Science Stream -->
+                <div class="bg-white rounded-xl p-5 shadow-sm space-y-2.5">
+                    <div class="w-10 h-10 rounded-lg bg-blue-100 text-instBlue flex items-center justify-center font-bold">
+                        <i data-lucide="atom" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900">विज्ञान संकाय (Science)</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        इन्जिनियरिङ, मेडिकल, जैविक तथा वैज्ञानिक अनुसन्धानका क्षेत्रमा उच्च शिक्षाको आधार। सुसज्जित भौतिक, रसायन र जीवविज्ञान ल्याब।
+                    </p>
+                    <div class="pt-2 text-[11px] text-slate-500 border-t border-slate-100">
+                        <strong>विषयहरू:</strong> Physics, Chemistry, Biology / Math, English, Nepali.
+                    </div>
+                </div>
+
+                <!-- Computer Science Stream -->
+                <div class="bg-white rounded-xl p-5 shadow-sm space-y-2.5">
+                    <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+                        <i data-lucide="code" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900">कम्प्युटर विज्ञान (Computer Science)</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        सूचना प्रविधि, सफ्टवेयर विकास, साइबर सुरक्षा र आधुनिक डिजिटलाइजेसनको माग पूरा गर्ने व्यवहारिक कार्यक्रम।
+                    </p>
+                    <div class="pt-2 text-[11px] text-slate-500 border-t border-slate-100">
+                        <strong>विषयहरू:</strong> Computer Science, Math, Physics, English, Nepali.
+                    </div>
+                </div>
+
+                <!-- Management Stream -->
+                <div class="bg-white rounded-xl p-5 shadow-sm space-y-2.5">
+                    <div class="w-10 h-10 rounded-lg bg-green-100 text-green-800 flex items-center justify-center font-bold">
+                        <i data-lucide="trending-up" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900">व्यवस्थापन संकाय (Management)</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        बैंकिङ, वित्तीय व्यवस्थापन, व्यापार, उद्यमशीलता तथा प्रशासनिक क्षेत्रमा नेतृत्वदायी भविष्य निर्माण।
+                    </p>
+                    <div class="pt-2 text-[11px] text-slate-500 border-t border-slate-100">
+                        <strong>विषयहरू:</strong> Accountancy, Economics, Business Studies, English, Nepali.
+                    </div>
+                </div>
+
+                <!-- Hotel Management Stream -->
+                <div class="bg-white rounded-xl p-5 shadow-sm space-y-2.5 border-2 border-amber-300">
+                    <div class="w-10 h-10 rounded-lg bg-rose-100 text-rose-800 flex items-center justify-center font-bold">
+                        <i data-lucide="utensils" class="w-6 h-6"></i>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <h3 class="text-sm sm:text-base font-bold text-slate-900">होटल व्यवस्थापन (Hotel Mgt.)</h3>
+                        <span class="bg-amber-100 text-amber-900 text-[9px] font-bold px-1.5 py-0.2 rounded uppercase">नयाँ संकाय</span>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        हस्पिटालिटी, पाककला (Culinary), फुड एण्ड बेभरेज सर्भिस तथा फ्रन्ट अफिस व्यवस्थापनका लागि प्रयोगात्मक ल्याबसहितको कार्यक्रम।
+                    </p>
+                    <div class="pt-2 text-[11px] text-slate-500 border-t border-slate-100">
+                        <strong>विषयहरू:</strong> Hotel Management, Food & Beverage Service, Housekeeping, English, Nepali.
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-white/20 flex flex-wrap items-center justify-between gap-4">
+                <div class="text-xs text-slate-200">
+                    <span class="font-bold text-amber-300">आवासीय सुविधा:</span> छात्र र छात्राका लागि छुट्टाछुट्टै होस्टल सुविधा उपलब्ध छ।
+                </div>
+                <a href="/admission" class="bg-instGold hover:bg-instGold-dark text-white font-bold text-xs px-5 py-2.5 rounded-lg transition shadow-md flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    <span>+२ मा नयाँ भर्ना आवेदन फाराम</span>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

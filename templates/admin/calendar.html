@@ -1,0 +1,265 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}वार्षिक शैक्षिक क्यालेन्डर व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
+                <i data-lucide="calendar" class="w-6 h-6 text-instGold"></i>
+                <span>वार्षिक शैक्षिक क्यालेन्डर व्यवस्थापन (Calendar Events)</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-0.5">परीक्षा, बिदा, वार्षिकोत्सव, बैठक तथा खेलकुद कार्यक्रमको तालिका व्यवस्थापन</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="openEventModal()" class="inline-flex items-center gap-2 bg-instBlue hover:bg-instBlue-dark text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-sm transition">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>नयाँ कार्यक्रम / बिदा थप्नुहोस्</span>
+            </button>
+            <a href="/api/calendar/events/export" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3.5 py-2.5 rounded-lg shadow-sm transition" title="क्यालेन्डर Excel मा डाउनलोड गर्नुहोस्">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                <span>Excel निर्यात</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Events List Table -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-100 text-slate-800 font-bold border-b border-slate-200">
+                    <tr>
+                        <th class="py-3 px-3 text-center w-12">क्र.सं.</th>
+                        <th class="py-3 px-4">कार्यक्रम शीर्षक</th>
+                        <th class="py-3 px-3 text-center">प्रकार</th>
+                        <th class="py-3 px-3.5 font-mono">मिति (देखि - सम्म)</th>
+                        <th class="py-3 px-3 text-center">सार्वजनिक बिदा?</th>
+                        <th class="py-3 px-5">विवरण</th>
+                        <th class="py-3 px-3 text-right">कार्य (Actions)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for ev in events %}
+                    <tr class="hover:bg-slate-50 transition" id="event-row-{{ ev.id }}">
+                        <td class="py-3 px-3 text-center text-slate-400 font-bold">{{ loop.index }}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: {{ ev.color or '#1e3a8a' }}"></span>
+                                <span>{{ ev.title }}</span>
+                            </div>
+                        </td>
+                        <td class="py-3 px-3 text-center">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold" style="background-color: {{ ev.color }}20; color: {{ ev.color }}">
+                                {{ ev.event_type }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-3.5 font-mono text-slate-700 font-semibold">
+                            {{ ev.start_date }}{% if ev.end_date %} देखि {{ ev.end_date }}{% endif %}
+                        </td>
+                        <td class="py-3 px-3 text-center">
+                            {% if ev.is_holiday %}
+                            <span class="px-2 py-0.5 rounded bg-red-100 text-red-800 font-bold text-[10px]">हो (बिदा)</span>
+                            {% else %}
+                            <span class="text-slate-400 text-[10px]">होइन</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-5 text-slate-600 max-w-xs truncate" title="{{ ev.description }}">
+                            {{ ev.description or '-' }}
+                        </td>
+                        <td class="py-3 px-3 text-right whitespace-nowrap">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button type="button" onclick='openEditEvent({{ ev | tojson | safe }})' class="p-1.5 rounded-md text-amber-600 hover:bg-amber-50 border border-amber-200 transition" title="सम्पादन गर्नुहोस्">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </button>
+                                <button type="button" onclick="deleteEvent({{ ev.id }})" class="p-1.5 rounded-md text-red-500 hover:bg-red-50 hover:text-red-700 border border-red-200 transition" title="मेटाउनुहोस्">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="py-8 text-center text-slate-500">हाल कुनै क्यालेन्डर कार्यक्रम प्रविष्टि गरिएको छैन।</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- Create / Edit Event Modal -->
+<div id="eventModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4 max-h-[90vh] overflow-y-auto text-xs">
+        <button type="button" onclick="closeEventModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+
+        <h3 id="evModalTitle" class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="calendar-plus" class="w-4 h-4 text-instBlue"></i>
+            <span>नयाँ क्यालेन्डर कार्यक्रम थप्नुहोस्</span>
+        </h3>
+
+        <form onsubmit="handleEventSave(event)" class="space-y-3">
+            <input type="hidden" id="ev_edit_id" value="">
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">कार्यक्रम शीर्षक <span class="text-red-500">*</span></label>
+                <input type="text" id="evTitle" required placeholder="उदा: प्रथम त्रैमासिक परीक्षा" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">प्रकार <span class="text-red-500">*</span></label>
+                    <select id="evType" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="बिदा">बिदा (Holiday)</option>
+                        <option value="परीक्षा">परीक्षा (Exam)</option>
+                        <option value="पर्व">पर्व तथा उत्सव (Festival)</option>
+                        <option value="खेलकुद">खेलकुद (Sports)</option>
+                        <option value="वार्षिकोत्सव">वार्षिकोत्सव (Anniversary)</option>
+                        <option value="बैठक">बैठक (Meeting)</option>
+                        <option value="अन्य">अन्य (Other)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">रङ (Color)</label>
+                    <select id="evColor" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="#dc2626">रातो (Red - बिदा)</option>
+                        <option value="#d97706">पहेंलो/अम्बर (Amber - परीक्षा)</option>
+                        <option value="#1e3a8a" selected>निलो (Blue - कार्यक्रम)</option>
+                        <option value="#059669">हरियो (Green - खेलकुद)</option>
+                        <option value="#7c3aed">बैजनी (Purple - उत्सव)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">सुरु मिति (BS/AD) <span class="text-red-500">*</span></label>
+                    <input type="text" id="evStartDate" required placeholder="२०८३-०१-१५" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">अन्तिम मिति (वैकल्पिक)</label>
+                    <input type="text" id="evEndDate" placeholder="२०८३-०१-२०" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">विवरण (Remarks)</label>
+                <textarea id="evDescription" rows="2" placeholder="कार्यक्रम सम्बन्धी संक्षिप्त विवरण..." class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none"></textarea>
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+                <input type="checkbox" id="evIsHoliday" class="w-4 h-4 text-instBlue rounded border-slate-300 focus:ring-instBlue">
+                <label for="evIsHoliday" class="font-bold text-slate-700 select-none cursor-pointer">सार्वजनिक बिदा हो (Public Holiday)</label>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button type="button" onclick="closeEventModal()" class="px-4 py-2 rounded-lg border border-slate-300 font-bold text-slate-700 hover:bg-slate-50 transition">
+                    रद्द गर्नुहोस्
+                </button>
+                <button type="submit" id="evSubmitBtn" class="px-5 py-2 rounded-lg bg-instBlue hover:bg-instBlue-dark text-white font-bold shadow-sm transition">
+                    सुरक्षित गर्नुहोस्
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEventModal() {
+    document.getElementById('ev_edit_id').value = '';
+    document.getElementById('evTitle').value = '';
+    document.getElementById('evType').value = 'बिदा';
+    document.getElementById('evColor').value = '#1e3a8a';
+    document.getElementById('evStartDate').value = '';
+    document.getElementById('evEndDate').value = '';
+    document.getElementById('evDescription').value = '';
+    document.getElementById('evIsHoliday').checked = false;
+    document.getElementById('evModalTitle').innerHTML = '<i data-lucide="calendar-plus" class="w-4 h-4 text-instBlue"></i><span>नयाँ क्यालेन्डर कार्यक्रम थप्नुहोस्</span>';
+    document.getElementById('evSubmitBtn').innerText = 'थप्नुहोस्';
+    document.getElementById('eventModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+function openEditEvent(ev) {
+    document.getElementById('ev_edit_id').value = ev.id;
+    document.getElementById('evTitle').value = ev.title || '';
+    document.getElementById('evType').value = ev.event_type || 'बिदा';
+    document.getElementById('evColor').value = ev.color || '#1e3a8a';
+    document.getElementById('evStartDate').value = ev.start_date || '';
+    document.getElementById('evEndDate').value = ev.end_date || '';
+    document.getElementById('evDescription').value = ev.description || '';
+    document.getElementById('evIsHoliday').checked = (ev.is_holiday === 1 || ev.is_holiday === true);
+    document.getElementById('evModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i><span>क्यालेन्डर कार्यक्रम सम्पादन</span>';
+    document.getElementById('evSubmitBtn').innerText = 'अद्यावधिक (Save) गर्नुहोस्';
+    document.getElementById('eventModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+function closeEventModal() {
+    document.getElementById('eventModal').classList.add('hidden');
+    document.getElementById('ev_edit_id').value = '';
+}
+
+async function handleEventSave(e) {
+    e.preventDefault();
+    const editId = document.getElementById('ev_edit_id').value;
+    const btn = document.getElementById('evSubmitBtn');
+    
+    const payload = {
+        title: document.getElementById('evTitle').value.trim(),
+        event_type: document.getElementById('evType').value,
+        color: document.getElementById('evColor').value,
+        start_date: document.getElementById('evStartDate').value.trim(),
+        end_date: document.getElementById('evEndDate').value.trim() || null,
+        description: document.getElementById('evDescription').value.trim() || null,
+        is_holiday: document.getElementById('evIsHoliday').checked
+    };
+
+    btn.disabled = true;
+    const url = editId ? `/api/calendar/events/${editId}` : '/api/calendar/events';
+    const method = editId ? 'PUT' : 'POST';
+
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.detail || "त्रुटि भयो।");
+        }
+    } catch(err) {
+        alert("सर्भर त्रुटि भयो।");
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function deleteEvent(id) {
+    if (!confirm("के तपाईं निश्चित रूपमा यो कार्यक्रम मेटाउन चाहनुहुन्छ?")) return;
+    try {
+        const res = await fetch(`/api/calendar/events/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.detail || "मेटाउन सकिएन।");
+        }
+    } catch(err) {
+        alert("सर्भर त्रुटि भयो।");
+    }
+}
+</script>
+{% endblock %}

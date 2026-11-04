@@ -1,0 +1,225 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}परीक्षा नतिजा लेजर | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue">परीक्षा नतिजा लेजर व्यवस्थापन (Exam Results & Marksheet Ledger)</h1>
+            <p class="text-xs text-slate-500 mt-0.5">कक्षागत परीक्षा नतिजा प्रविष्टि, मूल्याङ्कन, लब्धांक पत्र तथा तथ्याङ्क डाउनलोड</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="downloadResultsExcel()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                <i class="fas fa-file-excel"></i> Excel डाउनलोड
+            </button>
+            <button onclick="openAddResultModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-instBlue hover:bg-instBlue/90 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                <i class="fas fa-plus text-amber-300"></i> + प्राप्ताङ्क प्रविष्टि
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <form method="get" action="/admin/results" class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">परीक्षा छनोट गर्नुहोस्:</label>
+                <select id="filter_exam" name="exam_id" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none" onchange="this.form.submit()">
+                    {% for e in exams %}
+                    <option value="{{ e.id }}" {% if e.id == selected_exam_id %}selected{% endif %}>{{ e.name_ne }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">कक्षा छनोट गर्नुहोस्:</label>
+                <select id="filter_class" name="class_id" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none" onchange="this.form.submit()">
+                    <option value="">सबै कक्षाहरू (All Classes)</option>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {% if c.id == selected_class_id %}selected{% endif %}>{{ c.class_name_ne }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-1.5 px-4 rounded-lg text-xs transition">
+                    फिल्टर लागू गर्नुहोस्
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Ledger Table -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3 px-3 text-center w-12">क्र.सं.</th>
+                        <th class="py-3 px-3">विद्यार्थी ID</th>
+                        <th class="py-3 px-3 text-center">रोल</th>
+                        <th class="py-3 px-4">विद्यार्थीको नाम</th>
+                        <th class="py-3 px-3">कक्षा</th>
+                        <th class="py-3 px-4">विषय</th>
+                        <th class="py-3 px-2.5 text-center">सैद्धान्तिक</th>
+                        <th class="py-3 px-2.5 text-center">प्रयोगात्मक</th>
+                        <th class="py-3 px-3 text-center">जम्मा प्राप्ताङ्क</th>
+                        <th class="py-3 px-2.5 text-center">ग्रेड</th>
+                        <th class="py-3 px-2.5 text-center">GP</th>
+                        <th class="py-3 px-3 text-center">कार्य</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    {% for r in results_list %}
+                    <tr class="hover:bg-slate-50 transition" id="row-res-{{ r.id }}">
+                        <td class="py-2.5 px-3 text-center font-bold text-slate-400">{{ loop.index }}</td>
+                        <td class="py-2.5 px-3 font-mono font-semibold text-instBlue">{{ r.stu_code }}</td>
+                        <td class="py-2.5 px-3 text-center font-bold font-mono">{{ r.roll_no }}</td>
+                        <td class="py-2.5 px-4 font-bold text-slate-900">{{ r.name_nepali }}</td>
+                        <td class="py-2.5 px-3 text-slate-700 font-semibold">{{ r.class_name_ne }}</td>
+                        <td class="py-2.5 px-4 font-medium text-slate-800">{{ r.subject_name_ne }}</td>
+                        <td class="py-2.5 px-2.5 text-center font-mono text-slate-600">{{ r.theory_obtained }}</td>
+                        <td class="py-2.5 px-2.5 text-center font-mono text-slate-600">{{ r.practical_obtained }}</td>
+                        <td class="py-2.5 px-3 text-center font-mono font-bold text-slate-900">{{ r.total_obtained }}</td>
+                        <td class="py-2.5 px-2.5 text-center font-bold {% if r.grade == 'NG' %}text-rose-600{% else %}text-emerald-700{% endif %}">
+                            {{ r.grade }}
+                        </td>
+                        <td class="py-2.5 px-2.5 text-center font-mono font-bold">{{ r.grade_point }}</td>
+                        <td class="py-2.5 px-3 text-center">
+                            <button type="button" onclick="deleteResultRecord({{ r.id }})" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded transition" title="मेटाउनुहोस्">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="12" class="py-8 text-center text-slate-500">उक्त फिल्टर अनुसार कुनै नतिजा प्रविष्टि भेटिएन।</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- ADD RESULT MODAL -->
+<div id="addResultModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i class="fas fa-edit text-amber-500"></i>
+                <span>विद्यार्थी प्राप्ताङ्क प्रविष्टि</span>
+            </h3>
+            <button onclick="closeAddResultModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-base"></i></button>
+        </div>
+
+        <form id="resultSaveForm" onsubmit="saveResult(event)" class="space-y-3">
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">परीक्षा *</label>
+                <select id="modal_exam_id" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    {% for e in exams %}
+                    <option value="{{ e.id }}">{{ e.name_ne }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">विद्यार्थी (Student) *</label>
+                <select id="modal_student_id" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    {% for s in all_students %}
+                    <option value="{{ s.id }}">{{ s.name_nepali }} ({{ s.class_name_ne }} - रोल: {{ s.roll_no }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">विषय (Subject) *</label>
+                <select id="modal_subject_id" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    {% for sub in all_subjects %}
+                    <option value="{{ sub.id }}">{{ sub.subject_name_ne }} ({{ sub.class_name_ne }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">सैद्धान्तिक प्राप्ताङ्क (TH)</label>
+                    <input type="number" step="0.5" id="modal_theory" required value="60" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">प्रयोगात्मक प्राप्ताङ्क (PR)</label>
+                    <input type="number" step="0.5" id="modal_practical" required value="20" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeAddResultModal()" class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" class="px-5 py-2 bg-instBlue hover:bg-instBlue/90 text-white font-bold rounded shadow transition">सुरक्षित गर्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function downloadResultsExcel() {
+    const examId = document.getElementById('filter_exam').value;
+    const classId = document.getElementById('filter_class').value;
+    let url = `/api/results/export?`;
+    if (examId) url += `exam_id=${examId}&`;
+    if (classId) url += `class_id=${classId}`;
+    window.location.href = url;
+}
+
+function openAddResultModal() {
+    document.getElementById('addResultModal').classList.remove('hidden');
+}
+function closeAddResultModal() {
+    document.getElementById('addResultModal').classList.add('hidden');
+}
+
+async function saveResult(e) {
+    e.preventDefault();
+    const payload = {
+        exam_id: parseInt(document.getElementById('modal_exam_id').value),
+        student_id: parseInt(document.getElementById('modal_student_id').value),
+        subject_id: parseInt(document.getElementById('modal_subject_id').value),
+        theory_obtained: parseFloat(document.getElementById('modal_theory').value),
+        practical_obtained: parseFloat(document.getElementById('modal_practical').value)
+    };
+
+    try {
+        const res = await fetch('/api/results', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert(data.message || 'प्राप्ताङ्क प्रविष्टि भयो!');
+            location.reload();
+        } else {
+            alert(data.detail || 'त्रुटि देखा पर्यो।');
+        }
+    } catch(err) {
+        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+    }
+}
+
+async function deleteResultRecord(id) {
+    if (!confirm('के तपाईं निश्चित हुनुहुन्छ? यो प्राप्ताङ्क रेकर्ड मेटिनेछ।')) return;
+    try {
+        const res = await fetch(`/api/results/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert(data.message || 'रेकर्ड हटाइयो।');
+            const row = document.getElementById(`row-res-${id}`);
+            if (row) row.remove();
+        } else {
+            alert(data.detail || 'त्रुटि देखा पर्यो।');
+        }
+    } catch(err) {
+        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+    }
+}
+</script>
+{% endblock %}
+

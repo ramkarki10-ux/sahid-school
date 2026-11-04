@@ -1,0 +1,254 @@
+{% extends "teacher/base_teacher.html" %}
+
+{% block title %}कक्षा हाजिरी तथा अनुपस्थिति एसएमएस | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <!-- Top Filter & Selector -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-lg font-bold text-instBlue flex items-center gap-2">
+                <i data-lucide="check-square" class="w-5 h-5 text-instGold"></i>
+                <span>दैनिक विद्यार्थी हाजिरी (Daily Attendance & SMS)</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-0.5">पहिलो घण्टी हाजिरी लिँदा अनुपस्थित विद्यार्थीको अभिभावकलाई स्वचालित एसएमएस पठाउन सकिन्छ</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <!-- Event Type -->
+            <select id="t_event_type" class="px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold text-instBlue focus:ring-2 focus:ring-instBlue focus:outline-none">
+                <option value="FIRST_PERIOD">पहिलो घण्टी हाजिरी (1st Period - SMS सहित)</option>
+                <option value="FINAL_ATTENDANCE">अन्तिम हाजिरी (Final Attendance)</option>
+            </select>
+
+            <!-- Class Select -->
+            <select id="t_class_select" onchange="loadTeacherAttendance()" class="px-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-instBlue focus:outline-none">
+                <option value="">-- कक्षा छान्नुहोस् --</option>
+                {% for c in assigned_classes %}
+                <option value="{{ c.class_id }}" {% if selected_class_id == c.class_id %}selected{% endif %}>
+                    {{ c.class_name_ne }} (सेक्सन {{ c.section or 'A' }})
+                </option>
+                {% endfor %}
+            </select>
+
+            <input type="date" id="t_att_date" value="{{ today_date }}" onchange="loadTeacherAttendance()" class="px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono font-semibold focus:ring-2 focus:ring-instBlue focus:outline-none">
+
+            <button onclick="markAllPresent()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs">
+                सबै उपस्थित
+            </button>
+        </div>
+    </div>
+
+    <!-- SMS Notification Alert Bar -->
+    <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl flex items-center justify-between text-xs text-amber-900">
+        <div class="flex items-center gap-2">
+            <i data-lucide="smartphone" class="w-4 h-4 text-amber-600"></i>
+            <span>अनुपस्थित भएका विद्यार्थीको अभिभावकलाई स्वचालित अनुपस्थिति एसएमएस (Absence SMS) पठाउने:</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <input type="checkbox" id="sendSmsToggle" checked class="w-4 h-4 text-instBlue rounded">
+            <label for="sendSmsToggle" class="font-bold">एसएमएस सक्रिय (Enabled)</label>
+        </div>
+    </div>
+
+    <!-- Attendance Sheet Container -->
+    <div id="attendanceContainer" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-8 text-center text-slate-500 text-xs">
+            माथिबाट कक्षा छनोट गर्नुहोस्।
+        </div>
+    </div>
+
+    <!-- Save Button Floating/Bottom -->
+    <div id="saveBar" class="hidden sticky bottom-4 z-20 bg-slate-900/90 backdrop-blur text-white p-4 rounded-2xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="text-xs">
+            कुल: <span id="stat_total" class="font-bold font-mono">0</span> | 
+            उपस्थित: <span id="stat_present" class="font-bold text-emerald-400 font-mono">0</span> | 
+            अनुपस्थित: <span id="stat_absent" class="font-bold text-rose-400 font-mono">0</span> | 
+            बिदा: <span id="stat_leave" class="font-bold text-amber-400 font-mono">0</span>
+        </div>
+        <button onclick="saveAttendance()" id="saveAttBtn" class="px-6 py-2.5 bg-instGold hover:bg-amber-400 text-slate-900 font-extrabold rounded-xl text-xs shadow transition flex items-center gap-2">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            <span>हाजिरी सुरक्षित गर्नुहोस् (Save Attendance)</span>
+        </button>
+    </div>
+
+</div>
+
+<script>
+    let currentStudents = [];
+
+    async function loadTeacherAttendance() {
+        const classId = document.getElementById('t_class_select').value;
+        const attDate = document.getElementById('t_att_date').value;
+        const container = document.getElementById('attendanceContainer');
+        const saveBar = document.getElementById('saveBar');
+
+        if (!classId) {
+            container.innerHTML = '<div class="p-8 text-center text-slate-500 text-xs">कृपया कक्षा छनोट गर्नुहोस्।</div>';
+            saveBar.classList.add('hidden');
+            return;
+        }
+
+        container.innerHTML = '<div class="p-8 text-center text-slate-500 text-xs"><i data-lucide="loader" class="w-6 h-6 animate-spin mx-auto mb-2 text-instBlue"></i>लोड हुँदैछ...</div>';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+            const res = await fetch(`/api/attendance/sheet?class_id=${classId}&attendance_date=${attDate}`);
+            const data = await res.json();
+            currentStudents = data.sheet || [];
+
+            if (currentStudents.length === 0) {
+                container.innerHTML = '<div class="p-8 text-center text-slate-500 text-xs">यस कक्षामा कुनै सक्रिय विद्यार्थी भेटिएन।</div>';
+                saveBar.classList.add('hidden');
+                return;
+            }
+
+            renderAttendanceTable();
+            saveBar.classList.remove('hidden');
+            updateCounters();
+        } catch (e) {
+            container.innerHTML = '<div class="p-8 text-center text-red-500 text-xs">डेटा लोड गर्न सकिएन: ' + e.message + '</div>';
+        }
+    }
+
+    function renderAttendanceTable() {
+        const container = document.getElementById('attendanceContainer');
+        let html = `
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4 text-center w-12">रोल</th>
+                        <th class="py-3 px-4">विद्यार्थीको नाम</th>
+                        <th class="py-3 px-4">अभिभावक / सम्पर्क</th>
+                        <th class="py-3 px-4 text-center w-24">प्रकार</th>
+                        <th class="py-3 px-4 text-center w-72">हाजिरी स्थिति (Large Touch Buttons)</th>
+                        <th class="py-3 px-4">कैफियत (Remarks)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+        `;
+
+        currentStudents.forEach((s, idx) => {
+            const st = s.attendance_status || s.status || 'PRESENT';
+            s.status = st;
+            html += `
+            <tr class="hover:bg-slate-50 transition" id="row_${s.student_id}">
+                <td class="py-3 px-4 text-center font-bold text-slate-600 font-mono">${s.roll_no || idx + 1}</td>
+                <td class="py-3 px-4">
+                    <span class="font-bold text-slate-900 block">${s.name_nepali}</span>
+                    <span class="text-[10px] text-slate-400 font-mono">${s.name_english || ''}</span>
+                </td>
+                <td class="py-3 px-4 text-slate-600">
+                    <p class="font-medium">${s.guardian_name || '-'}</p>
+                    <p class="text-[11px] font-mono text-instBlue">${s.guardian_phone || '-'}</p>
+                </td>
+                <td class="py-3 px-4 text-center">
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded ${s.residential_status === 'आवासीय' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700'}">${s.residential_status || 'दिवा'}</span>
+                </td>
+                <td class="py-3 px-4 text-center">
+                    <div class="inline-flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                        <button type="button" onclick="setStatus(${s.student_id}, 'PRESENT')" id="btn_p_${s.student_id}" class="px-3.5 py-2 rounded-lg font-extrabold text-xs transition ${st === 'PRESENT' ? 'bg-emerald-600 text-white shadow' : 'bg-transparent text-slate-600 hover:bg-slate-200'}">P हाजिर</button>
+                        <button type="button" onclick="setStatus(${s.student_id}, 'ABSENT')" id="btn_a_${s.student_id}" class="px-3.5 py-2 rounded-lg font-extrabold text-xs transition ${st === 'ABSENT' ? 'bg-rose-600 text-white shadow' : 'bg-transparent text-slate-600 hover:bg-slate-200'}">A गैरहाजिर</button>
+                        <button type="button" onclick="setStatus(${s.student_id}, 'LEAVE')" id="btn_l_${s.student_id}" class="px-3.5 py-2 rounded-lg font-extrabold text-xs transition ${st === 'LEAVE' ? 'bg-amber-500 text-white shadow' : 'bg-transparent text-slate-600 hover:bg-slate-200'}">L बिदा</button>
+                    </div>
+                </td>
+                <td class="py-3 px-4">
+                    <input type="text" id="rem_${s.student_id}" value="${s.remark || s.remarks || ''}" placeholder="कैफियत..." class="w-full px-2 py-1 border border-slate-200 rounded text-xs">
+                </td>
+            </tr>
+            `;
+        });
+
+        html += `</tbody></table></div>`;
+        container.innerHTML = html;
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function setStatus(studentId, newStatus) {
+        const student = currentStudents.find(s => s.student_id === studentId);
+        if (student) {
+            student.status = newStatus;
+            student.attendance_status = newStatus;
+            ['PRESENT', 'ABSENT', 'LEAVE'].forEach(type => {
+                const b = document.getElementById(`btn_${type[0].toLowerCase()}_${studentId}`);
+                if (!b) return;
+                if (type === newStatus) {
+                    b.className = `px-3.5 py-2 rounded-lg font-extrabold text-xs transition ${type === 'PRESENT' ? 'bg-emerald-600 text-white shadow' : (type === 'ABSENT' ? 'bg-rose-600 text-white shadow' : 'bg-amber-500 text-white shadow')}`;
+                } else {
+                    b.className = 'px-3.5 py-2 rounded-lg font-extrabold text-xs transition bg-transparent text-slate-600 hover:bg-slate-200';
+                }
+            });
+            updateCounters();
+        }
+    }
+
+    function markAllPresent() {
+        currentStudents.forEach(s => setStatus(s.student_id, 'PRESENT'));
+    }
+
+    function updateCounters() {
+        document.getElementById('stat_total').innerText = currentStudents.length;
+        document.getElementById('stat_present').innerText = currentStudents.filter(s => (s.status || s.attendance_status) === 'PRESENT').length;
+        document.getElementById('stat_absent').innerText = currentStudents.filter(s => (s.status || s.attendance_status) === 'ABSENT').length;
+        document.getElementById('stat_leave').innerText = currentStudents.filter(s => (s.status || s.attendance_status) === 'LEAVE').length;
+    }
+
+    async function saveAttendance() {
+        const classId = document.getElementById('t_class_select').value;
+        const attDate = document.getElementById('t_att_date').value;
+        const eventType = document.getElementById('t_event_type').value;
+        const sendSms = document.getElementById('sendSmsToggle').checked;
+        const btn = document.getElementById('saveAttBtn');
+
+        const payload = {
+            class_id: parseInt(classId),
+            attendance_date: attDate,
+            event_type: eventType,
+            send_sms_notification: sendSms,
+            records: currentStudents.map(s => ({
+                student_id: s.student_id,
+                status: s.status || s.attendance_status || 'PRESENT',
+                remark: document.getElementById(`rem_${s.student_id}`) ? document.getElementById(`rem_${s.student_id}`).value.trim() : null
+            }))
+        };
+
+        btn.disabled = true;
+        btn.innerText = 'सुरक्षित गरिँदैछ...';
+
+        try {
+            const res = await fetch('/api/attendance/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                let msg = data.message;
+                if (data.sms_sent_count > 0) {
+                    msg += `\n✓ ${data.sms_sent_count} जना अनुपस्थित विद्यार्थीका अभिभावकलाई SMS पठाइयो।`;
+                }
+                if (data.sms_skipped_count > 0) {
+                    msg += `\n(${data.sms_skipped_count} जनालाई आज पहिले नै SMS गइसकेकोले दोहोरिन दिइएन)`;
+                }
+                alert(msg);
+            } else {
+                alert('त्रुटि: ' + (data.detail || 'असफल भयो'));
+            }
+        } catch (e) {
+            alert('सर्भर त्रुटि: ' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = '💾 हाजिरी सुरक्षित गर्नुहोस् (Save Attendance)';
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const select = document.getElementById('t_class_select');
+        if (select && select.value) {
+            loadTeacherAttendance();
+        }
+    });
+</script>
+{% endblock %}

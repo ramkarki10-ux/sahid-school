@@ -1,0 +1,279 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}दैनिक विद्यार्थी हाजिरी | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Top Filter Header (Section 30 & 51) -->
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <div>
+                <h1 class="text-xl font-bold text-instBlue flex items-center gap-2">
+                    <i data-lucide="check-square" class="w-5 h-5 text-green-600"></i>
+                    <span>दैनिक विद्यार्थी हाजिरी (Daily Attendance)</span>
+                </h1>
+                <p class="text-xs text-slate-500 mt-0.5">कक्षा छनोट गरी दैनिक हाजिरी लिनुहोस्।</p>
+            </div>
+            <div class="text-xs text-slate-500">
+                शिक्षक / रेकर्डर: <strong class="text-slate-800">{{ current_user.full_name_ne }}</strong>
+            </div>
+        </div>
+
+        <form id="attendanceFilterForm" class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">शैक्षिक वर्ष *</label>
+                <select id="att_academic_year" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <option value="1">२०८३ (हालको सत्र)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">हाजिरी मिति *</label>
+                <input type="date" id="att_date" value="{{ today_date }}" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">कक्षा छनोट गर्नुहोस् *</label>
+                <select id="att_class" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {% if c.class_numeric == 8 %}selected{% endif %}>{{ c.class_name_ne }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">Section</label>
+                <select id="att_section" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <option value="">Section A</option>
+                    <option value="2">Section B</option>
+                </select>
+            </div>
+        </form>
+    </div>
+
+    <!-- Attendance Sheet Container (Section 30 Exact layout) -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        
+        <!-- Header Info & Quick Bulk Action Buttons -->
+        <div class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+                <h2 id="sheetHeaderTitle" class="text-base font-bold text-instBlue flex items-center gap-2">
+                    <span>कक्षा ८ — Section A</span>
+                </h2>
+                <div class="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
+                    <span>मिति: <strong id="sheetHeaderDate" class="text-slate-800">{{ today_date }}</strong></span>
+                    <span>•</span>
+                    <span>शिक्षक: <strong class="text-slate-800">{{ current_user.full_name_ne }}</strong></span>
+                </div>
+            </div>
+
+            <!-- Top Bulk Action Buttons: [सबै उपस्थित], [सबै अनुपस्थित], [सबै बिदा] -->
+            <div class="flex items-center gap-2 text-xs font-semibold">
+                <span class="text-slate-500 text-[11px] mr-1 hidden sm:inline">एकमुष्ट छनोट:</span>
+                <button type="button" onclick="bulkSetStatus('PRESENT')" class="px-3 py-1.5 bg-green-100 hover:bg-green-200 text-green-800 rounded border border-green-300 transition flex items-center gap-1 shadow-sm">
+                    <span class="w-2.5 h-2.5 rounded-full bg-green-600 inline-block"></span>
+                    <span>सबै उपस्थित</span>
+                </button>
+                <button type="button" onclick="bulkSetStatus('ABSENT')" class="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-800 rounded border border-red-300 transition flex items-center gap-1 shadow-sm">
+                    <span class="w-2.5 h-2.5 rounded-full bg-red-600 inline-block"></span>
+                    <span>सबै अनुपस्थित</span>
+                </button>
+                <button type="button" onclick="bulkSetStatus('LEAVE')" class="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded border border-amber-300 transition flex items-center gap-1 shadow-sm">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block"></span>
+                    <span>सबै बिदा</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Attendance Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3 px-3 text-center">रोल नं.</th>
+                        <th class="py-3 px-4">विद्यार्थीको नाम</th>
+                        <th class="py-3 px-4">ठेगाना</th>
+                        <th class="py-3 px-4">अभिभावक</th>
+                        <th class="py-3 px-4">सम्पर्क (फोन)</th>
+                        <th class="py-3 px-4 text-center">उपस्थित (Present)</th>
+                        <th class="py-3 px-4 text-center">अनुपस्थित (Absent)</th>
+                        <th class="py-3 px-4 text-center">बिदा (Leave)</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceSheetBody" class="divide-y divide-slate-200">
+                    <!-- Populated dynamically via JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bottom Save Button (Section 30) -->
+        <div class="p-5 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div id="attendanceStatsSummary" class="text-xs text-slate-600">
+                कुल: <strong id="sumTotal">0</strong> | 
+                उपस्थित: <strong id="sumPresent" class="text-green-600">0</strong> | 
+                अनुपस्थित: <strong id="sumAbsent" class="text-red-600">0</strong> | 
+                बिदा: <strong id="sumLeave" class="text-amber-600">0</strong>
+            </div>
+
+            <button type="button" id="saveAttendanceBtn" onclick="saveAttendance()" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-8 py-2.5 rounded-lg shadow-md transition flex items-center justify-center gap-2">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                <span>हाजिरी सुरक्षित गर्नुहोस्</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Alert Message Box -->
+    <div id="saveSuccessAlert" class="hidden p-4 bg-green-50 border-2 border-green-500 rounded-xl text-green-900 font-bold text-sm text-center shadow">
+        हाजिरी सफलतापूर्वक सुरक्षित भयो।
+    </div>
+
+</div>
+
+<script>
+    let currentStudents = [];
+
+    async function loadAttendanceSheet() {
+        const classId = document.getElementById('att_class').value;
+        const sectionId = document.getElementById('att_section').value;
+        const dateVal = document.getElementById('att_date').value;
+
+        document.getElementById('sheetHeaderDate').innerText = dateVal;
+        const classSelect = document.getElementById('att_class');
+        const className = classSelect.options[classSelect.selectedIndex].text;
+        document.getElementById('sheetHeaderTitle').innerHTML = `<span>${className} — Section ${sectionId ? 'B' : 'A'}</span>`;
+
+        try {
+            const url = `/api/attendance?class_id=${classId}&attendance_date=${dateVal}${sectionId ? '&section_id=' + sectionId : ''}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            currentStudents = data.students || [];
+            renderAttendanceTable();
+        } catch (e) {
+            alert('हाजिरी सिट लोड गर्न सकिएन।');
+        }
+    }
+
+    function renderAttendanceTable() {
+        const tbody = document.getElementById('attendanceSheetBody');
+        tbody.innerHTML = '';
+
+        currentStudents.forEach((s, idx) => {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-slate-50 transition';
+            const status = s.attendance_status || 'PRESENT';
+
+            tr.innerHTML = `
+                <td class="py-3 px-3 text-center font-bold text-slate-800">${s.roll_no}</td>
+                <td class="py-3 px-4 font-bold text-slate-900">${s.name_nepali}</td>
+                <td class="py-3 px-4 text-slate-600">${s.address}</td>
+                <td class="py-3 px-4 text-slate-700">${s.guardian_name}</td>
+                <td class="py-3 px-4 font-mono text-slate-500">${s.guardian_phone}</td>
+                
+                <!-- Status Buttons with Touch Target Size -->
+                <td class="py-2.5 px-3 text-center">
+                    <button type="button" onclick="setStudentStatus(${idx}, 'PRESENT')" 
+                            class="touch-btn w-full py-2 px-3 rounded-lg font-bold text-xs transition border flex items-center justify-center gap-1.5 ${status === 'PRESENT' ? 'bg-green-600 text-white border-green-600 shadow' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-green-50'}">
+                        <span>🟢</span>
+                        <span>उपस्थित</span>
+                    </button>
+                </td>
+                <td class="py-2.5 px-3 text-center">
+                    <button type="button" onclick="setStudentStatus(${idx}, 'ABSENT')" 
+                            class="touch-btn w-full py-2 px-3 rounded-lg font-bold text-xs transition border flex items-center justify-center gap-1.5 ${status === 'ABSENT' ? 'bg-red-600 text-white border-red-600 shadow' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-red-50'}">
+                        <span>🔴</span>
+                        <span>अनुपस्थित</span>
+                    </button>
+                </td>
+                <td class="py-2.5 px-3 text-center">
+                    <button type="button" onclick="setStudentStatus(${idx}, 'LEAVE')" 
+                            class="touch-btn w-full py-2 px-3 rounded-lg font-bold text-xs transition border flex items-center justify-center gap-1.5 ${status === 'LEAVE' ? 'bg-amber-500 text-white border-amber-500 shadow' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-amber-50'}">
+                        <span>🟡</span>
+                        <span>बिदा</span>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        updateSummaryNumbers();
+    }
+
+    function setStudentStatus(index, newStatus) {
+        if (currentStudents[index]) {
+            currentStudents[index].attendance_status = newStatus;
+            renderAttendanceTable();
+        }
+    }
+
+    function bulkSetStatus(status) {
+        currentStudents.forEach(s => s.attendance_status = status);
+        renderAttendanceTable();
+    }
+
+    function updateSummaryNumbers() {
+        const total = currentStudents.length;
+        const present = currentStudents.filter(s => s.attendance_status === 'PRESENT').length;
+        const absent = currentStudents.filter(s => s.attendance_status === 'ABSENT').length;
+        const leave = currentStudents.filter(s => s.attendance_status === 'LEAVE').length;
+
+        document.getElementById('sumTotal').innerText = total;
+        document.getElementById('sumPresent').innerText = present;
+        document.getElementById('sumAbsent').innerText = absent;
+        document.getElementById('sumLeave').innerText = leave;
+    }
+
+    async function saveAttendance() {
+        const btn = document.getElementById('saveAttendanceBtn');
+        btn.disabled = true;
+        btn.innerHTML = 'सुरक्षित गरिँदैछ...';
+
+        const classId = parseInt(document.getElementById('att_class').value);
+        const sectionId = document.getElementById('att_section').value ? parseInt(document.getElementById('att_section').value) : null;
+        const dateVal = document.getElementById('att_date').value;
+
+        const payload = {
+            academic_year_id: 1,
+            class_id: classId,
+            section_id: sectionId,
+            attendance_date: dateVal,
+            records: currentStudents.map(s => ({
+                student_id: s.student_id,
+                status: s.attendance_status || 'PRESENT',
+                remark: null
+            }))
+        };
+
+        try {
+            const res = await fetch('/api/attendance', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                const alertEl = document.getElementById('saveSuccessAlert');
+                alertEl.innerText = data.message || 'हाजिरी सफलतापूर्वक सुरक्षित भयो।';
+                alertEl.classList.remove('hidden');
+                setTimeout(() => alertEl.classList.add('hidden'), 5000);
+            } else {
+                alert(data.detail || 'हाजिरी सुरक्षित गर्न सकिएन।');
+            }
+        } catch (e) {
+            alert('सुरक्षित गर्दा त्रुटि भयो।');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i><span>हाजिरी सुरक्षित गर्नुहोस्</span>';
+            lucide.createIcons();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadAttendanceSheet();
+        document.getElementById('att_class').addEventListener('change', loadAttendanceSheet);
+        document.getElementById('att_section').addEventListener('change', loadAttendanceSheet);
+        document.getElementById('att_date').addEventListener('change', loadAttendanceSheet);
+    });
+</script>
+{% endblock %}

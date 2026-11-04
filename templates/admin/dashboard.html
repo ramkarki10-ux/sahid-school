@@ -1,0 +1,245 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}ड्यासबोर्ड | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Welcome Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-bold text-instBlue">नमस्कार, {{ current_user.full_name_ne }}!</h1>
+            <p class="text-xs text-slate-500 mt-1">
+                सहिद स्मृति आवासीय माध्यमिक विद्यालय — शैक्षिक सत्र २०८३ प्रशासनिक ड्यासबोर्ड
+            </p>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <a href="/admin/attendance" class="inline-flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
+                <i data-lucide="check-square" class="w-4 h-4"></i>
+                <span>आजको हाजिरी लिनुहोस्</span>
+            </a>
+            <a href="/admin/students" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue-dark text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
+                <i data-lucide="user-plus" class="w-4 h-4 text-instGold"></i>
+                <span>विद्यार्थी सूची</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 46. ADMIN DASHBOARD STATS CARDS -->
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Total Students -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-slate-500">कुल विद्यार्थी</p>
+                <h3 class="text-2xl sm:text-3xl font-extrabold text-instBlue mt-1">{{ stats.total_students }}</h3>
+                <span class="text-[11px] text-slate-400">कक्षा १ देखि १२ सम्म</span>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-instBlue flex items-center justify-center">
+                <i data-lucide="users" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+        <!-- Today Present -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-slate-500">आज उपस्थित विद्यार्थी</p>
+                <h3 class="text-2xl sm:text-3xl font-extrabold text-green-600 mt-1">{{ stats.today_present }}</h3>
+                <span class="text-[11px] text-green-700 font-medium">दैनिक हाजिरी</span>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
+                <i data-lucide="user-check" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+        <!-- Today Absent -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-slate-500">आज अनुपस्थित</p>
+                <h3 class="text-2xl sm:text-3xl font-extrabold text-red-600 mt-1">{{ stats.today_absent }}</h3>
+                <a href="/admin/attendance/absent" class="text-[11px] text-red-600 font-semibold hover:underline">विवरण हेर्नुहोस् →</a>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
+                <i data-lucide="user-x" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+        <!-- Residential Students -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-slate-500">आवासीय विद्यार्थी</p>
+                <h3 class="text-2xl sm:text-3xl font-extrabold text-amber-600 mt-1">{{ stats.residential_students }}</h3>
+                <span class="text-[11px] text-slate-400">छात्रावासमा बस्ने</span>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <i data-lucide="bed-double" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Second Stats Row -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+            <span class="text-xs text-slate-500 font-medium">कुल शिक्षक</span>
+            <div class="text-xl font-bold text-slate-800 mt-0.5">{{ stats.total_teachers }} जना</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+            <span class="text-xs text-slate-500 font-medium">कुल कर्मचारी</span>
+            <div class="text-xl font-bold text-slate-800 mt-0.5">{{ stats.total_staff }} जना</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+            <span class="text-xs text-slate-500 font-medium">कुल कक्षाहरू</span>
+            <div class="text-xl font-bold text-slate-800 mt-0.5">{{ stats.total_classes }} (१–१२)</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+            <span class="text-xs text-slate-500 font-medium">नयाँ भर्ना आवेदन</span>
+            <div class="text-xl font-bold text-instGold-dark mt-0.5">
+                <a href="/admin/admissions" class="hover:underline">{{ stats.new_admissions }} नयाँ</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section (Section 46: कक्षा अनुसार विद्यार्थी & आवासीय/दिवा) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Students per Class Bar Chart -->
+        <div class="lg:col-span-8 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+                <h2 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                    <i data-lucide="bar-chart" class="w-4 h-4 text-instBlue"></i>
+                    <span>कक्षा अनुसार विद्यार्थी सङ्ख्या (Class Distribution)</span>
+                </h2>
+                <span class="text-xs text-slate-400">शैक्षिक सत्र २०८३</span>
+            </div>
+            <div class="h-64 sm:h-72">
+                <canvas id="classChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Residential vs Day Scholars Doughnut Chart -->
+        <div class="lg:col-span-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+                <h2 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                    <i data-lucide="pie-chart" class="w-4 h-4 text-instGold"></i>
+                    <span>आवासीय तथा दिवा विद्यार्थी अनुपात</span>
+                </h2>
+            </div>
+            <div class="h-56 relative flex items-center justify-center">
+                <canvas id="residentialChart"></canvas>
+            </div>
+            <div class="pt-4 border-t border-slate-100 grid grid-cols-2 text-center text-xs">
+                <div>
+                    <span class="text-amber-600 font-bold block">{{ stats.residential_students }}</span>
+                    <span class="text-slate-500">आवासीय</span>
+                </div>
+                <div>
+                    <span class="text-blue-600 font-bold block">{{ stats.day_students }}</span>
+                    <span class="text-slate-500">दिवा</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Quick Shortcuts Grid -->
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <h3 class="font-bold text-sm text-slate-800 mb-3">द्रुत प्रशासनिक कार्यहरू (Quick Actions)</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 text-xs text-center font-semibold">
+            <a href="/admin/students" class="p-3 bg-slate-50 hover:bg-blue-50 border border-slate-200 rounded-lg transition text-slate-700 hover:text-instBlue">
+                <i data-lucide="user-plus" class="w-5 h-5 mx-auto mb-1 text-instBlue"></i>
+                <span>विद्यार्थी थप्नुहोस्</span>
+            </a>
+            <a href="/admin/students/import" class="p-3 bg-slate-50 hover:bg-green-50 border border-slate-200 rounded-lg transition text-slate-700 hover:text-green-700">
+                <i data-lucide="upload" class="w-5 h-5 mx-auto mb-1 text-green-600"></i>
+                <span>Excel आयात</span>
+            </a>
+            <a href="/admin/students/promotion" class="p-3 bg-slate-50 hover:bg-amber-50 border border-slate-200 rounded-lg transition text-slate-700 hover:text-amber-700">
+                <i data-lucide="arrow-up-circle" class="w-5 h-5 mx-auto mb-1 text-amber-600"></i>
+                <span>कक्षा बढुवा</span>
+            </a>
+            <a href="/admin/results" class="p-3 bg-slate-50 hover:bg-purple-50 border border-slate-200 rounded-lg transition text-slate-700 hover:text-purple-700">
+                <i data-lucide="award" class="w-5 h-5 mx-auto mb-1 text-purple-600"></i>
+                <span>नतिजा लेजर</span>
+            </a>
+            <a href="/admin/contact-messages" class="p-3 bg-slate-50 hover:bg-sky-50 border border-slate-200 rounded-lg transition text-slate-700 hover:text-sky-700">
+                <i data-lucide="mail" class="w-5 h-5 mx-auto mb-1 text-sky-600"></i>
+                <span>सम्पर्क सन्देश</span>
+            </a>
+            <a href="/admin/attendance" class="p-3 bg-slate-50 hover:bg-emerald-50 border border-slate-200 rounded-lg transition text-slate-700 hover:text-emerald-700">
+                <i data-lucide="calendar" class="w-5 h-5 mx-auto mb-1 text-emerald-600"></i>
+                <span>हाजिरी लिनुहोस्</span>
+            </a>
+            <a href="/admin/notices" class="p-3 bg-slate-50 hover:bg-red-50 border border-slate-200 rounded-lg transition text-slate-700 hover:text-red-700">
+                <i data-lucide="bell-plus" class="w-5 h-5 mx-auto mb-1 text-red-600"></i>
+                <span>सूचना प्रकाशन</span>
+            </a>
+            <a href="/admin/settings" class="p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition text-slate-700 hover:text-slate-900">
+                <i data-lucide="sliders" class="w-5 h-5 mx-auto mb-1 text-slate-600"></i>
+                <span>विद्यालय सेटिङ</span>
+            </a>
+        </div>
+    </div>
+
+</div>
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Class Bar Chart
+        const classData = {{ stats.students_by_class|tojson }};
+        const classLabels = classData.map(c => c.class_name_ne);
+        const classCounts = classData.map(c => c.count);
+
+        const ctxClass = document.getElementById('classChart').getContext('2d');
+        new Chart(ctxClass, {
+            type: 'bar',
+            data: {
+                labels: classLabels,
+                datasets: [{
+                    label: 'विद्यार्थी सङ्ख्या',
+                    data: classCounts,
+                    backgroundColor: '#15305b',
+                    hoverBackgroundColor: '#d97706',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, precision: 0 }
+                    }
+                }
+            }
+        });
+
+        // Residential Doughnut Chart
+        const ctxRes = document.getElementById('residentialChart').getContext('2d');
+        new Chart(ctxRes, {
+            type: 'doughnut',
+            data: {
+                labels: ['आवासीय (Hostel)', 'दिवा (Day)'],
+                datasets: [{
+                    data: [{{ stats.residential_students }}, {{ stats.day_students }}],
+                    backgroundColor: ['#d97706', '#2563eb'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,256 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}विद्यार्थी Excel आयात | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue">विद्यार्थी → Excel बाट आयात (10-Step Excel Import)</h1>
+            <p class="text-xs text-slate-500 mt-1">Excel फाइल अपलोड गरी स्वचालित प्रमाणीकरण (Validation) सहित विद्यार्थीहरू दर्ता गर्नुहोस्</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="/api/students/template" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm transition">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>Excel Template डाउनलोड गर्नुहोस्</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Upload Box -->
+    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h2 class="text-sm font-bold text-slate-800 mb-3">१. Excel फाइल छनोट गर्नुहोस् (.xlsx)</h2>
+        
+        <form id="importUploadForm" class="space-y-4">
+            <div class="border-2 border-dashed border-slate-300 hover:border-instBlue rounded-xl p-8 text-center bg-slate-50 transition cursor-pointer" onclick="document.getElementById('excelFileInput').click()">
+                <i data-lucide="upload-cloud" class="w-10 h-10 text-instBlue mx-auto mb-2"></i>
+                <p class="text-xs font-semibold text-slate-700">फाइल यहाँ तान्नुहोस् वा ब्राउज गर्न क्लिक गर्नुहोस्</p>
+                <p class="text-[11px] text-slate-400 mt-1">मान्य ढाँचा: .xlsx (माथिको Template प्रयोग गर्नुहोस्)</p>
+                <input type="file" id="excelFileInput" accept=".xlsx" class="hidden" onchange="handleFileSelected(this)">
+                <div id="selectedFileName" class="mt-2 text-xs font-bold text-instBlue hidden"></div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2">
+                <p class="text-[11px] text-slate-500">
+                    * फाइल अपलोड गर्दा हेडर, रोल नम्बर, कक्षा, फोन नम्बर र दोहोरिएका रेकर्डहरूको कडा परीक्षण गरिन्छ।
+                </p>
+                <button type="button" id="previewBtn" onclick="runValidationPreview()" disabled class="bg-instBlue hover:bg-instBlue-dark disabled:bg-slate-300 text-white font-bold px-6 py-2 rounded-lg text-xs transition shadow flex items-center gap-2">
+                    <i data-lucide="search-check" class="w-4 h-4"></i>
+                    <span>परीक्षण तथा पूर्वावलोकन (Preview)</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 10-Step Workflow Progress & Results Container -->
+    <div id="validationResultArea" class="hidden space-y-6">
+        
+        <!-- Status Box -->
+        <div id="statusAlertBox" class="p-4 rounded-xl text-xs font-semibold flex items-start gap-3">
+            <div id="statusIcon"></div>
+            <div>
+                <h3 id="statusTitle" class="font-bold text-sm mb-1"></h3>
+                <p id="statusDesc" class="leading-relaxed"></p>
+            </div>
+        </div>
+
+        <!-- Errors List Box (If any) -->
+        <div id="errorsContainer" class="hidden bg-red-50 border border-red-200 rounded-xl p-5 text-xs text-red-800 space-y-2">
+            <h4 class="font-bold text-sm flex items-center gap-1.5 text-red-900">
+                <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600"></i>
+                <span>सच्याउनुपर्ने त्रुटिहरू (Validation Errors):</span>
+            </h4>
+            <ul id="errorList" class="space-y-1 list-disc pl-5"></ul>
+        </div>
+
+        <!-- Preview Table -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <h3 class="font-bold text-xs text-slate-800 flex items-center gap-2">
+                    <i data-lucide="table" class="w-4 h-4 text-instBlue"></i>
+                    <span>आयात गरिने डेटाको पूर्वावलोकन (Data Preview)</span>
+                </h3>
+                <span id="previewStatsBadge" class="text-[11px] font-bold text-slate-600"></span>
+            </div>
+
+            <div class="overflow-x-auto max-h-96 custom-scrollbar">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-instBlue text-white font-semibold text-[11px] sticky top-0">
+                        <tr>
+                            <th class="p-2.5">Row</th>
+                            <th class="p-2.5">Student ID</th>
+                            <th class="p-2.5">Admission No</th>
+                            <th class="p-2.5">नाम (नेपाली)</th>
+                            <th class="p-2.5">Name (English)</th>
+                            <th class="p-2.5">कक्षा</th>
+                            <th class="p-2.5">Section</th>
+                            <th class="p-2.5">रोल नं.</th>
+                            <th class="p-2.5">अभिभावक</th>
+                            <th class="p-2.5">फोन (Contact)</th>
+                            <th class="p-2.5">स्थिति</th>
+                        </tr>
+                    </thead>
+                    <tbody id="previewTableBody" class="divide-y divide-slate-200"></tbody>
+                </table>
+            </div>
+
+            <!-- Action Buttons: रद्द गर्नुहोस्, त्रुटि सुधार्नुहोस्, आयात सुरु गर्नुहोस् -->
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-end gap-3">
+                <button type="button" onclick="cancelImport()" class="px-4 py-2 border border-slate-300 rounded font-semibold text-xs text-slate-700 hover:bg-slate-100">
+                    रद्द गर्नुहोस्
+                </button>
+                <button type="button" id="executeImportBtn" onclick="commitImport()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded shadow transition flex items-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4"></i>
+                    <span>आयात सुरु गर्नुहोस् (Commit Import)</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    let currentSelectedFile = null;
+
+    function handleFileSelected(input) {
+        if (input.files && input.files[0]) {
+            currentSelectedFile = input.files[0];
+            const nameEl = document.getElementById('selectedFileName');
+            nameEl.innerText = `छनोट भएको फाइल: ${currentSelectedFile.name} (${(currentSelectedFile.size / 1024).toFixed(1)} KB)`;
+            nameEl.classList.remove('hidden');
+            document.getElementById('previewBtn').disabled = false;
+        }
+    }
+
+    async function runValidationPreview() {
+        if (!currentSelectedFile) return;
+        const btn = document.getElementById('previewBtn');
+        btn.disabled = true;
+        btn.innerHTML = 'परीक्षण हुँदैछ...';
+
+        const formData = new FormData();
+        formData.append('file', currentSelectedFile);
+        formData.append('commit', 'false');
+
+        try {
+            const res = await fetch('/api/students/import', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            renderPreviewResult(data);
+        } catch (e) {
+            alert('फाइल परीक्षण गर्दा त्रुटि भयो।');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="search-check" class="w-4 h-4"></i><span>परीक्षण तथा पूर्वावलोकन (Preview)</span>';
+            lucide.createIcons();
+        }
+    }
+
+    function renderPreviewResult(data) {
+        const area = document.getElementById('validationResultArea');
+        area.classList.remove('hidden');
+
+        const alertBox = document.getElementById('statusAlertBox');
+        const iconEl = document.getElementById('statusIcon');
+        const titleEl = document.getElementById('statusTitle');
+        const descEl = document.getElementById('statusDesc');
+        const errorsCont = document.getElementById('errorsContainer');
+        const errorList = document.getElementById('errorList');
+        const commitBtn = document.getElementById('executeImportBtn');
+
+        errorList.innerHTML = '';
+
+        if (data.success && (!data.errors || data.errors.length === 0)) {
+            alertBox.className = 'p-4 rounded-xl text-xs font-semibold flex items-start gap-3 bg-green-50 border border-green-300 text-green-900';
+            iconEl.innerHTML = '<i data-lucide="check-circle-2" class="w-6 h-6 text-green-600"></i>';
+            titleEl.innerText = 'फाइल परीक्षण सफल (Validation Passed)';
+            descEl.innerText = `जम्मा ${data.total_rows} पङ्क्तिहरू परीक्षण गरियो। सबै विवरणहरू सही छन्। अब 'आयात सुरु गर्नुहोस्' थिचेर प्रणालीमा दर्ता गर्न सकिन्छ।`;
+            errorsCont.classList.add('hidden');
+            commitBtn.disabled = false;
+        } else {
+            alertBox.className = 'p-4 rounded-xl text-xs font-semibold flex items-start gap-3 bg-red-50 border border-red-300 text-red-900';
+            iconEl.innerHTML = '<i data-lucide="alert-octagon" class="w-6 h-6 text-red-600"></i>';
+            titleEl.innerText = 'फाइलमा त्रुटिहरू फेला पर्यो (Validation Failed)';
+            descEl.innerText = `जम्मा ${data.total_rows} पङ्क्तिमध्ये त्रुटिहरू फेला परेका छन्। कृपया तलका त्रुटिहरू सुधार गरी पुन: अपलोड गर्नुहोस्।`;
+            
+            errorsCont.classList.remove('hidden');
+            (data.errors || []).forEach(err => {
+                const li = document.createElement('li');
+                li.innerText = err;
+                errorList.appendChild(li);
+            });
+            commitBtn.disabled = true;
+        }
+
+        document.getElementById('previewStatsBadge').innerText = `कुल: ${data.total_rows} | मान्य: ${data.valid_rows_count}`;
+
+        // Populate table
+        const tbody = document.getElementById('previewTableBody');
+        tbody.innerHTML = '';
+        (data.rows || []).forEach(r => {
+            const hasError = r._errors && r._errors.length > 0;
+            const tr = document.createElement('tr');
+            tr.className = hasError ? 'bg-red-50/60 text-red-900' : 'hover:bg-slate-50';
+            tr.innerHTML = `
+                <td class="p-2.5 font-bold">${r._row_number}</td>
+                <td class="p-2.5 font-mono">${r['Student ID']}</td>
+                <td class="p-2.5 font-mono">${r['Admission No']}</td>
+                <td class="p-2.5 font-bold">${r['Name Nepali']}</td>
+                <td class="p-2.5">${r['Name English']}</td>
+                <td class="p-2.5">${r['Class']}</td>
+                <td class="p-2.5 text-center">${r['Section']}</td>
+                <td class="p-2.5 font-bold text-center">${r['Roll No']}</td>
+                <td class="p-2.5">${r['Guardian Name']}</td>
+                <td class="p-2.5 font-mono">${r['Guardian Contact']}</td>
+                <td class="p-2.5">${hasError ? '<span class="text-red-600 font-bold">त्रुटि</span>' : '<span class="text-green-600 font-bold">मान्य</span>'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        lucide.createIcons();
+    }
+
+    async function commitImport() {
+        if (!confirm('के तपाईं यी विद्यार्थीहरूलाई प्रणालीमा आयात गर्न निश्चित हुनुहुन्छ?')) return;
+        const btn = document.getElementById('executeImportBtn');
+        btn.disabled = true;
+        btn.innerHTML = 'आयात हुँदैछ...';
+
+        const formData = new FormData();
+        formData.append('file', currentSelectedFile);
+        formData.append('commit', 'true');
+
+        try {
+            const res = await fetch('/api/students/import', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message);
+                window.location.href = '/admin/students';
+            } else {
+                alert(data.detail || 'आयात गर्न सकिएन।');
+            }
+        } catch (e) {
+            alert('आयात गर्दा त्रुटि भयो।');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    function cancelImport() {
+        document.getElementById('excelFileInput').value = '';
+        document.getElementById('selectedFileName').classList.add('hidden');
+        document.getElementById('validationResultArea').classList.add('hidden');
+        document.getElementById('previewBtn').disabled = true;
+        currentSelectedFile = null;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}अनलाइन भर्ना आवेदन फाराम | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-100 py-6 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="flex items-center gap-2 text-xs text-slate-500">
+            <a href="/" class="hover:text-instBlue">गृहपृष्ठ</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <span class="text-slate-800 font-semibold">भर्ना आवेदन</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-instBlue mt-2">अनलाइन भर्ना फारम / आवेदन फाराम (२०८३)</h1>
+        <p class="text-xs text-slate-600 mt-1">शिशु/केजी देखि कक्षा १२ सम्म नयाँ भर्नाका लागि अनलाइन आवेदन दिनुहोस्</p>
+    </div>
+</div>
+
+<div class="py-12 bg-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-8">
+        
+        <!-- Instruction Banner -->
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-8 text-xs text-amber-900 flex items-start gap-3">
+            <i data-lucide="alert-circle" class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"></i>
+            <div>
+                <strong class="font-bold block mb-1">आवेदन सम्बन्धी महत्वपूर्ण जानकारी:</strong>
+                <p class="leading-relaxed">
+                    कृपया फाराममा सम्पूर्ण विवरणहरू सही र स्पष्ट रूपमा भर्नुहोस्। फाराम पेश भएपछि विद्यालय प्रशासन शाखाबाट ३ कार्यदिनभित्र अभिभावकको मोबाइल नम्बरमा सम्पर्क गरिनेछ। आवासीय (Hostel) सुविधा लिन चाहनेहरूले सन्देश बक्समा उल्लेख गर्नुहोस्।
+                </p>
+            </div>
+        </div>
+
+        <form id="onlineAdmissionForm" class="bg-slate-50 border border-slate-200 rounded-2xl p-6 sm:p-10 shadow-sm space-y-6">
+            
+            <h2 class="text-base font-bold text-instBlue pb-2 border-b border-slate-200 flex items-center gap-2">
+                <i data-lucide="user" class="w-4 h-4 text-instGold"></i>
+                <span>१. विद्यार्थीको व्यक्तिगत विवरण</span>
+            </h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">विद्यार्थीको पूरा नाम (नेपाली वा अंग्रेजी) *</label>
+                    <input type="text" name="student_name" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="विद्यार्थीको नाम">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">जन्म मिति (Date of Birth) *</label>
+                    <input type="text" name="dob" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="२०६८/०५/१५ वा YYYY-MM-DD">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">लिङ्ग (Gender) *</label>
+                    <select name="gender" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="">छनोट गर्नुहोस्</option>
+                        <option value="छात्र">छात्र (Male)</option>
+                        <option value="छात्रा">छात्रा (Female)</option>
+                        <option value="अन्य">अन्य (Other)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">आवेदन दिन चाहेको कक्षा *</label>
+                    <select name="applying_class" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="">कक्षा छनोट गर्नुहोस्</option>
+                        <option value="नर्सरी">नर्सरी (Nursery)</option>
+                        <option value="एल.के.जी.">एल.के.जी. (LKG)</option>
+                        <option value="यु.के.जी. (केजी)">यु.के.जी. / केजी (UKG / KG)</option>
+                        <option value="कक्षा १">कक्षा १</option>
+                        <option value="कक्षा २">कक्षा २</option>
+                        <option value="कक्षा ३">कक्षा ३</option>
+                        <option value="कक्षा ४">कक्षा ४</option>
+                        <option value="कक्षा ५">कक्षा ५</option>
+                        <option value="कक्षा ६">कक्षा ६</option>
+                        <option value="कक्षा ७">कक्षा ७</option>
+                        <option value="कक्षा ८">कक्षा ८</option>
+                        <option value="कक्षा ९">कक्षा ९</option>
+                        <option value="कक्षा १०">कक्षा १०</option>
+                        <option value="कक्षा ११ - विज्ञान">कक्षा ११ - विज्ञान (Science)</option>
+                        <option value="कक्षा ११ - कम्प्युटर">कक्षा ११ - कम्प्युटर विज्ञान (Computer Science)</option>
+                        <option value="कक्षा ११ - व्यवस्थापन">कक्षा ११ - व्यवस्थापन (Management)</option>
+                        <option value="कक्षा ११ - होटल व्यवस्थापन">कक्षा ११ - होटल व्यवस्थापन (Hotel Management)</option>
+                        <option value="कक्षा १२ - विज्ञान">कक्षा १२ - विज्ञान (Science)</option>
+                        <option value="कक्षा १२ - कम्प्युटर">कक्षा १२ - कम्प्युटर विज्ञान (Computer Science)</option>
+                        <option value="कक्षा १२ - व्यवस्थापन">कक्षा १२ - व्यवस्थापन (Management)</option>
+                        <option value="कक्षा १२ - होटल व्यवस्थापन">कक्षा १२ - होटल व्यवस्थापन (Hotel Management)</option>
+                    </select>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block font-semibold text-slate-700 mb-1">अघिल्लो विद्यालयको नाम तथा ठेगाना</label>
+                    <input type="text" name="previous_school" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="पहिले अध्ययन गरेको विद्यालय">
+                </div>
+            </div>
+
+            <h2 class="text-base font-bold text-instBlue pt-4 pb-2 border-b border-slate-200 flex items-center gap-2">
+                <i data-lucide="users" class="w-4 h-4 text-instGold"></i>
+                <span>२. अभिभावक तथा सम्पर्क विवरण</span>
+            </h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">बाबु / आमाको नाम *</label>
+                    <input type="text" name="parent_name" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="बाबु वा आमाको नाम">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">स्थानीय अभिभावकको नाम (यदि फरक भएमा)</label>
+                    <input type="text" name="guardian_name" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="अभिभावकको नाम">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">सम्पर्क मोबाइल नम्बर *</label>
+                    <input type="tel" name="mobile" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="९८XXXXXXXX">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">ईमेल (Email Address)</label>
+                    <input type="email" name="email" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="example@mail.com">
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block font-semibold text-slate-700 mb-1">स्थायी तथा हालको ठेगाना *</label>
+                    <input type="text" name="address" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="जिल्ला, नगरपालिका/गाउँपालिका, वडा नं., टोल">
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block font-semibold text-slate-700 mb-1">थप विवरण / सन्देश (छात्रावास आवश्यकता, बस रुट आदि)</label>
+                    <textarea name="message" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="छात्रावास बस्ने वा अन्य कुनै विवरण भए खुलाउनुहोस्..."></textarea>
+                </div>
+            </div>
+
+            <div class="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p class="text-[11px] text-slate-500">
+                    * चिन्ह लगाइएका सम्पूर्ण विवरणहरू भर्न अनिवार्य छ।
+                </p>
+                <button type="submit" class="w-full sm:w-auto bg-instBlue hover:bg-instBlue-dark text-white font-bold px-8 py-2.5 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-instGold"></i>
+                    <span>आवेदन फाराम पेश गर्नुहोस्</span>
+                </button>
+            </div>
+
+            <div id="admissionSuccessMsg" class="hidden p-4 bg-green-50 border border-green-300 rounded-lg text-green-800 text-xs font-semibold text-center">
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script>
+    document.getElementById('onlineAdmissionForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'कृपया पर्खनुहोस्...';
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const res = await fetch('/api/admission', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            const msgBox = document.getElementById('admissionSuccessMsg');
+            msgBox.classList.remove('hidden');
+            if (result.success) {
+                msgBox.className = 'p-4 bg-green-50 border border-green-300 rounded-lg text-green-800 text-xs font-semibold text-center';
+                msgBox.innerText = result.message;
+                form.reset();
+            } else {
+                msgBox.className = 'p-4 bg-red-50 border border-red-300 rounded-lg text-red-800 text-xs font-semibold text-center';
+                msgBox.innerText = result.detail || 'त्रुटि देखा पर्यो। कृपया पुन: प्रयास गर्नुहोस्।';
+            }
+        } catch (err) {
+            alert('अनपेक्षित त्रुटि भयो। कृपया पुन: प्रयास गर्नुहोस्।');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            lucide.createIcons();
+        }
+    });
+</script>
+{% endblock %}

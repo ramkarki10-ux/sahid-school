@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}समाचार तथा गतिविधिहरू | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-100 py-6 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="flex items-center gap-2 text-xs text-slate-500">
+            <a href="/" class="hover:text-instBlue">गृहपृष्ठ</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <span class="text-slate-800 font-semibold">समाचार</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-instBlue mt-2">विद्यालय समाचार तथा गतिविधिहरू</h1>
+        <p class="text-xs text-slate-600 mt-1">शैक्षिक, खेलकुद तथा सांस्कृतिक कार्यक्रमका ताजा समाचार</p>
+    </div>
+</div>
+
+<div class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for nw in news %}
+            <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between bg-white">
+                <div class="p-5 space-y-2.5">
+                    <div class="flex items-center justify-between text-xs text-slate-500">
+                        <span class="bg-blue-50 text-instBlue px-2 py-0.5 rounded font-bold text-[10px]">{{ nw.category }}</span>
+                        <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i>{{ nw.publish_date }}</span>
+                    </div>
+
+                    <h2 class="text-base font-bold text-slate-900 leading-snug hover:text-instBlue transition">
+                        {{ nw.title_ne }}
+                    </h2>
+                    {% if nw.title_en %}
+                    <p class="text-xs text-slate-400 font-medium">{{ nw.title_en }}</p>
+                    {% endif %}
+
+                    <p class="text-xs text-slate-600 leading-relaxed text-justify line-clamp-4">
+                        {{ nw.content_ne }}
+                    </p>
+                </div>
+                <div class="p-5 pt-0">
+                    <span class="text-xs font-semibold text-instBlue hover:underline inline-flex items-center gap-1 cursor-pointer">
+                        <span>पूरा पढ्नुहोस्</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </span>
+                </div>
+            </div>
+            {% else %}
+            <p class="col-span-3 text-center py-12 text-xs text-slate-500">हाल कुनै समाचार उपलब्ध छैन।</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

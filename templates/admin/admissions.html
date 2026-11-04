@@ -1,0 +1,209 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}अनलाइन भर्ना आवेदनहरू | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue">अनलाइन भर्ना आवेदनहरू (Admission Applications)</h1>
+            <p class="text-xs text-slate-500 mt-0.5">वेबसाइट मार्फत अभिभावक तथा विद्यार्थीले भरेका भर्ना फारामहरू, स्थिति व्यवस्थापन र तथ्याङ्क डाउनलोड</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="bg-blue-100 text-blue-800 font-bold px-3 py-1.5 rounded-lg text-xs">
+                कुल आवेदन: {{ applications | length }}
+            </span>
+            <a href="/api/admissions/export" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                <i class="fas fa-file-excel"></i> Excel डाउनलोड
+            </a>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4 text-center">क्र.सं.</th>
+                        <th class="py-3 px-4">विद्यार्थीको नाम</th>
+                        <th class="py-3 px-4">कक्षा</th>
+                        <th class="py-3 px-4">अभिभावक</th>
+                        <th class="py-3 px-4 font-mono">सम्पर्क नम्बर</th>
+                        <th class="py-3 px-4">ठेगाना</th>
+                        <th class="py-3 px-4 text-center">मिति</th>
+                        <th class="py-3 px-4 text-center">स्थिति</th>
+                        <th class="py-3 px-4 text-center">कार्य (Actions)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    {% for a in applications %}
+                    <tr class="hover:bg-slate-50 transition" id="row-adm-{{ a.id }}">
+                        <td class="py-3 px-4 text-center font-bold text-slate-500">{{ loop.index }}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">
+                            <div>{{ a.student_name }}</div>
+                            <div class="text-[10px] text-slate-500 font-normal">लिंग: {{ a.gender or 'खुलाइएको छैन' }} | जन्म: {{ a.dob or '-' }}</div>
+                        </td>
+                        <td class="py-3 px-4 font-semibold text-instBlue">{{ a.applying_class }}</td>
+                        <td class="py-3 px-4 text-slate-700">{{ a.parent_name }}</td>
+                        <td class="py-3 px-4 font-mono text-slate-700">
+                            <a href="tel:{{ a.mobile }}" class="text-blue-600 hover:underline">{{ a.mobile }}</a>
+                        </td>
+                        <td class="py-3 px-4 text-slate-600">{{ a.address }}</td>
+                        <td class="py-3 px-4 font-mono text-slate-500 text-center">{{ a.created_at[:10] if a.created_at else '' }}</td>
+                        <td class="py-3 px-4 text-center">
+                            {% if a.status == 'स्वीकृत' %}
+                            <span class="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full text-[10px]"><i class="fas fa-check-circle mr-1"></i>स्वीकृत</span>
+                            {% elif a.status == 'अस्वीकृत' %}
+                            <span class="bg-rose-100 text-rose-800 font-bold px-2.5 py-0.5 rounded-full text-[10px]"><i class="fas fa-times-circle mr-1"></i>अस्वीकृत</span>
+                            {% elif a.status == 'सम्पर्क गरिएको' %}
+                            <span class="bg-purple-100 text-purple-800 font-bold px-2.5 py-0.5 rounded-full text-[10px]"><i class="fas fa-phone mr-1"></i>सम्पर्क गरिएको</span>
+                            {% else %}
+                            <span class="bg-amber-100 text-amber-800 font-bold px-2.5 py-0.5 rounded-full text-[10px]"><i class="fas fa-clock mr-1"></i>{{ a.status or 'नयाँ' }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button type="button" 
+                                        onclick='openStatusModal({{ a | tojson | safe }})'
+                                        class="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition" 
+                                        title="स्थिति सम्पादन र विस्तृत विवरण">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" 
+                                        onclick="deleteAdmission({{ a.id }}, '{{ a.student_name }}')"
+                                        class="p-1.5 text-rose-600 hover:bg-rose-50 rounded transition" 
+                                        title="हटाउनुहोस्">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="py-6 text-center text-slate-500">हाल कुनै नयाँ अनलाइन भर्ना आवेदन प्राप्त भएको छैन।</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Status & Details Modal -->
+<div id="statusModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="font-bold text-instBlue text-base flex items-center gap-2">
+                <i class="fas fa-user-graduate text-accentGold"></i>
+                भर्ना आवेदन विवरण तथा स्थिति सम्पादन
+            </h3>
+            <button onclick="closeStatusModal()" class="text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+
+        <form id="admissionStatusForm" onsubmit="submitAdmissionStatus(event)" class="mt-4 space-y-4">
+            <input type="hidden" id="modal_adm_id">
+            
+            <!-- Readonly info summary -->
+            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs space-y-1.5">
+                <div class="flex justify-between"><span class="text-slate-500">विद्यार्थीको नाम:</span> <strong id="modal_student_name" class="text-slate-800"></strong></div>
+                <div class="flex justify-between"><span class="text-slate-500">भर्ना हुन चाहेको कक्षा:</span> <span id="modal_applying_class" class="font-bold text-instBlue"></span></div>
+                <div class="flex justify-between"><span class="text-slate-500">अभिभावक:</span> <span id="modal_parent_name"></span></div>
+                <div class="flex justify-between"><span class="text-slate-500">मोबाइल नम्बर:</span> <span id="modal_mobile" class="font-mono font-bold"></span></div>
+                <div class="flex justify-between"><span class="text-slate-500">ठेगाना:</span> <span id="modal_address"></span></div>
+                <div class="flex justify-between"><span class="text-slate-500">पछिल्लो विद्यालय:</span> <span id="modal_prev_school"></span></div>
+                <div class="pt-1 text-slate-600"><span class="text-slate-500">सन्देश/कैफियत:</span> <span id="modal_message"></span></div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">आवेदन स्थिति (Application Status) *</label>
+                <select id="modal_status" class="w-full text-xs rounded-lg border-slate-300 focus:ring-accentGold focus:border-accentGold p-2 border">
+                    <option value="नयाँ">नयाँ (New)</option>
+                    <option value="सम्पर्क गरिएको">सम्पर्क गरिएको (Contacted)</option>
+                    <option value="स्वीकृत">स्वीकृत (Approved)</option>
+                    <option value="अस्वीकृत">अस्वीकृत (Rejected)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">एडमिन टिप्पणी / नोट (Admin Remarks)</label>
+                <textarea id="modal_remarks" rows="3" class="w-full text-xs rounded-lg border-slate-300 focus:ring-accentGold focus:border-accentGold p-2 border" placeholder="उदाहरण: फोनमा कुरा भयो, कागजात मगाइयो..."></textarea>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button type="button" onclick="closeStatusModal()" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-50">
+                    रद्द गर्नुहोस्
+                </button>
+                <button type="submit" class="px-5 py-2 bg-instBlue hover:bg-instBlue/90 text-white rounded-lg text-xs font-bold shadow-md transition">
+                    स्थिति सुरक्षित गर्नुहोस्
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openStatusModal(adm) {
+    document.getElementById('modal_adm_id').value = adm.id;
+    document.getElementById('modal_student_name').textContent = adm.student_name || '-';
+    document.getElementById('modal_applying_class').textContent = adm.applying_class || '-';
+    document.getElementById('modal_parent_name').textContent = adm.parent_name || '-';
+    document.getElementById('modal_mobile').textContent = adm.mobile || '-';
+    document.getElementById('modal_address').textContent = adm.address || '-';
+    document.getElementById('modal_prev_school').textContent = adm.previous_school || 'खुलाइएको छैन';
+    document.getElementById('modal_message').textContent = adm.message || 'कुनै सन्देश छैन';
+    document.getElementById('modal_status').value = adm.status || 'नयाँ';
+    document.getElementById('modal_remarks').value = adm.remarks || '';
+    document.getElementById('statusModal').classList.remove('hidden');
+}
+
+function closeStatusModal() {
+    document.getElementById('statusModal').classList.add('hidden');
+}
+
+async function submitAdmissionStatus(e) {
+    e.preventDefault();
+    const id = document.getElementById('modal_adm_id').value;
+    const status = document.getElementById('modal_status').value;
+    const remarks = document.getElementById('modal_remarks').value;
+
+    try {
+        const res = await fetch(`/api/admissions/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status, remarks })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert(data.message || 'स्थिति सफलतापूर्वक सुरक्षित भयो!');
+            location.reload();
+        } else {
+            alert(data.detail || 'त्रुटि देखा पर्यो।');
+        }
+    } catch(err) {
+        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+    }
+}
+
+async function deleteAdmission(id, name) {
+    if (!confirm(`के तपाईं निश्चित हुनुहुन्छ? "${name}" को भर्ना आवेदन स्थायी रूपमा हट्नेछ।`)) return;
+    try {
+        const res = await fetch(`/api/admissions/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert(data.message || 'आवेदन हटाइयो।');
+            const row = document.getElementById(`row-adm-${id}`);
+            if (row) row.remove();
+        } else {
+            alert(data.detail || 'त्रुटि देखा पर्यो।');
+        }
+    } catch(err) {
+        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}यातायात व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue flex items-center gap-2">
+                <i data-lucide="bus" class="w-5 h-5 text-instGold"></i>
+                <span>यातायात व्यवस्थापन (School Transport & Buses)</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-0.5">विद्यालयका बसहरू, रुट विवरण, चालक तथा सह-चालक सम्पर्क विवरण</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="openBusModal()" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue-dark text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-instGold"></i>
+                <span>+ नयाँ बस थप्नुहोस्</span>
+            </button>
+            <a href="/api/transport/export" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition" title="बस विवरण Excel मा डाउनलोड गर्नुहोस्">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                <span>Excel निर्यात</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4 text-center">क्र.सं.</th>
+                        <th class="py-3 px-4">बस नम्बर</th>
+                        <th class="py-3 px-4">गाडी नम्बर (Vehicle No.)</th>
+                        <th class="py-3 px-4">रुट विवरण (Route)</th>
+                        <th class="py-3 px-4">चालक (Driver)</th>
+                        <th class="py-3 px-4 font-mono">चालक फोन</th>
+                        <th class="py-3 px-4 text-center">क्षमता</th>
+                        <th class="py-3 px-4 text-center">स्थिति</th>
+                        <th class="py-3 px-4 text-right">कार्य (Actions)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    {% for b in buses %}
+                    <tr class="hover:bg-slate-50 transition" id="bus-row-{{ b.id }}">
+                        <td class="py-3 px-4 text-center font-bold text-slate-500">{{ loop.index }}</td>
+                        <td class="py-3 px-4 font-bold text-instBlue">{{ b.bus_number }}</td>
+                        <td class="py-3 px-4 font-mono font-semibold text-slate-800">{{ b.vehicle_number }}</td>
+                        <td class="py-3 px-4 text-slate-700 font-medium">{{ b.route_name }}</td>
+                        <td class="py-3 px-4 font-semibold text-slate-900">{{ b.driver_name }}</td>
+                        <td class="py-3 px-4 font-mono text-slate-700">{{ b.driver_phone }}</td>
+                        <td class="py-3 px-4 text-center font-mono">{{ b.capacity }} सिट</td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full text-[10px]">{{ b.status or 'सक्रिय' }}</span>
+                        </td>
+                        <td class="py-3 px-4 text-right whitespace-nowrap">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button onclick='openEditBus({{ b | tojson | safe }})' class="p-1.5 rounded-md text-amber-600 hover:bg-amber-50 border border-amber-200 transition" title="सम्पादन गर्नुहोस्">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteBus({{ b.id }}, '{{ b.bus_number }}')" class="p-1.5 rounded-md text-red-600 hover:bg-red-50 border border-red-200 transition" title="मेटाउनुहोस्">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="py-8 text-center text-slate-500">हाल कुनै बस प्रविष्टि गरिएको छैन।</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ADD / EDIT BUS MODAL -->
+<div id="busModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 id="busModalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i data-lucide="bus" class="w-4 h-4 text-instGold"></i>
+                <span>नयाँ बस थप्नुहोस्</span>
+            </h3>
+            <button onclick="closeBusModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <form id="busSaveForm" class="space-y-3">
+            <input type="hidden" id="bus_edit_id" value="">
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">बस नम्बर (Bus No.) *</label>
+                    <input type="text" id="b_number" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="बस नं. १">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">गाडी नम्बर (Vehicle No.) *</label>
+                    <input type="text" id="b_veh_num" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="को १ ख १२३४">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">रुट विवरण (Route Name) *</label>
+                <input type="text" id="b_route" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="इटहरी चोक - खनार - विद्यालय">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">चालकको नाम *</label>
+                    <input type="text" id="b_driver" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="चालकको नाम">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">चालक फोन *</label>
+                    <input type="tel" id="b_phone" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="98XXXXXXXX">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">सिट क्षमता (Capacity) *</label>
+                <input type="number" id="b_cap" required value="35" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeBusModal()" class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" id="busSubmitBtn" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded shadow transition">सुरक्षित गर्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openBusModal() {
+    document.getElementById('busSaveForm').reset();
+    document.getElementById('bus_edit_id').value = '';
+    document.getElementById('busModalTitle').innerHTML = '<i data-lucide="bus" class="w-4 h-4 text-instGold"></i><span>नयाँ बस थप्नुहोस्</span>';
+    document.getElementById('busSubmitBtn').innerText = 'बस थप्नुहोस्';
+    document.getElementById('busModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+function openEditBus(b) {
+    document.getElementById('bus_edit_id').value = b.id;
+    document.getElementById('b_number').value = b.bus_number || '';
+    document.getElementById('b_veh_num').value = b.vehicle_number || '';
+    document.getElementById('b_route').value = b.route_name || '';
+    document.getElementById('b_driver').value = b.driver_name || '';
+    document.getElementById('b_phone').value = b.driver_phone || '';
+    document.getElementById('b_cap').value = b.capacity || 35;
+    document.getElementById('busModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i><span>बस विवरण सम्पादन</span>';
+    document.getElementById('busSubmitBtn').innerText = 'अद्यावधिक (Save) गर्नुहोस्';
+    document.getElementById('busModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+function closeBusModal() {
+    document.getElementById('busModal').classList.add('hidden');
+}
+
+document.getElementById('busSaveForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const editId = document.getElementById('bus_edit_id').value;
+    const payload = {
+        bus_number: document.getElementById('b_number').value.trim(),
+        vehicle_number: document.getElementById('b_veh_num').value.trim(),
+        route_name: document.getElementById('b_route').value.trim(),
+        driver_name: document.getElementById('b_driver').value.trim(),
+        driver_phone: document.getElementById('b_phone').value.trim(),
+        capacity: parseInt(document.getElementById('b_cap').value) || 35,
+        status: 'सक्रिय'
+    };
+
+    const url = editId ? `/api/transport/${editId}` : '/api/transport';
+    const method = editId ? 'PUT' : 'POST';
+
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.detail || 'त्रुटि भयो।');
+        }
+    } catch(err) {
+        alert('सर्भर त्रुटि भयो।');
+    }
+});
+
+async function deleteBus(id, busNumber) {
+    if (!confirm(`के तपाईं निश्चित रूपमा '${busNumber}' हटाउन चाहनुहुन्छ?`)) return;
+    try {
+        const res = await fetch(`/api/transport/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.detail || 'मेटाउन सकिएन।');
+        }
+    } catch(err) {
+        alert('सर्भर त्रुटि भयो।');
+    }
+}
+</script>
+{% endblock %}

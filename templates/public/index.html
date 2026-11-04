@@ -1,0 +1,581 @@
+{% extends "base.html" %}
+
+{% block title %}सहिद स्मृति आवासीय माध्यमिक विद्यालय | इटहरी–१९, सुनसरी{% endblock %}
+
+{% block content %}
+
+<!-- 4. NOTICE TICKER -->
+{% include "components/ticker.html" %}
+
+<!-- 5. HERO / BANNER SECTION (Compact 300–420px Desktop, 220–300px Mobile, NO GIANT LOGO) -->
+<section class="relative bg-instBlue overflow-hidden" style="min-height: 260px; max-height: 420px;">
+    <!-- Background Image with Overlay -->
+    <div class="absolute inset-0 z-0">
+        <img src="/static/images/hero-banner.jpg" alt="सहिद स्मृति आवासीय माध्यमिक विद्यालय" class="w-full h-full object-cover opacity-35 filter brightness-90">
+        <div class="absolute inset-0 bg-gradient-to-r from-instBlue-dark via-instBlue/90 to-transparent"></div>
+    </div>
+
+    <!-- Hero Content -->
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 py-10 sm:py-14 flex flex-col justify-center h-full text-white">
+        <div class="max-w-2xl space-y-3">
+            <div class="inline-flex items-center gap-2 bg-amber-400/20 text-amber-300 border border-amber-400/30 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm">
+                <i data-lucide="award" class="w-3.5 h-3.5"></i>
+                <span>स्थापना: {{ settings.established_ne }} वि.सं. | आवासीय नमुना विद्यालय</span>
+            </div>
+
+            <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight text-white drop-shadow-sm">
+                {{ settings.name_ne }}
+            </h1>
+
+            <p class="text-xs sm:text-sm text-slate-200 font-medium">
+                {{ settings.address_ne }}
+            </p>
+
+            <p class="text-xs sm:text-sm text-slate-300 line-clamp-2 sm:line-clamp-3 leading-relaxed">
+                {{ settings.tagline_ne or 'सहिदका सपना, गुणस्तरीय शिक्षा र आवासीय सुविधायुक्त नमुना विद्यालय। कक्षा १ देखि १२ सम्म विज्ञान, कम्प्युटर विज्ञान तथा व्यवस्थापन संकाय।' }}
+            </p>
+
+            <!-- Buttons: विद्यालय परिचय, सूचना हेर्नुहोस्, सम्पर्क गर्नुहोस् -->
+            <div class="pt-2 flex flex-wrap items-center gap-2.5 sm:gap-3">
+                <a href="/about" class="inline-flex items-center gap-1.5 bg-instGold hover:bg-instGold-dark text-white font-semibold px-4 py-2 rounded-md text-xs sm:text-sm shadow-md transition transform hover:-translate-y-0.5">
+                    <i data-lucide="book-open" class="w-4 h-4"></i>
+                    <span>विद्यालय परिचय</span>
+                </a>
+                <a href="/notices" class="inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white border border-white/30 font-semibold px-4 py-2 rounded-md text-xs sm:text-sm transition">
+                    <i data-lucide="bell" class="w-4 h-4 text-amber-300"></i>
+                    <span>सूचना हेर्नुहोस्</span>
+                </a>
+                <a href="/contact" class="inline-flex items-center gap-1.5 bg-transparent hover:bg-white/10 text-slate-200 hover:text-white border border-slate-300/40 font-medium px-4 py-2 rounded-md text-xs sm:text-sm transition">
+                    <i data-lucide="phone-call" class="w-4 h-4"></i>
+                    <span>सम्पर्क गर्नुहोस्</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 6. SCHOOL INTRODUCTION -->
+<section class="py-12 bg-white border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            <div class="lg:col-span-7 space-y-4">
+                <div class="inline-flex items-center gap-1.5 text-instBlue font-bold text-xs uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded">
+                    <i data-lucide="building-2" class="w-3.5 h-3.5 text-instBlue"></i>
+                    <span>हाम्रो ऐतिहासिक परिचय</span>
+                </div>
+                <h2 class="text-xl sm:text-3xl font-bold text-slate-900 leading-snug">
+                    सहिद स्मृति आवासीय माध्यमिक विद्यालय इटहरी
+                </h2>
+                <div class="text-slate-600 text-sm leading-relaxed space-y-3 text-justify">
+                    <p>
+                        सहिद स्मृति आवासीय माध्यमिक विद्यालय वि.सं. २०६६ सालमा सहिद परिवार, द्वन्द्वपीडित, घाइते, अपाङ्गता भएका तथा विपन्न समुदायका बालबालिकाहरूलाई सर्वसुलभ, आवासीय र गुणस्तरीय आधुनिक शिक्षा प्रदान गर्ने पवित्र संकल्पका साथ स्थापना भएको हो।
+                    </p>
+                    <p>
+                        इटहरी–१९, भवानीपुरको शान्त र प्राकृतिक वातावरणमा अवस्थित यस विद्यालयमा कक्षा १ देखि १२ सम्म विज्ञान (Science), कम्प्युटर विज्ञान (Computer Science), र व्यवस्थापन (Management) संकायहरूमा उत्कृष्ट पठनपाठन, सुसज्जित प्रयोगशालाहरू, डिजिटल स्मार्ट क्लास तथा सुरक्षित छात्र/छात्रा छात्रावासको व्यवस्था रहेको छ।
+                    </p>
+                </div>
+                <div class="pt-2 flex flex-wrap gap-4">
+                    <a href="/about" class="text-instBlue hover:text-instBlue-dark font-semibold text-xs flex items-center gap-1">
+                        <span>विस्तृत विवरण पढ्नुहोस्</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </a>
+                    <a href="/administration" class="text-slate-600 hover:text-slate-900 font-semibold text-xs flex items-center gap-1">
+                        <span>विद्यालय प्रशासन हेर्नुहोस्</span>
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Features Highlights Grid -->
+            <div class="lg:col-span-5 grid grid-cols-2 gap-4">
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-lg hover:shadow-md transition">
+                    <div class="w-9 h-9 rounded bg-blue-100 text-instBlue flex items-center justify-center mb-2">
+                        <i data-lucide="home" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-bold text-sm text-slate-800">आवासीय सुविधा</h3>
+                    <p class="text-xs text-slate-500 mt-1">छात्र र छात्राका लागि छुट्टाछुट्टै सुरक्षित पारिवारिक छात्रावास।</p>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-lg hover:shadow-md transition">
+                    <div class="w-9 h-9 rounded bg-amber-100 text-amber-800 flex items-center justify-center mb-2">
+                        <i data-lucide="laptop" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-bold text-sm text-slate-800">स्मार्ट ल्याब र ICT</h3>
+                    <p class="text-xs text-slate-500 mt-1">हाई-स्पिड इन्टरनेट तथा प्रविधिमैत्री आधुनिक कम्प्युटर ल्याब।</p>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-lg hover:shadow-md transition">
+                    <div class="w-9 h-9 rounded bg-green-100 text-green-800 flex items-center justify-center mb-2">
+                        <i data-lucide="flask-conical" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-bold text-sm text-slate-800">विज्ञान प्रयोगशाला</h3>
+                    <p class="text-xs text-slate-500 mt-1">भौतिक, रसायन र जीवविज्ञानका व्यावहारिक प्रयोगशालाहरू।</p>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-lg hover:shadow-md transition">
+                    <div class="w-9 h-9 rounded bg-purple-100 text-purple-800 flex items-center justify-center mb-2">
+                        <i data-lucide="bus" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-bold text-sm text-slate-800">सुरक्षित यातायात</h3>
+                    <p class="text-xs text-slate-500 mt-1">इटहरी, तरहरा, खनार, दुहबी विभिन्न रुटमा बस सेवा।</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- 7. QUICK STATISTICS (Compact Cards, Dynamic from DB) -->
+<section class="py-8 bg-slate-100 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            
+            <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm text-center">
+                <div class="w-8 h-8 mx-auto rounded-full bg-blue-50 text-instBlue flex items-center justify-center mb-1.5">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                </div>
+                <div class="text-2xl sm:text-3xl font-extrabold text-instBlue">{{ stats.total_students }}</div>
+                <div class="text-xs font-semibold text-slate-600 mt-0.5">कुल विद्यार्थी</div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm text-center">
+                <div class="w-8 h-8 mx-auto rounded-full bg-amber-50 text-amber-700 flex items-center justify-center mb-1.5">
+                    <i data-lucide="bed-double" class="w-4 h-4"></i>
+                </div>
+                <div class="text-2xl sm:text-3xl font-extrabold text-amber-700">{{ stats.residential_students }}</div>
+                <div class="text-xs font-semibold text-slate-600 mt-0.5">आवासीय विद्यार्थी</div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm text-center">
+                <div class="w-8 h-8 mx-auto rounded-full bg-green-50 text-green-700 flex items-center justify-center mb-1.5">
+                    <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                </div>
+                <div class="text-2xl sm:text-3xl font-extrabold text-green-700">{{ stats.total_teachers }}</div>
+                <div class="text-xs font-semibold text-slate-600 mt-0.5">कुल शिक्षक</div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm text-center">
+                <div class="w-8 h-8 mx-auto rounded-full bg-purple-50 text-purple-700 flex items-center justify-center mb-1.5">
+                    <i data-lucide="briefcase" class="w-4 h-4"></i>
+                </div>
+                <div class="text-2xl sm:text-3xl font-extrabold text-purple-700">{{ stats.total_staff }}</div>
+                <div class="text-xs font-semibold text-slate-600 mt-0.5">कुल कर्मचारी</div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm text-center col-span-2 md:col-span-1">
+                <div class="w-8 h-8 mx-auto rounded-full bg-rose-50 text-rose-700 flex items-center justify-center mb-1.5">
+                    <i data-lucide="school" class="w-4 h-4"></i>
+                </div>
+                <div class="text-2xl sm:text-3xl font-extrabold text-rose-700">{{ stats.total_classes }} (१–१२)</div>
+                <div class="text-xs font-semibold text-slate-600 mt-0.5">कुल कक्षा</div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- 8. PRINCIPAL MESSAGE -->
+<section class="py-12 bg-white border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="bg-gradient-to-br from-slate-50 to-blue-50/50 border border-slate-200/80 rounded-xl p-6 sm:p-8 shadow-sm">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                
+                <!-- Principal Photo -->
+                <div class="md:col-span-4 lg:col-span-3 text-center">
+                    <div class="relative inline-block">
+                        <img 
+                            src="{{ principal.photo or '/static/images/principal.jpg' }}" 
+                            alt="{{ principal.name }}" 
+                            class="w-44 h-52 sm:w-48 sm:h-56 object-cover rounded-lg shadow-md border-2 border-instBlue mx-auto"
+                        >
+                        <div class="absolute -bottom-2 -right-2 bg-instGold text-white rounded-full p-2 shadow">
+                            <i data-lucide="quote" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-900 mt-3">{{ principal.name }}</h3>
+                    <p class="text-xs font-semibold text-instBlue">{{ principal.position }}</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">{{ principal.qualification }}</p>
+                </div>
+
+                <!-- Message Content -->
+                <div class="md:col-span-8 lg:col-span-9 space-y-3">
+                    <div class="inline-flex items-center gap-1.5 text-xs font-bold text-instGold uppercase tracking-wide">
+                        <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                        <span>प्रधानाध्यापकको सन्देश</span>
+                    </div>
+                    
+                    <h2 class="text-xl sm:text-2xl font-bold text-slate-900">
+                        संस्कारयुक्त शिक्षा, अनुशासित वातावरण र आत्मनिर्भर भविष्य
+                    </h2>
+
+                    <div class="text-slate-700 text-sm leading-relaxed space-y-3 text-justify">
+                        <p>
+                            "{{ principal.message_ne }}"
+                        </p>
+                    </div>
+
+                    <div class="pt-3 flex items-center gap-4">
+                        <a href="/principal" class="inline-flex items-center gap-1.5 text-xs font-semibold text-instBlue hover:text-instBlue-dark hover:underline">
+                            <span>विस्तृत सन्देश तथा प्रोफाइल हेर्नुहोस्</span>
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                        </a>
+                        <span class="text-slate-300">|</span>
+                        <a href="/assistant-principal" class="text-xs text-slate-600 hover:text-slate-900 font-medium">
+                            सहायक प्रधानाध्यापकको सन्देश →
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 9. LATEST NOTICES & 10. LATEST NEWS (Side by Side Grid) -->
+<section class="py-12 bg-slate-50 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- 9. Latest Notices -->
+            <div class="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-sm flex flex-col">
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-200">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded bg-red-100 text-red-600 flex items-center justify-center">
+                            <i data-lucide="bell" class="w-4 h-4"></i>
+                        </div>
+                        <h2 class="text-lg font-bold text-slate-900">ताजा सूचनाहरू</h2>
+                    </div>
+                    <a href="/notices" class="text-xs font-semibold text-instBlue hover:underline flex items-center gap-1">
+                        <span>सबै सूचना ({{ notices|length }})</span>
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    </a>
+                </div>
+
+                <div class="space-y-3 flex-grow">
+                    {% for n in notices[:4] %}
+                    <div class="p-3 rounded-lg border border-slate-100 hover:border-blue-200 hover:bg-blue-50/40 transition">
+                        <div class="flex items-center justify-between gap-2 text-[11px] text-slate-500 mb-1">
+                            <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium">{{ n.category }}</span>
+                            <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i>{{ n.publish_date }}</span>
+                        </div>
+                        <h3 class="text-sm font-semibold text-slate-900 hover:text-instBlue transition">
+                            <a href="/notices">{{ n.title_ne }}</a>
+                        </h3>
+                        <p class="text-xs text-slate-600 line-clamp-2 mt-1 leading-relaxed">
+                            {{ n.description_ne }}
+                        </p>
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-slate-500 py-4 text-center">हाल कुनै नयाँ सूचना उपलब्ध छैन।</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 10. Latest News -->
+            <div class="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-sm flex flex-col">
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-200">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded bg-blue-100 text-instBlue flex items-center justify-center">
+                            <i data-lucide="newspaper" class="w-4 h-4"></i>
+                        </div>
+                        <h2 class="text-lg font-bold text-slate-900">विद्यालय गतिविधि तथा समाचार</h2>
+                    </div>
+                    <a href="/news" class="text-xs font-semibold text-instBlue hover:underline flex items-center gap-1">
+                        <span>सबै समाचार</span>
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    </a>
+                </div>
+
+                <div class="space-y-3 flex-grow">
+                    {% for nw in news[:3] %}
+                    <div class="p-3 rounded-lg border border-slate-100 hover:border-blue-200 hover:bg-blue-50/40 transition">
+                        <div class="flex items-center justify-between gap-2 text-[11px] text-slate-500 mb-1">
+                            <span class="bg-blue-50 text-blue-800 px-2 py-0.5 rounded font-medium">{{ nw.category }}</span>
+                            <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i>{{ nw.publish_date }}</span>
+                        </div>
+                        <h3 class="text-sm font-semibold text-slate-900 hover:text-instBlue transition">
+                            <a href="/news">{{ nw.title_ne }}</a>
+                        </h3>
+                        <p class="text-xs text-slate-600 line-clamp-2 mt-1 leading-relaxed">
+                            {{ nw.content_ne }}
+                        </p>
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-slate-500 py-4 text-center">समाचार उपलब्ध छैन।</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- 11. SCHOOL FACILITIES -->
+<section class="py-12 bg-white border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="text-center max-w-xl mx-auto mb-10">
+            <span class="text-xs font-bold text-instBlue uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded">भौतिक पूर्वाधार</span>
+            <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-2">विद्यालयका प्रमुख सुविधाहरू</h2>
+            <p class="text-xs text-slate-500 mt-1">आधुनिक सिकाइका लागि सुविधायुक्त वातावरण</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for fac in facilities[:6] %}
+            <div class="border border-slate-200 rounded-lg p-5 hover:shadow-md hover:border-instBlue/50 transition bg-slate-50/40">
+                <div class="w-10 h-10 rounded-lg bg-instBlue/10 text-instBlue flex items-center justify-center mb-3">
+                    <i data-lucide="check-circle-2" class="w-5 h-5 text-instBlue"></i>
+                </div>
+                <h3 class="font-bold text-base text-slate-900">{{ fac.title }}</h3>
+                <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">{{ fac.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-8">
+            <a href="/facilities" class="inline-flex items-center gap-1.5 text-xs font-semibold text-instBlue border border-instBlue px-4 py-2 rounded hover:bg-instBlue hover:text-white transition">
+                <span>सबै सुविधाहरू हेर्नुहोस्</span>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 12. ACHIEVEMENTS -->
+<section class="py-12 bg-slate-100 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 mb-6 border-b border-slate-200 gap-2">
+            <div>
+                <span class="text-xs font-bold text-instGold-dark uppercase tracking-wider">हाम्रा गौरव</span>
+                <h2 class="text-2xl font-bold text-slate-900 mt-1">विद्यालयका प्रमुख उपलब्धिहरू</h2>
+            </div>
+            <a href="/achievements" class="text-xs font-semibold text-instBlue hover:underline flex items-center gap-1">
+                <span>सम्पूर्ण उपलब्धिहरू</span>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for a in achievements %}
+            <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow transition">
+                <div class="flex items-center justify-between text-xs text-slate-500 mb-2">
+                    <span class="bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-bold text-[11px]">{{ a.year }}</span>
+                    <span class="text-slate-400 font-medium">{{ a.category }}</span>
+                </div>
+                <h3 class="text-base font-bold text-slate-900 leading-snug">{{ a.title }}</h3>
+                <p class="text-xs text-slate-600 mt-2 leading-relaxed">{{ a.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- 13. PHOTO GALLERY & 14. VIDEO GALLERY -->
+<section class="py-12 bg-white border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        
+        <!-- Photo Gallery Header -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 mb-6 border-b border-slate-200 gap-2">
+            <div>
+                <span class="text-xs font-bold text-instBlue uppercase tracking-wider">स्मृतिहरू</span>
+                <h2 class="text-2xl font-bold text-slate-900 mt-1">फोटो तथा भिडियो ग्यालेरी</h2>
+            </div>
+            <div class="flex items-center gap-3 text-xs">
+                <a href="/gallery" class="font-semibold text-instBlue hover:underline">सबै फोटो</a>
+                <span>•</span>
+                <a href="/videos" class="font-semibold text-instBlue hover:underline">सबै भिडियो</a>
+            </div>
+        </div>
+
+        <!-- Visual Highlights -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {% for alb in albums %}
+            <div class="group relative rounded-lg overflow-hidden border border-slate-200 bg-slate-50 shadow-sm aspect-video flex flex-col justify-end p-4">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/30 to-transparent z-10"></div>
+                <div class="relative z-20 text-white">
+                    <span class="text-[10px] bg-amber-500 text-slate-900 font-bold px-1.5 py-0.2 rounded uppercase">{{ alb.category }}</span>
+                    <h3 class="text-sm font-bold text-white mt-1">{{ alb.title_ne }}</h3>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Video Highlight if exists -->
+        {% if videos %}
+        <div class="mt-8 pt-6 border-t border-slate-200">
+            <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                <i data-lucide="video" class="w-4 h-4 text-red-600"></i>
+                <span>भिडियो झलक</span>
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for v in videos[:2] %}
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 flex gap-3 items-center">
+                    <div class="w-24 h-16 bg-slate-800 rounded flex-shrink-0 flex items-center justify-center text-red-500">
+                        <i data-lucide="play-circle" class="w-8 h-8"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-900">{{ v.title }}</h4>
+                        <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{{ v.description }}</p>
+                        <a href="{{ v.youtube_url }}" target="_blank" rel="noopener" class="text-[11px] text-red-600 font-semibold hover:underline mt-1 inline-block">यूट्युबमा हेर्नुहोस् →</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</section>
+
+<!-- 15. PUBLICATIONS -->
+<section class="py-12 bg-slate-50 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="flex items-center justify-between pb-4 mb-6 border-b border-slate-200">
+            <div>
+                <span class="text-xs font-bold text-instBlue uppercase tracking-wider">डाउनलोड सामग्री</span>
+                <h2 class="text-2xl font-bold text-slate-900 mt-1">महत्वपूर्ण प्रकाशन तथा वडापत्र</h2>
+            </div>
+            <a href="/publications" class="text-xs font-semibold text-instBlue hover:underline flex items-center gap-1">
+                <span>सबै प्रकाशन</span>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {% for pub in publications %}
+            <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm hover:shadow transition flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between text-xs text-slate-500 mb-2">
+                        <span class="bg-blue-50 text-instBlue px-2 py-0.5 rounded text-[10px] font-bold">{{ pub.category }}</span>
+                        <span class="text-red-600 font-bold text-[11px]">PDF</span>
+                    </div>
+                    <h3 class="text-xs font-bold text-slate-800 leading-snug">{{ pub.title }}</h3>
+                    <p class="text-[11px] text-slate-500 mt-1 line-clamp-2">{{ pub.description }}</p>
+                </div>
+                <div class="pt-3 mt-3 border-t border-slate-100">
+                    <a href="{{ pub.file_url }}" target="_blank" download class="w-full inline-flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-instBlue hover:text-white text-slate-700 text-xs font-semibold py-1.5 rounded transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>डाउनलोड (PDF)</span>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- 16. CONTACT SECTION -->
+<section class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <div class="lg:col-span-5 space-y-4">
+                <span class="text-xs font-bold text-instBlue uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded">सम्पर्क विवरण</span>
+                <h2 class="text-2xl font-bold text-slate-900">हामीलाई सम्पर्क गर्नुहोस्</h2>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    विद्यालयको भर्ना, छात्रावास, शैक्षिक कार्यक्रम वा अन्य कुनै जिज्ञासा भएमा निम्न सम्पर्क माध्यमबाट वा फाराम भरेर सम्पर्क गर्न सक्नुहुनेछ।
+                </p>
+
+                <div class="space-y-3 pt-2 text-xs">
+                    <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-instBlue mt-0.5"></i>
+                        <div>
+                            <strong class="text-slate-800 block">ठेगाना:</strong>
+                            <span class="text-slate-600">{{ settings.address_ne }}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <i data-lucide="phone" class="w-4 h-4 text-instBlue mt-0.5"></i>
+                        <div>
+                            <strong class="text-slate-800 block">फोन नम्बर:</strong>
+                            <span class="text-slate-600">{{ settings.phone }}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <i data-lucide="mail" class="w-4 h-4 text-instBlue mt-0.5"></i>
+                        <div>
+                            <strong class="text-slate-800 block">ईमेल:</strong>
+                            <span class="text-slate-600">{{ settings.email }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h3 class="text-base font-bold text-slate-900 mb-4">सन्देश पठाउनुहोस्</h3>
+                <form id="contactForm" class="space-y-3 text-xs">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">पूरा नाम *</label>
+                            <input type="text" name="name" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="तपाईंको नाम">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">मोबाइल नम्बर *</label>
+                            <input type="tel" name="phone" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="९८XXXXXXXX">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">ईमेल</label>
+                            <input type="email" name="email" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="example@mail.com">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">विषय</label>
+                            <input type="text" name="subject" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="भर्ना सम्बन्धी / अन्य">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">सन्देश *</label>
+                        <textarea name="message" rows="3" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="तपाईंको सन्देश यहाँ लेख्नुहोस्..."></textarea>
+                    </div>
+                    <button type="submit" class="bg-instBlue hover:bg-instBlue-dark text-white font-semibold px-5 py-2 rounded transition shadow flex items-center gap-1.5">
+                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                        <span>सन्देश पठाउनुहोस्</span>
+                    </button>
+                    <div id="contactStatus" class="hidden text-xs font-semibold py-1"></div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<script>
+document.getElementById('contactForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+
+    const data = Object.fromEntries(new FormData(form).entries());
+    const statusBox = document.getElementById('contactStatus');
+
+    try {
+        const res = await fetch('/api/contact', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        statusBox.classList.remove('hidden');
+        if (result.success) {
+            statusBox.className = 'text-xs font-semibold text-emerald-700 py-2';
+            statusBox.innerText = result.message || 'सन्देश सफलतापूर्वक पठाइयो। धन्यवाद!';
+            form.reset();
+        } else {
+            statusBox.className = 'text-xs font-semibold text-rose-700 py-2';
+            statusBox.innerText = result.detail || 'त्रुटि देखा पर्यो।';
+        }
+    } catch(err) {
+        statusBox.classList.remove('hidden');
+        statusBox.className = 'text-xs font-semibold text-rose-700 py-2';
+        statusBox.innerText = 'सर्भरसँग सम्पर्क हुन सकेन।';
+    } finally {
+        btn.disabled = false;
+    }
+});
+</script>
+
+{% endblock %}

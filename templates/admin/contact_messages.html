@@ -1,0 +1,98 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}सम्पर्क सन्देशहरू | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue">सम्पर्क सन्देशहरू (Website Inquiries & Contact Messages)</h1>
+            <p class="text-xs text-slate-500 mt-0.5">वेबसाइटको सम्पर्क फाराम मार्फत अभिभावक तथा आगन्तुकहरूले पठाएका सन्देशहरू</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <span class="bg-blue-100 text-blue-800 font-bold px-3 py-1.5 rounded-lg text-xs">
+                कुल सन्देश: {{ messages | length }}
+            </span>
+            <a href="/api/contact/export" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                <i class="fas fa-file-excel"></i> Excel डाउनलोड
+            </a>
+        </div>
+    </div>
+
+    <!-- Messages List / Table -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4 text-center w-12">क्र.सं.</th>
+                        <th class="py-3 px-4">पठाउनेको नाम</th>
+                        <th class="py-3 px-4 font-mono">सम्पर्क नम्बर</th>
+                        <th class="py-3 px-4">ईमेल</th>
+                        <th class="py-3 px-4">विषय</th>
+                        <th class="py-3 px-4">सन्देश विवरण</th>
+                        <th class="py-3 px-4 text-center">मिति</th>
+                        <th class="py-3 px-4 text-center">कार्य</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    {% for m in messages %}
+                    <tr class="hover:bg-slate-50 transition" id="row-msg-{{ m.id }}">
+                        <td class="py-3 px-4 text-center font-bold text-slate-500">{{ loop.index }}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">{{ m.name }}</td>
+                        <td class="py-3 px-4 font-mono">
+                            <a href="tel:{{ m.phone }}" class="text-blue-600 hover:underline font-bold">{{ m.phone }}</a>
+                        </td>
+                        <td class="py-3 px-4 text-slate-600 font-mono text-[11px]">
+                            {% if m.email %}
+                            <a href="mailto:{{ m.email }}" class="text-slate-700 hover:underline">{{ m.email }}</a>
+                            {% else %}
+                            <span class="text-slate-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 font-semibold text-slate-800">{{ m.subject or 'सामान्य सोधपुछ' }}</td>
+                        <td class="py-3 px-4 text-slate-700 max-w-xs break-words">{{ m.message }}</td>
+                        <td class="py-3 px-4 font-mono text-slate-400 text-center text-[10px] whitespace-nowrap">
+                            {{ m.created_at[:16] if m.created_at else '' }}
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <button type="button" onclick="deleteMessage({{ m.id }}, '{{ m.name | escape }}')" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded transition" title="मेटाउनुहोस्">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="py-8 text-center text-slate-500">हाल कुनै नयाँ सन्देश प्राप्त भएको छैन।</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+async function deleteMessage(id, name) {
+    if (!confirm(`के तपाईं निश्चित हुनुहुन्छ? "${name}" ले पठाएको सन्देश हटाइनेछ।`)) return;
+    try {
+        const res = await fetch(`/api/contact/messages/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert(data.message || 'सन्देश हटाइयो।');
+            const row = document.getElementById(`row-msg-${id}`);
+            if (row) row.remove();
+        } else {
+            alert(data.detail || 'त्रुटि देखा पर्यो।');
+        }
+    } catch(err) {
+        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+    }
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ settings.name_ne }} | इटहरी–१९, सुनसरी{% endblock %}</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="सहिद स्मृति आवासीय माध्यमिक विद्यालय, इटहरी–१९, सुनसरी — विद्यालयको सूचना, शैक्षिक कार्यक्रम, विद्यार्थी, शिक्षक, समाचार, प्रकाशन तथा विद्यालय व्यवस्थापन प्रणाली।">
+    <meta name="keywords" content="Shahid Smriti Residential Secondary School, सहिद स्मृति आवासीय माध्यमिक विद्यालय, Itahari school, Sunsari school, best school in Koshi, residential school Nepal, SEE, 10+2">
+    <meta name="author" content="Shahid Smriti Residential Secondary School">
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{ settings.name_ne }} | {{ settings.name_en }}">
+    <meta property="og:description" content="गुणस्तरीय शिक्षा र आवासीय सुविधायुक्त नमुना विद्यालय, इटहरी–१९, सुनसरी। स्थापना: २०६६">
+    <meta property="og:image" content="/static/images/logo_header.png">
+    <meta property="og:url" content="http://localhost:3000/">
+    
+    <link rel="canonical" href="http://localhost:3000/">
+    <link rel="icon" type="image/png" href="/static/images/favicon.ico">
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        instBlue: {
+                            DEFAULT: '#15305b',
+                            dark: '#0e2343',
+                            light: '#1e427b',
+                            accent: '#2a5bb5'
+                        },
+                        instGold: {
+                            DEFAULT: '#d97706',
+                            light: '#f59e0b',
+                            dark: '#b45309'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans Devanagari"', 'Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/custom.css">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen font-sans antialiased">
+
+    <!-- 1. Top Utility Header -->
+    {% include "components/topbar.html" %}
+
+    <!-- 2. Main Branding Header -->
+    {% include "components/branding.html" %}
+
+    <!-- 3. Navigation Bar -->
+    {% include "components/navbar.html" %}
+
+    <!-- Main Content Area -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Public Footer -->
+    {% include "components/footer.html" %}
+
+    <!-- Scripts -->
+    <script src="/static/js/main.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

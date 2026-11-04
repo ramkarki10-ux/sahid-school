@@ -1,0 +1,216 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}SMS गेटवे सेटिङ्स | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6 max-w-4xl">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900">SMS गेटवे तथा सूचना प्रणाली (SMS Gateway)</h1>
+            <p class="text-xs text-slate-500 mt-0.5">पहिलो घण्टी अनुपस्थित विद्यार्थीका अभिभावकहरूलाई स्वचालित एसएमएस पठाउने गेटवे कन्फिगरेसन</p>
+        </div>
+        <a href="/admin/sms-history" class="inline-flex items-center gap-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold px-4 py-2 rounded-lg transition">
+            <i data-lucide="history" class="w-4 h-4"></i>
+            <span>एसएमएस लग (History) हेर्नुहोस्</span>
+        </a>
+    </div>
+
+    <!-- Balance & Status Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm space-y-1">
+            <span class="text-xs text-slate-500 font-medium">बाँकी SMS क्रेडिट ब्यालेन्स</span>
+            <div class="text-3xl font-black text-emerald-600 font-mono" id="balanceDisplay">
+                {{ sms_settings.balance or 2480 }} <span class="text-xs font-sans text-slate-400">क्रेडिट</span>
+            </div>
+            <p class="text-[11px] text-slate-400">प्रति अनुपस्थिति १ क्रेडिट खर्च हुन्छ</p>
+        </div>
+
+        <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm space-y-1">
+            <span class="text-xs text-slate-500 font-medium">गेटवे स्थिति (Status)</span>
+            <div class="text-xl font-bold flex items-center gap-2 mt-1">
+                {% if sms_settings.is_enabled %}
+                <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-emerald-700">सक्रिय (Active / Enabled)</span>
+                {% else %}
+                <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                <span class="text-red-700">निष्क्रिय (Disabled)</span>
+                {% endif %}
+            </div>
+            <p class="text-[11px] text-slate-400">पहिलो घण्टी हाजिरीमा अटो-एसएमएस चालु छ</p>
+        </div>
+
+        <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm space-y-1">
+            <span class="text-xs text-slate-500 font-medium">Sender ID (प्रेषकको नाम)</span>
+            <div class="text-xl font-bold text-instBlue font-mono">
+                {{ sms_settings.sender_id or 'ShahidSmriti' }}
+            </div>
+            <p class="text-[11px] text-slate-400">दूरसञ्चार प्राधिकरणद्वारा स्वीकृत ID</p>
+        </div>
+    </div>
+
+    <!-- Gateway Configuration Form -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
+        <div class="border-b border-slate-200 pb-4">
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="settings-2" class="w-4 h-4 text-instBlue"></i>
+                <span>SMS गेटवे API कन्फिगरेसन</span>
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Sparrow SMS, Aakash SMS वा अन्य नेपालका आधिकारिक बल्क एसएमएस प्रदायकका विवरण</p>
+        </div>
+
+        <form id="smsConfigForm" onsubmit="saveSmsSettings(event)" class="space-y-4 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">एसएमएस सेवा प्रदायक (SMS Provider) <span class="text-red-500">*</span></label>
+                    <select id="smsProvider" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="Sparrow SMS (नेपाल)" {% if 'Sparrow' in (sms_settings.provider_name or '') %}selected{% endif %}>Sparrow SMS (नेपाल)</option>
+                        <option value="Aakash SMS" {% if 'Aakash' in (sms_settings.provider_name or '') %}selected{% endif %}>Aakash SMS</option>
+                        <option value="Nepal Telecom SMS API">Nepal Telecom SMS API</option>
+                        <option value="अन्य कस्टम गेटवे (Custom API)">अन्य कस्टम गेटवे (Custom API)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">गेटवे API URL <span class="text-red-500">*</span></label>
+                    <input type="url" id="smsApiUrl" value="{{ sms_settings.api_url or 'https://api.sparrowsms.com/v2/sms/' }}" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Sender ID (हेडर नाम) <span class="text-red-500">*</span></label>
+                    <input type="text" id="smsSenderId" value="{{ sms_settings.sender_id or 'ShahidSmriti' }}" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">प्रयोगकर्ता नाम / Client ID</label>
+                    <input type="text" id="smsUsername" value="{{ sms_settings.username or 'shahidsmriti' }}" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">API टोकन / सेक्रेट कि (Key)</label>
+                    <input type="password" id="smsApiKey" placeholder="••••••••••••••••" value="••••••••" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">रिचार्ज गरिएको ब्यालेन्स (SMS Units)</label>
+                    <input type="number" id="smsBalance" value="{{ sms_settings.balance or 2480 }}" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 pt-2">
+                <input type="checkbox" id="smsEnabled" {% if sms_settings.is_enabled %}checked{% endif %} class="w-4 h-4 text-instBlue rounded focus:ring-instBlue">
+                <label for="smsEnabled" class="font-bold text-slate-800">स्वचालित अनुपस्थिति एसएमएस (Absence SMS) सक्रिय राख्नुहोस्</label>
+            </div>
+
+            <div class="pt-3 flex justify-end">
+                <button type="submit" id="saveBtn" class="inline-flex items-center gap-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold py-2.5 px-6 rounded-lg shadow-sm transition">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>गेटवे सेटिङ्स सुरक्षित गर्नुहोस्</span>
+                </button>
+            </div>
+            <div id="saveAlert" class="hidden p-3 rounded-lg font-semibold text-xs"></div>
+        </form>
+    </div>
+
+    <!-- Test SMS Sender Card -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-4">
+        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="send" class="w-4 h-4 text-amber-500"></i>
+            <span>परीक्षण एसएमएस पठाउनुहोस् (Send Test SMS)</span>
+        </h3>
+        <p class="text-xs text-slate-500">गेटवे सही रूपमा काम गरिरहेको छ कि छैन जाँच्न कुनै पनि मोबाइल नम्बरमा परीक्षण सन्देश पठाउनुहोस्:</p>
+
+        <form onsubmit="sendTestSms(event)" class="space-y-3 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">मोबाइल नम्बर</label>
+                    <input type="tel" id="testPhone" required placeholder="९८५२०३३१३३ वा ९८४१५५२८५७" value="९८५२०३३१३३" class="w-full p-2.5 border border-slate-300 rounded-lg font-mono focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">सन्देश (Message)</label>
+                    <input type="text" id="testMsg" required value="सहिद स्मृति मा.वि. इटहरी: एसएमएस गेटवे परीक्षण सफल भएको छ।" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit" id="testBtn" class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-2 px-5 rounded-lg transition shadow-sm">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    <span>परीक्षण एसएमएस पठाउनुहोस्</span>
+                </button>
+            </div>
+            <div id="testAlert" class="hidden p-3 rounded-lg font-semibold text-xs"></div>
+        </form>
+    </div>
+
+</div>
+
+<script>
+async function saveSmsSettings(e) {
+    e.preventDefault();
+    const alertBox = document.getElementById('saveAlert');
+    const payload = {
+        provider_name: document.getElementById('smsProvider').value,
+        api_url: document.getElementById('smsApiUrl').value.trim(),
+        sender_id: document.getElementById('smsSenderId').value.trim(),
+        username: document.getElementById('smsUsername').value.trim(),
+        api_key: document.getElementById('smsApiKey').value.trim(),
+        balance: parseInt(document.getElementById('smsBalance').value) || 2480,
+        is_enabled: document.getElementById('smsEnabled').checked
+    };
+
+    try {
+        const res = await fetch('/api/sms/settings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            alertBox.className = "p-3 rounded-lg font-semibold text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 block";
+            alertBox.innerText = data.message;
+            setTimeout(() => { location.reload(); }, 1200);
+        } else {
+            alertBox.className = "p-3 rounded-lg font-semibold text-xs bg-red-50 text-red-800 border border-red-200 block";
+            alertBox.innerText = data.detail || 'त्रुटि भयो।';
+        }
+    } catch (err) {
+        alertBox.className = "p-3 rounded-lg font-semibold text-xs bg-red-50 text-red-800 border border-red-200 block";
+        alertBox.innerText = 'सर्भरसँग सम्पर्क हुन सकेन।';
+    }
+}
+
+async function sendTestSms(e) {
+    e.preventDefault();
+    const btn = document.getElementById('testBtn');
+    const alertBox = document.getElementById('testAlert');
+    const phone = document.getElementById('testPhone').value.trim();
+    const msg = document.getElementById('testMsg').value.trim();
+
+    btn.disabled = true;
+    btn.innerText = 'पठाउँदै...';
+
+    try {
+        const res = await fetch('/api/sms/test', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ recipient_phone: phone, message: msg })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alertBox.className = "p-3 rounded-lg font-semibold text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 block";
+            alertBox.innerText = "✓ " + data.message;
+        } else {
+            alertBox.className = "p-3 rounded-lg font-semibold text-xs bg-red-50 text-red-800 border border-red-200 block";
+            alertBox.innerText = data.detail || 'पठाउन सकिएन।';
+        }
+    } catch (err) {
+        alertBox.className = "p-3 rounded-lg font-semibold text-xs bg-red-50 text-red-800 border border-red-200 block";
+        alertBox.innerText = 'त्रुटि भयो।';
+    } finally {
+        btn.disabled = false;
+        btn.innerText = 'परीक्षण एसएमएस पठाउनुहोस्';
+    }
+}
+</script>
+{% endblock %}

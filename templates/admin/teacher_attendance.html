@@ -1,0 +1,202 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}शिक्षक हाजिरी अभिलेख (Admin Only) | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="bg-red-100 text-red-800 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                    <i data-lucide="shield-alert" class="w-3 h-3"></i>
+                    <span>प्रशासकीय गोप्य अभिलेख (Admin Restricted)</span>
+                </span>
+                <span class="text-slate-400">•</span>
+                <span class="text-slate-500 font-medium">एडमिन र प्रधानाध्यापकले मात्र हेर्न मिल्ने</span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 mt-1">शिक्षक हाजिरी व्यवस्थापन (Teacher Attendance)</h1>
+            <p class="text-xs text-slate-500 mt-0.5">विद्यालयका १६ जना आदरणीय शिक्षक शिक्षिकाहरूको दैनिक उपस्थिति, आगमन समय तथा बिदा अभिलेख</p>
+        </div>
+
+        <form method="get" action="/admin/teacher-attendance" class="flex items-center gap-2">
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">हाजिरी मिति:</label>
+                <input 
+                    type="date" 
+                    name="date" 
+                    value="{{ selected_date }}" 
+                    class="p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono"
+                    onchange="this.form.submit()"
+                >
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary Counters -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+            <div class="text-2xl font-black text-instBlue">{{ stats.total }}</div>
+            <div class="text-xs text-slate-600 font-medium">कुल शिक्षक सङ्ख्या</div>
+        </div>
+        <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+            <div class="text-2xl font-black text-emerald-600">{{ stats.present }}</div>
+            <div class="text-xs text-slate-600 font-medium">आज उपस्थित (Present)</div>
+        </div>
+        <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+            <div class="text-2xl font-black text-red-600">{{ stats.absent }}</div>
+            <div class="text-xs text-slate-600 font-medium">अनुपस्थित (Absent)</div>
+        </div>
+        <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+            <div class="text-2xl font-black text-amber-600">{{ stats.leave }}</div>
+            <div class="text-xs text-slate-600 font-medium">बिदा / काज (Leave)</div>
+        </div>
+    </div>
+
+    <!-- Teacher Attendance Table -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="calendar-check" class="w-4 h-4 text-instBlue"></i>
+                <span>मिति {{ selected_date }} को शिक्षक हाजिरी सूची</span>
+            </h2>
+            <span class="text-xs text-slate-500">एडमिन प्रमाणीकरण सक्रिय</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                    <tr>
+                        <th class="py-3 px-3 text-center w-12">क्र.सं.</th>
+                        <th class="py-3 px-4">शिक्षकको नाम</th>
+                        <th class="py-3 px-3">पद / जिम्मेवारी</th>
+                        <th class="py-3 px-3">तह</th>
+                        <th class="py-3 px-3">विषय</th>
+                        <th class="py-3 px-3 text-center">स्थिति (Status)</th>
+                        <th class="py-3 px-3 text-center">आगमन समय</th>
+                        <th class="py-3 px-3 text-center">प्रस्थान समय</th>
+                        <th class="py-3 px-4">कैफियत</th>
+                        <th class="py-3 px-3 text-center">कार्य</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for t in records %}
+                    <tr class="hover:bg-slate-50 transition" id="row-{{ t.teacher_id }}">
+                        <td class="py-3 px-3 text-center font-bold text-slate-400">{{ loop.index }}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-full bg-instBlue/10 text-instBlue flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                    {{ t.name_nepali[2] if t.name_nepali|length > 2 else t.name_nepali[0] }}
+                                </div>
+                                <div>
+                                    <p class="leading-tight text-slate-900 font-bold">{{ t.name_nepali }}</p>
+                                    <p class="text-[10px] text-slate-400 font-mono">{{ t.employee_id }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-3 font-semibold text-instBlue">
+                            {{ t.position }}
+                        </td>
+                        <td class="py-3 px-3 text-slate-600">
+                            {{ t.level }}
+                        </td>
+                        <td class="py-3 px-3 text-slate-600">
+                            {{ t.subject }}
+                        </td>
+                        <td class="py-3 px-3 text-center">
+                            <select 
+                                id="status-{{ t.teacher_id }}" 
+                                class="p-1 text-[11px] font-bold rounded border {% if t.status == 'PRESENT' %}bg-emerald-50 text-emerald-800 border-emerald-300{% elif t.status == 'ABSENT' %}bg-red-50 text-red-800 border-red-300{% else %}bg-amber-50 text-amber-800 border-amber-300{% endif %}"
+                                onchange="updateAttendanceStatus({{ t.teacher_id }})"
+                            >
+                                <option value="PRESENT" {% if t.status == 'PRESENT' %}selected{% endif %}>उपस्थित (Present)</option>
+                                <option value="ABSENT" {% if t.status == 'ABSENT' %}selected{% endif %}>अनुपस्थित (Absent)</option>
+                                <option value="LEAVE" {% if t.status == 'LEAVE' %}selected{% endif %}>बिदा (Leave)</option>
+                                <option value="LATE" {% if t.status == 'LATE' %}selected{% endif %}>ढिला (Late)</option>
+                            </select>
+                        </td>
+                        <td class="py-3 px-3 text-center font-mono text-[11px] text-slate-600">
+                            <input 
+                                type="text" 
+                                id="in-{{ t.teacher_id }}" 
+                                value="{{ t.check_in_time or '09:45:00' }}" 
+                                class="w-20 p-1 text-center font-mono border border-slate-200 rounded text-xs"
+                            >
+                        </td>
+                        <td class="py-3 px-3 text-center font-mono text-[11px] text-slate-600">
+                            <input 
+                                type="text" 
+                                id="out-{{ t.teacher_id }}" 
+                                value="{{ t.check_out_time or '16:00:00' }}" 
+                                class="w-20 p-1 text-center font-mono border border-slate-200 rounded text-xs"
+                            >
+                        </td>
+                        <td class="py-3 px-4">
+                            <input 
+                                type="text" 
+                                id="rem-{{ t.teacher_id }}" 
+                                value="{{ t.remark or '' }}" 
+                                placeholder="कैफियत..."
+                                class="w-full p-1 border border-slate-200 rounded text-xs"
+                            >
+                        </td>
+                        <td class="py-3 px-3 text-center">
+                            <button 
+                                type="button" 
+                                onclick="saveAttendanceRow({{ t.teacher_id }})"
+                                class="bg-instBlue hover:bg-instBlue-dark text-white px-2.5 py-1 rounded text-[11px] font-bold shadow-sm transition"
+                            >
+                                सेभ
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+async function saveAttendanceRow(teacherId) {
+    const status = document.getElementById(`status-${teacherId}`).value;
+    const checkIn = document.getElementById(`in-${teacherId}`).value;
+    const checkOut = document.getElementById(`out-${teacherId}`).value;
+    const remark = document.getElementById(`rem-${teacherId}`).value;
+    const date = "{{ selected_date }}";
+
+    try {
+        const resp = await fetch('/admin/teacher-attendance/update', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                teacher_id: teacherId,
+                attendance_date: date,
+                status: status,
+                check_in_time: checkIn,
+                check_out_time: checkOut,
+                remark: remark
+            })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            alert('हाजिरी सुरक्षित भयो।');
+        } else {
+            alert('त्रुटि: ' + (data.detail || 'सेभ हुन सकेन।'));
+        }
+    } catch(e) {
+        alert('सर्भर त्रुटि: ' + e.message);
+    }
+}
+
+function updateAttendanceStatus(teacherId) {
+    const sel = document.getElementById(`status-${teacherId}`);
+    const val = sel.value;
+    sel.className = "p-1 text-[11px] font-bold rounded border " + 
+        (val === 'PRESENT' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
+         val === 'ABSENT' ? 'bg-red-50 text-red-800 border-red-300' : 'bg-amber-50 text-amber-800 border-amber-300');
+}
+</script>
+{% endblock %}

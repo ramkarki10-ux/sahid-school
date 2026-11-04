@@ -1,0 +1,150 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}विद्यालय पहिचान तथा सेटिङहरू | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Header -->
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue">विद्यालय पहिचान तथा सेटिङहरू (School Identity & Settings)</h1>
+            <p class="text-xs text-slate-500 mt-0.5">वेबसाइटको माथिल्लो बार (Utility Bar), हेडर, लोगो तथा सम्पर्क विवरण व्यवस्थापन गर्नुहोस्</p>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <form id="settingsForm" class="p-6 space-y-6 text-xs">
+            
+            <!-- School Name & Tagline -->
+            <div>
+                <h3 class="font-bold text-sm text-instBlue border-b pb-2 mb-4 flex items-center gap-2">
+                    <i data-lucide="building-2" class="w-4 h-4 text-instGold"></i>
+                    <span>विद्यालयको नाम तथा स्थापना विवरण</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-700">विद्यालयको नाम (नेपाली) *</label>
+                        <input type="text" id="st_name_ne" value="{{ settings.name_ne }}" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-700">School Name (English) *</label>
+                        <input type="text" id="st_name_en" value="{{ settings.name_en }}" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-700">ठेगाना (नेपाली) *</label>
+                        <input type="text" id="st_addr_ne" value="{{ settings.address_ne }}" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-700">Address (English) *</label>
+                        <input type="text" id="st_addr_en" value="{{ settings.address_en }}" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-700">स्थापना वर्ष (नेपाली) *</label>
+                        <input type="text" id="st_est_ne" value="{{ settings.established_ne }}" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-700">Established Year (English) *</label>
+                        <input type="text" id="st_est_en" value="{{ settings.established_en }}" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Utility Bar & Contacts -->
+            <div>
+                <h3 class="font-bold text-sm text-instBlue border-b pb-2 mb-4 flex items-center gap-2">
+                    <i data-lucide="phone-call" class="w-4 h-4 text-instGold"></i>
+                    <span>सम्पर्क तथा शीर्ष बार (Utility Bar) विवरण</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-700">☎ फोन नम्बर *</label>
+                        <input type="text" id="st_phone" value="{{ settings.phone }}" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-700">📢 सूचना बोर्ड नम्बर (Notice Board Phone)</label>
+                        <input type="text" id="st_notice_phone" value="{{ settings.notice_board_phone or '' }}" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-700">✉ आधिकारिक इमेल *</label>
+                        <input type="email" id="st_email" value="{{ settings.email }}" required class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Social Media Links -->
+            <div>
+                <h3 class="font-bold text-sm text-instBlue border-b pb-2 mb-4 flex items-center gap-2">
+                    <i data-lucide="share-2" class="w-4 h-4 text-instGold"></i>
+                    <span>सामाजिक सञ्जाल लिङ्कहरू (Social Media)</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-700">फेसबुक लिङ्क (Facebook URL)</label>
+                        <input type="url" id="st_fb" value="{{ settings.facebook_url or '' }}" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-700">युट्युब च्यानल लिङ्क (YouTube URL)</label>
+                        <input type="url" id="st_yt" value="{{ settings.youtube_url or '' }}" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Text -->
+            <div>
+                <h3 class="font-bold text-sm text-instBlue border-b pb-2 mb-4 flex items-center gap-2">
+                    <i data-lucide="file-text" class="w-4 h-4 text-instGold"></i>
+                    <span>विद्यालयको संक्षिप्त परिचय (About Text)</span>
+                </h3>
+                <textarea id="st_about_ne" rows="4" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none leading-relaxed">{{ settings.about_text_ne or '' }}</textarea>
+            </div>
+
+            <div class="pt-4 border-t flex justify-end">
+                <button type="submit" class="inline-flex items-center gap-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold px-6 py-2.5 rounded-lg shadow-sm">
+                    <i data-lucide="save" class="w-4 h-4 text-instGold"></i>
+                    <span>सेटिङहरू सुरक्षित गर्नुहोस्</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<script>
+    document.getElementById('settingsForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const payload = {
+            name_ne: document.getElementById('st_name_ne').value.trim(),
+            name_en: document.getElementById('st_name_en').value.trim(),
+            address_ne: document.getElementById('st_addr_ne').value.trim(),
+            address_en: document.getElementById('st_addr_en').value.trim(),
+            established_ne: document.getElementById('st_est_ne').value.trim(),
+            established_en: document.getElementById('st_est_en').value.trim(),
+            phone: document.getElementById('st_phone').value.trim(),
+            notice_board_phone: document.getElementById('st_notice_phone').value.trim() || null,
+            email: document.getElementById('st_email').value.trim(),
+            facebook_url: document.getElementById('st_fb').value.trim() || null,
+            youtube_url: document.getElementById('st_yt').value.trim() || null,
+            about_text_ne: document.getElementById('st_about_ne').value.trim() || null
+        };
+
+        try {
+            const res = await fetch('/api/settings', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('विद्यालयको सेटिङ सुरक्षित भयो!');
+                window.location.reload();
+            } else {
+                alert('त्रुटि: ' + (data.detail || 'असफल भयो'));
+            }
+        } catch (err) {
+            alert('सर्भर त्रुटि: ' + err.message);
+        }
+    });
+</script>
+{% endblock %}

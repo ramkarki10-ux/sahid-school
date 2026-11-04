@@ -1,0 +1,209 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}गुठियार समिति व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue flex items-center gap-2">
+                <i data-lucide="landmark" class="w-5 h-5 text-instGold"></i>
+                <span>गुठियार समिति (Trustee Committee)</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-0.5">गुठियार समितिका प्रमुख तथा सदस्यहरूको विवरण, पद र सम्पर्क</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="openTrusteeModal()" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue-dark text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-instGold"></i>
+                <span>+ सदस्य थप्नुहोस्</span>
+            </button>
+            <a href="/api/committees/trustee/export" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition" title="गुठियार समिति विवरण Excel मा डाउनलोड गर्नुहोस्">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                <span>Excel निर्यात</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4 text-center">क्रम</th>
+                        <th class="py-3 px-4">नाम</th>
+                        <th class="py-3 px-4">पद</th>
+                        <th class="py-3 px-4 font-mono">फोन</th>
+                        <th class="py-3 px-4 text-center">स्थिति</th>
+                        <th class="py-3 px-4 text-right">कार्य (Actions)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    {% for m in members %}
+                    <tr class="hover:bg-slate-50 transition" id="trustee-row-{{ m.id }}">
+                        <td class="py-3 px-4 text-center font-bold text-slate-500">{{ m.order_index or loop.index }}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">{{ m.name }}</td>
+                        <td class="py-3 px-4 font-semibold text-instBlue">{{ m.position }}</td>
+                        <td class="py-3 px-4 font-mono text-slate-700">{{ m.phone or '-' }}</td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full text-[10px]">{{ m.status or 'सक्रिय' }}</span>
+                        </td>
+                        <td class="py-3 px-4 text-right whitespace-nowrap">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button onclick='openEditTrustee({{ m | tojson | safe }})' class="p-1.5 rounded-md text-amber-600 hover:bg-amber-50 border border-amber-200 transition" title="सम्पादन गर्नुहोस्">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteTrustee({{ m.id }}, '{{ m.name }}')" class="p-1.5 rounded-md text-red-600 hover:bg-red-50 border border-red-200 transition" title="मेटाउनुहोस्">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="py-8 text-center text-slate-500">हाल कुनै गुठियार सदस्य प्रविष्टि गरिएको छैन।</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div id="trusteeModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 id="trusteeModalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i data-lucide="user-plus" class="w-4 h-4 text-instGold"></i>
+                <span>गुठियार सदस्य थप्नुहोस्</span>
+            </h3>
+            <button onclick="closeTrusteeModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <form id="trusteeSaveForm" class="space-y-3">
+            <input type="hidden" id="t_edit_id" value="">
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">सदस्यको नाम *</label>
+                <input type="text" id="t_name" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="नाम">
+            </div>
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">पद (Position) *</label>
+                <input type="text" id="t_position" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="गुठियार प्रमुख / सदस्य">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">फोन नम्बर</label>
+                    <input type="tel" id="t_phone" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="98XXXXXXXX">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">क्रम सङ्ख्या (Order)</label>
+                    <input type="number" id="t_order" value="10" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+            </div>
+
+            <!-- Photo Upload -->
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                <label class="block font-semibold text-slate-700">फोटो अपलोड गर्नुहोस् (Upload Photo)</label>
+                <input type="file" id="t_file_input" accept=".jpg,.jpeg,.png,.webp" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-instBlue file:text-white hover:file:bg-instBlue-dark cursor-pointer" onchange="window.adminUploadFile(this, 't_photo', 't_photo_status')">
+                <div id="t_photo_status" class="text-[11px]"></div>
+                <div>
+                    <label class="block text-[10px] text-slate-500 font-medium">वा फोटो URL</label>
+                    <input type="text" id="t_photo" placeholder="/static/images/committee/sample.jpg" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none font-mono text-[11px]">
+                </div>
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeTrusteeModal()" class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" id="tSubmitBtn" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded shadow transition">सुरक्षित गर्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openTrusteeModal() {
+        document.getElementById('trusteeSaveForm').reset();
+        document.getElementById('t_edit_id').value = '';
+        document.getElementById('t_photo_status').innerHTML = '';
+        document.getElementById('trusteeModalTitle').innerHTML = '<i data-lucide="user-plus" class="w-4 h-4 text-instGold"></i><span>गुठियार सदस्य थप्नुहोस्</span>';
+        document.getElementById('tSubmitBtn').innerText = 'सदस्य थप्नुहोस्';
+        document.getElementById('trusteeModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function openEditTrustee(m) {
+        document.getElementById('t_edit_id').value = m.id;
+        document.getElementById('t_name').value = m.name || '';
+        document.getElementById('t_position').value = m.position || '';
+        document.getElementById('t_phone').value = m.phone || '';
+        document.getElementById('t_order').value = m.order_index || 10;
+        document.getElementById('t_photo').value = m.photo || '';
+        document.getElementById('t_photo_status').innerHTML = m.photo 
+            ? `<span class="text-blue-600 font-semibold">हालको फोटो: <a href="${m.photo}" target="_blank" class="underline font-mono">${m.photo}</a></span>` 
+            : '';
+        document.getElementById('trusteeModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i><span>गुठियार सदस्य सम्पादन</span>';
+        document.getElementById('tSubmitBtn').innerText = 'अद्यावधिक (Save) गर्नुहोस्';
+        document.getElementById('trusteeModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function closeTrusteeModal() {
+        document.getElementById('trusteeModal').classList.add('hidden');
+    }
+
+    document.getElementById('trusteeSaveForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const editId = document.getElementById('t_edit_id').value;
+        const payload = {
+            name: document.getElementById('t_name').value.trim(),
+            position: document.getElementById('t_position').value.trim(),
+            phone: document.getElementById('t_phone').value.trim() || null,
+            photo: document.getElementById('t_photo').value.trim() || null,
+            order_index: parseInt(document.getElementById('t_order').value) || 10,
+            term: '२०८०-२०८३',
+            status: 'सक्रिय'
+        };
+
+        const url = editId ? `/api/committees/trustee/${editId}` : '/api/committees/trustee';
+        const method = editId ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'त्रुटि भयो।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि भयो।');
+        }
+    });
+
+    async function deleteTrustee(id, name) {
+        if (!confirm(`के तपाईं निश्चित रूपमा '${name}' लाई मेटाउन चाहनुहुन्छ?`)) return;
+        try {
+            const res = await fetch(`/api/committees/trustee/${id}`, {method: 'DELETE'});
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'मेटाउन सकिएन।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि भयो।');
+        }
+    }
+</script>
+{% endblock %}
