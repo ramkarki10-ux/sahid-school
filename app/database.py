@@ -19,15 +19,30 @@ if IS_SERVERLESS:
 else:
     DB_PATH = SOURCE_DB_PATH
 
+_db_initialized = False
+
 def get_db():
-    if IS_SERVERLESS and not DB_PATH.exists() and SOURCE_DB_PATH.exists():
-        try:
-            shutil.copy2(SOURCE_DB_PATH, DB_PATH)
-        except Exception:
-            pass
+    global _db_initialized
+    if IS_SERVERLESS and not DB_PATH.exists():
+        if SOURCE_DB_PATH.exists():
+            try:
+                shutil.copy2(SOURCE_DB_PATH, DB_PATH)
+            except Exception:
+                pass
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
+    
+    if not _db_initialized:
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='school_settings'")
+            if not cur.fetchone():
+                init_db()
+            _db_initialized = True
+        except Exception:
+            pass
+
     return conn
 
 def init_db():

@@ -98,10 +98,28 @@ app.include_router(api_results.router)
 def on_startup():
     init_db()
 
+@app.exception_handler(500)
+async def custom_500_handler(request: Request, exc):
+    import traceback
+    err_tb = traceback.format_exc()
+    return HTMLResponse(
+        content=f"<html><body style='font-family:sans-serif;padding:24px;'><h2 style='color:#e11d48;'>Server Error 500</h2><pre style='background:#1e293b;color:#f8fafc;padding:16px;border-radius:8px;overflow:auto;'>{err_tb}</pre></body></html>",
+        status_code=500
+    )
+
+@app.exception_handler(Exception)
+async def custom_general_exception_handler(request: Request, exc: Exception):
+    import traceback
+    err_tb = traceback.format_exc()
+    return HTMLResponse(
+        content=f"<html><body style='font-family:sans-serif;padding:24px;'><h2 style='color:#e11d48;'>Server Error</h2><pre style='background:#1e293b;color:#f8fafc;padding:16px;border-radius:8px;overflow:auto;'>{err_tb}</pre></body></html>",
+        status_code=500
+    )
+
 @app.exception_handler(404)
 async def custom_404_handler(request: Request, exc):
     # If API call, return JSON
-    if request.url.path.startswith("/api/"):
+    if request.url.path.startswith("/api/") and not request.url.path.startswith("/api/index.py"):
         return HTMLResponse(content='{"detail": "Not Found"}', status_code=404, media_type="application/json")
     # If view call, redirect to home or render error
     return RedirectResponse(url="/", status_code=303)
