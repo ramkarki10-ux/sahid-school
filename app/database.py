@@ -138,6 +138,46 @@ def init_db():
     );
     """)
 
+    # 3.1 User Registrations (Self Signup & Approval Queue)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS user_registrations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_type TEXT NOT NULL, -- 'STUDENT', 'TEACHER', 'PARENT'
+        first_name TEXT NOT NULL,
+        last_name TEXT NOT NULL,
+        full_name_ne TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        password_hash TEXT NOT NULL,
+        class_id INTEGER,
+        class_name TEXT,
+        roll_no INTEGER,
+        guardian_name TEXT,
+        guardian_phone TEXT,
+        subject TEXT,
+        student_name TEXT,
+        student_phone TEXT,
+        status TEXT NOT NULL DEFAULT 'विचाराधीन', -- 'विचाराधीन', 'स्वीकृत', 'अस्वीकृत'
+        reviewed_by INTEGER,
+        reviewed_at TIMESTAMP,
+        review_remarks TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (class_id) REFERENCES classes(id),
+        FOREIGN KEY (reviewed_by) REFERENCES users(id)
+    );
+    """)
+
+    # Parent accounts table (for parent portal)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS parent_accounts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        phone TEXT UNIQUE NOT NULL,
+        pin_hash TEXT NOT NULL,
+        guardian_name TEXT,
+        last_login TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
     # 4. Academic Years, Classes, Sections, Streams
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS academic_years (

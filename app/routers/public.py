@@ -453,6 +453,33 @@ def page_contact(request: Request):
         "active_menu": "contact"
     })
 
+@router.get("/signup", response_class=HTMLResponse)
+def page_signup(request: Request):
+    settings, ticker_notice = get_school_context()
+    user = get_current_user(request)
+    if user:
+        if user["role"] == "TEACHER":
+            return RedirectResponse(url="/teacher/dashboard", status_code=303)
+        elif user["role"] in ("STUDENT", "PARENT"):
+            return RedirectResponse(url="/leave-application", status_code=303)
+        return RedirectResponse(url="/admin/dashboard", status_code=303)
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, class_name_ne, class_numeric FROM classes WHERE class_numeric >= 1 AND class_numeric <= 12 ORDER BY class_numeric ASC")
+    classes = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+
+    redirect_to = request.query_params.get("redirect", "")
+
+    return templates.TemplateResponse(request, "public/signup.html", {
+        "settings": settings,
+        "ticker_notice": ticker_notice,
+        "classes": classes,
+        "redirect_to": redirect_to,
+        "active_menu": "signup"
+    })
+
 @router.get("/login", response_class=HTMLResponse)
 def page_login(request: Request):
     settings, ticker_notice = get_school_context()
@@ -460,10 +487,15 @@ def page_login(request: Request):
     if user:
         if user["role"] == "TEACHER":
             return RedirectResponse(url="/teacher/dashboard", status_code=303)
+        elif user["role"] in ("STUDENT", "PARENT"):
+            return RedirectResponse(url="/leave-application", status_code=303)
         return RedirectResponse(url="/admin/dashboard", status_code=303)
+    
+    redirect_to = request.query_params.get("redirect", "")
     return templates.TemplateResponse(request, "public/login.html", {
         "settings": settings,
         "ticker_notice": ticker_notice,
+        "redirect_to": redirect_to,
         "active_menu": "login"
     })
 
@@ -518,10 +550,81 @@ def page_homework(request: Request):
 @router.get("/leave-application", response_class=HTMLResponse)
 def page_leave_application(request: Request):
     settings, ticker_notice = get_school_context()
+    user = get_current_user(request)
+    parent = get_current_parent(request)
+    
+    is_authenticated = bool(user or parent)
+    user_role = user.get("role") if user else ("PARENT" if parent else None)
+    
+    logged_name = ""
+    student_info = {
+        "student_name": "",
+        "class_id": "",
+        "roll_no": "",
+        "applicant_name": "",
+        "applicant_phone": ""
+    }
+
     conn = get_db()
     cursor = conn.cursor()
+
+    if user:
+        logged_name = user.get("full_name_ne") or user.get("username", "")
+        # Try to find corresponding student record by user's phone or name
+        cursor.execute("""
+            SELECT id, name_nepali, class_id, roll_no, guardian_name, guardian_phone
+            FROM students
+            WHERE guardian_phone = ? OR name_nepali = ?
+            ORDER BY id DESC LIMIT 1
+        """, (user.get("phone", ""), user.get("full_name_ne", "")))
+        s_row = cursor.fetchone()
+        
+        # Or check in user_registrations for this student
+        if not s_row and user.get("role") == "STUDENT":
+            cursor.execute("""
+                SELECT full_name_ne, class_id, roll_no, guardian_name, guardian_phone, phone
+                FROM user_registrations
+                WHERE phone = ? AND user_type = 'STUDENT'
+                ORDER BY id DESC LIMIT 1
+            """, (user.get("phone", ""),))
+            reg_row = cursor.fetchone()
+            if reg_row:
+                student_info["student_name"] = reg_row["full_name_ne"]
+                student_info["class_id"] = reg_row["class_id"]
+                student_info["roll_no"] = reg_row["roll_no"]
+                student_info["applicant_name"] = reg_row["full_name_ne"]
+                student_info["applicant_phone"] = reg_row["guardian_phone"] or reg_row["phone"]
+
+        if s_row:
+            student_info["student_name"] = s_row["name_nepali"]
+            student_info["class_id"] = s_row["class_id"]
+            student_info["roll_no"] = s_row["roll_no"]
+            student_info["applicant_name"] = s_row["guardian_name"] if user.get("role") == "PARENT" else s_row["name_nepali"]
+            student_info["applicant_phone"] = s_row["guardian_phone"] or user.get("phone", "")
+
+    elif parent:
+        logged_name = parent.get("guardian_name") or "अभिभावक"
+        parent_phone = parent.get("phone", "")
+        cursor.execute("""
+            SELECT id, name_nepali, class_id, roll_no, guardian_name, guardian_phone
+            FROM students
+            WHERE guardian_phone = ?
+            ORDER BY id DESC LIMIT 1
+        """, (parent_phone,))
+        s_row = cursor.fetchone()
+        if s_row:
+            student_info["student_name"] = s_row["name_nepali"]
+            student_info["class_id"] = s_row["class_id"]
+            student_info["roll_no"] = s_row["roll_no"]
+            student_info["applicant_name"] = s_row["guardian_name"] or logged_name
+            student_info["applicant_phone"] = parent_phone
+        else:
+            student_info["applicant_name"] = logged_name
+            student_info["applicant_phone"] = parent_phone
+
     cursor.execute("SELECT id, class_name_ne, class_numeric FROM classes ORDER BY class_numeric ASC")
     classes = [dict(r) for r in cursor.fetchall()]
+
     cursor.execute("""
         SELECT l.*, c.class_name_ne
         FROM leave_applications l
@@ -530,11 +633,17 @@ def page_leave_application(request: Request):
     """)
     recent_leaves = [dict(r) for r in cursor.fetchall()]
     conn.close()
+
     return templates.TemplateResponse(request, "public/leave_application.html", {
         "settings": settings,
         "ticker_notice": ticker_notice,
         "classes": classes,
         "recent_leaves": recent_leaves,
+        "is_authenticated": is_authenticated,
+        "current_user": user,
+        "user_role": user_role,
+        "logged_name": logged_name,
+        "student_info": student_info,
         "active_menu": "students"
     })
 

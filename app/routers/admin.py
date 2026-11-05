@@ -693,6 +693,67 @@ def admin_leave_applications(request: Request):
     ctx.update({"leaves": leaves})
     return templates.TemplateResponse(request, "admin/leave_applications.html", ctx)
 
+@router.get("/registrations", response_class=HTMLResponse)
+def admin_registrations(
+    request: Request,
+    status_filter: Optional[str] = Query(None, alias="status"),
+    user_type: Optional[str] = Query(None)
+):
+    """Super Admin page to review, approve, reject, or delete user registrations."""
+    user, ctx = get_admin_context(request, "registrations")
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Counts
+    cursor.execute("SELECT COUNT(*) FROM user_registrations WHERE status = 'विचाराधीन'")
+    pending_count = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM user_registrations WHERE user_type = 'STUDENT'")
+    student_reg_count = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM user_registrations WHERE user_type = 'TEACHER'")
+    teacher_reg_count = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM user_registrations WHERE user_type = 'PARENT'")
+    parent_reg_count = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM user_registrations")
+    total_reg_count = cursor.fetchone()[0]
+
+    query = """
+        SELECT r.*, u.full_name_ne as reviewer_name
+        FROM user_registrations r
+        LEFT JOIN users u ON r.reviewed_by = u.id
+        WHERE 1=1
+    """
+    params = []
+    if status_filter and status_filter != "all":
+        query += " AND r.status = ?"
+        params.append(status_filter)
+    if user_type and user_type != "all":
+        query += " AND r.user_type = ?"
+        params.append(user_type.upper())
+
+    query += " ORDER BY r.id DESC"
+    cursor.execute(query, params)
+    registrations = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+
+    ctx.update({
+        "registrations": registrations,
+        "pending_count": pending_count,
+        "student_reg_count": student_reg_count,
+        "teacher_reg_count": teacher_reg_count,
+        "parent_reg_count": parent_reg_count,
+        "total_reg_count": total_reg_count,
+        "current_status": status_filter or "all",
+        "current_type": user_type or "all"
+    })
+    return templates.TemplateResponse(request, "admin/registrations.html", ctx)
+
 class TeacherAttendanceUpdateRequest(BaseModel):
     teacher_id: int
     attendance_date: str

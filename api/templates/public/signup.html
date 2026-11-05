@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% block title %}नयाँ प्रयोगकर्ता दर्ता (Sign Up) | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-100 py-6 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="flex items-center gap-2 text-xs text-slate-500">
+            <a href="/" class="hover:text-instBlue">गृहपृष्ठ</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <span class="text-instBlue font-semibold">नयाँ दर्ता (Sign Up)</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-instBlue mt-2">नयाँ प्रयोगकर्ता दर्ता फारम (User Registration)</h1>
+        <p class="text-xs text-slate-600 mt-1">विद्यार्थी, शिक्षक तथा अभिभावकहरूका लागि अनलाइन सेवा तथा बिदा निवेदन पोर्टल दर्ता</p>
+    </div>
+</div>
+
+<div class="py-12 bg-slate-50 min-h-screen">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6">
+        
+        <!-- Main Signup Card -->
+        <div id="signupFormCard" class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-md space-y-6">
+            
+            <div class="flex items-center gap-3 border-b border-slate-200 pb-4">
+                <div class="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="user-plus" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">खाता सिर्जना गर्नुहोस्</h2>
+                    <p class="text-xs text-slate-500">कृपया आफ्नो विवरण ठीकसँग भर्नुहोस्।</p>
+                </div>
+            </div>
+
+            <!-- Error Box -->
+            <div id="signupError" class="hidden p-3.5 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold space-y-1"></div>
+
+            <form id="signupForm" onsubmit="handleSignupSubmit(event)" class="space-y-4 text-xs">
+                
+                <!-- 1. Role / Type Dropdown -->
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1 text-xs">
+                        तपाईंको प्रकार छनोट गर्नुहोस् (User Type) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <select id="userType" onchange="toggleRoleFields()" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 font-semibold focus:ring-2 focus:ring-instBlue focus:outline-none appearance-none pr-8">
+                            <option value="STUDENT" selected>विद्यार्थी (Student)</option>
+                            <option value="TEACHER">शिक्षक (Teacher)</option>
+                            <option value="PARENT">अभिभावक (Parent)</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                            <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Basic Personal Details (Name, Surname) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">पहिलो नाम (First Name) <span class="text-red-500">*</span></label>
+                        <input type="text" id="firstName" required placeholder="उदा: रोहित" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">थर (Surname / Last Name) <span class="text-red-500">*</span></label>
+                        <input type="text" id="lastName" required placeholder="उदा: कार्की" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- 3. Contact Mobile Number -->
+                <div>
+                    <label id="phoneLabel" class="block font-bold text-slate-700 mb-1">
+                        सम्पर्क मोबाइल नम्बर (Mobile Number) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i data-lucide="phone" class="w-4 h-4"></i>
+                        </span>
+                        <input type="tel" id="userPhone" required placeholder="९८XXXXXXXX" class="w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1">यही मोबाइल नम्बर तपाईंको लगइन युजरनेमको रूपमा प्रयोग हुनेछ।</p>
+                </div>
+
+                <!-- 4. Dynamic Fields for STUDENT (विद्यार्थी) -->
+                <div id="studentFields" class="p-4 bg-blue-50/70 border border-blue-200 rounded-xl space-y-3.5">
+                    <div class="flex items-center gap-2 text-instBlue font-bold text-xs pb-1 border-b border-blue-200/60">
+                        <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                        <span>विद्यार्थी तथा अभिभावक विवरण (Student & Guardian Details)</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">कक्षा (Class १ देखि १२) <span class="text-red-500">*</span></label>
+                            <select id="studentClass" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                                <option value="">कक्षा छनोट गर्नुहोस्</option>
+                                {% for c in classes %}
+                                <option value="{{ c.id }}">{{ c.class_name_ne }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">रोल नम्बर (Roll Number) <span class="text-red-500">*</span></label>
+                            <input type="number" id="studentRoll" min="1" max="200" placeholder="उदा: ५" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">अभिभावकको नाम (Guardian Name) <span class="text-red-500">*</span></label>
+                            <input type="text" id="guardianName" placeholder="उदा: राम बहादुर कार्की (बुबा)" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">अभिभावकको मोबाइल न. (Guardian Phone) <span class="text-red-500">*</span></label>
+                            <input type="tel" id="guardianPhone" placeholder="९८XXXXXXXX" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-[11px]">
+                        <i data-lucide="info" class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5"></i>
+                        <span>विद्यार्थी दर्ता पेस भएपछि <strong>प्रमुख एडमिन (Super Admin)</strong> ले रुजु गरी स्वीकृत गरेपछि मात्र खाता पूर्ण हुनेछ।</span>
+                    </div>
+                </div>
+
+                <!-- 5. Dynamic Fields for TEACHER (शिक्षक) -->
+                <div id="teacherFields" class="hidden p-4 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-3.5">
+                    <div class="flex items-center gap-2 text-emerald-800 font-bold text-xs pb-1 border-b border-emerald-200/60">
+                        <i data-lucide="briefcase" class="w-4 h-4"></i>
+                        <span>शिक्षक विवरण (Teacher Details)</span>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">अध्यापन विषय / पद (Subject / Designation) <span class="text-red-500">*</span></label>
+                        <input type="text" id="teacherSubject" placeholder="उदा: अनिवार्य गणित / माध्यमिक शिक्षक" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+
+                    <div class="flex items-start gap-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-[11px]">
+                        <i data-lucide="shield-alert" class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5"></i>
+                        <span>शिक्षक आइडीको सुरक्षाका लागि दर्ता पेस भएपछि <strong>प्रमुख एडमिन (Super Admin)</strong> ले स्वीकृत गरेपछि मात्र लगइन खुल्नेछ।</span>
+                    </div>
+                </div>
+
+                <!-- 6. Dynamic Fields for PARENT (अभिभावक) -->
+                <div id="parentFields" class="hidden p-4 bg-purple-50/70 border border-purple-200 rounded-xl space-y-3.5">
+                    <div class="flex items-center gap-2 text-purple-800 font-bold text-xs pb-1 border-b border-purple-200/60">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span>अभिभावक तथा विद्यार्थी विवरण (Parent Details)</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">आफ्नो विद्यार्थीको नाम (Student Name) <span class="text-red-500">*</span></label>
+                            <input type="text" id="parentStudentName" placeholder="उदा: रोहित कार्की" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">विद्यार्थीको कक्षा वा सम्पर्क फोन</label>
+                            <input type="text" id="parentStudentPhone" placeholder="उदा: कक्षा ८ वा ९८XXXXXXXX" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-900 text-[11px]">
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5"></i>
+                        <span>अभिभावकको खाता <strong>सिधै तयार हुनेछ</strong>, प्रमुख एडमिनले स्वीकृत गरिरहनु पर्दैन। तपाईं तुरुन्तै लगइन गर्न सक्नुहुन्छ।</span>
+                    </div>
+                </div>
+
+                <!-- 7. Password and Confirm Password -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">नयाँ पासवर्ड (Password) <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                <i data-lucide="lock" class="w-4 h-4"></i>
+                            </span>
+                            <input type="password" id="password" required minlength="4" placeholder="••••••••" class="w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">पासवर्ड पुष्टि (Confirm) <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                <i data-lucide="lock" class="w-4 h-4"></i>
+                            </span>
+                            <input type="password" id="confirmPassword" required minlength="4" placeholder="••••••••" class="w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-2">
+                    <button type="submit" id="signupSubmitBtn" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-xl transition shadow flex items-center justify-center gap-2 text-sm active:scale-[0.99]">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                        <span>खाता दर्ता गर्नुहोस् (Submit Registration)</span>
+                    </button>
+                </div>
+
+                <div class="text-center pt-2">
+                    <p class="text-xs text-slate-600">
+                        पहिले नै खाता छ? 
+                        <a href="/login{% if redirect_to %}?redirect={{ redirect_to }}{% endif %}" class="font-bold text-instBlue hover:underline">यहाँ लगइन गर्नुहोस्</a>
+                    </p>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- Success Result Card (Hidden until submitted) -->
+        <div id="signupSuccessCard" class="hidden bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xl text-center space-y-5">
+            <div id="successIconContainer" class="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                <i data-lucide="check-circle" class="w-10 h-10"></i>
+            </div>
+
+            <div class="space-y-2">
+                <h2 id="successTitle" class="text-xl font-bold text-slate-900">दर्ता सफलतापूर्वक सम्पन्न भयो!</h2>
+                <p id="successMessage" class="text-xs text-slate-600 leading-relaxed max-w-lg mx-auto"></p>
+            </div>
+
+            <div id="pendingNoticeBox" class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 text-left space-y-1">
+                <p class="font-bold flex items-center gap-1.5 text-amber-800">
+                    <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i>
+                    <span>अर्को चरण (Next Steps):</span>
+                </p>
+                <p class="text-[11px] leading-relaxed text-amber-800/90">
+                    तपाईंको दर्ता आवेदन विद्यालयका <strong>प्रमुख एडमिन (Super Admin)</strong> को ड्यासबोर्डमा पुगेको छ। प्रशासकले विवरण रुजु गरी स्वीकृत गरेपछि तपाईंको खाता सक्रिय हुनेछ। स्वीकृत भएपछि तपाईंले आफ्नो मोबाइल नम्बर र पासवर्ड प्रयोग गरी लगइन गर्न सक्नुहुनेछ।
+                </p>
+            </div>
+
+            <div id="directLoginBox" class="hidden p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 text-left space-y-1">
+                <p class="font-bold flex items-center gap-1.5 text-emerald-800">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+                    <span>खाता तुरुन्तै सक्रिय छ:</span>
+                </p>
+                <p class="text-[11px] leading-relaxed text-emerald-800/90">
+                    तपाईंको अभिभावक खाता तुरुन्तै तयार भएको छ। अब तपाईं सिधै लगइन गरी अनलाइन बिदा निवेदन वा अभिभावक पोर्टल प्रयोग गर्न सक्नुहुन्छ।
+                </p>
+            </div>
+
+            <div class="pt-4 flex flex-col sm:flex-row justify-center gap-3">
+                <a href="/login{% if redirect_to %}?redirect={{ redirect_to }}{% endif %}" class="inline-flex items-center justify-center gap-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold px-6 py-2.5 rounded-xl shadow transition text-xs">
+                    <i data-lucide="log-in" class="w-4 h-4 text-instGold"></i>
+                    <span>लगइन पृष्ठमा जानुहोस्</span>
+                </a>
+                <a href="/" class="inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-5 py-2.5 rounded-xl transition text-xs">
+                    <i data-lucide="home" class="w-4 h-4"></i>
+                    <span>गृहपृष्ठ फर्कनुहोस्</span>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function toggleRoleFields() {
+    const role = document.getElementById('userType').value;
+    const stuFields = document.getElementById('studentFields');
+    const tchFields = document.getElementById('teacherFields');
+    const prnFields = document.getElementById('parentFields');
+    const stuClass = document.getElementById('studentClass');
+    const stuRoll = document.getElementById('studentRoll');
+    const gName = document.getElementById('guardianName');
+    const gPhone = document.getElementById('guardianPhone');
+    const phoneLabel = document.getElementById('phoneLabel');
+
+    stuFields.classList.add('hidden');
+    tchFields.classList.add('hidden');
+    prnFields.classList.add('hidden');
+
+    if (role === 'STUDENT') {
+        stuFields.classList.remove('hidden');
+        stuClass.required = true;
+        stuRoll.required = true;
+        gName.required = true;
+        gPhone.required = true;
+        phoneLabel.innerHTML = 'विद्यार्थीको सम्पर्क मोबाइल नम्बर <span class="text-red-500">*</span>';
+    } else if (role === 'TEACHER') {
+        tchFields.classList.remove('hidden');
+        stuClass.required = false;
+        stuRoll.required = false;
+        gName.required = false;
+        gPhone.required = false;
+        phoneLabel.innerHTML = 'शिक्षकको मोबाइल नम्बर <span class="text-red-500">*</span>';
+    } else if (role === 'PARENT') {
+        prnFields.classList.remove('hidden');
+        stuClass.required = false;
+        stuRoll.required = false;
+        gName.required = false;
+        gPhone.required = false;
+        phoneLabel.innerHTML = 'अभिभावकको मोबाइल नम्बर <span class="text-red-500">*</span>';
+    }
+    if (window.lucide) lucide.createIcons();
+}
+
+async function handleSignupSubmit(e) {
+    e.preventDefault();
+    const errBox = document.getElementById('signupError');
+    errBox.classList.add('hidden');
+
+    const role = document.getElementById('userType').value;
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    const phone = document.getElementById('userPhone').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (password !== confirmPassword) {
+        errBox.innerText = 'पासवर्ड र पासवर्ड पुष्टि मिलेन। कृपया पुनः जाँच्नुहोस्।';
+        errBox.classList.remove('hidden');
+        return;
+    }
+
+    const payload = {
+        user_type: role,
+        first_name: firstName,
+        last_name: lastName,
+        phone: phone,
+        password: password
+    };
+
+    if (role === 'STUDENT') {
+        const clsId = document.getElementById('studentClass').value;
+        const roll = document.getElementById('studentRoll').value;
+        const gName = document.getElementById('guardianName').value.trim();
+        const gPhone = document.getElementById('guardianPhone').value.trim();
+
+        if (!clsId || !roll || !gName || !gPhone) {
+            errBox.innerText = 'कृपया विद्यार्थी तथा अभिभावकका सम्पूर्ण अनिवार्य विवरणहरू भर्नुहोस्।';
+            errBox.classList.remove('hidden');
+            return;
+        }
+        payload.class_id = parseInt(clsId);
+        payload.roll_no = parseInt(roll);
+        payload.guardian_name = gName;
+        payload.guardian_phone = gPhone;
+    } else if (role === 'TEACHER') {
+        payload.subject = document.getElementById('teacherSubject').value.trim();
+    } else if (role === 'PARENT') {
+        const pStudentName = document.getElementById('parentStudentName').value.trim();
+        const pStudentPhone = document.getElementById('parentStudentPhone').value.trim();
+        if (!pStudentName) {
+            errBox.innerText = 'कृपया आफ्नो विद्यार्थीको नाम अनिवार्य रूपमा लेख्नुहोस्।';
+            errBox.classList.remove('hidden');
+            return;
+        }
+        payload.student_name = pStudentName;
+        payload.student_phone = pStudentPhone;
+    }
+
+    const btn = document.getElementById('signupSubmitBtn');
+    const origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>दर्ता प्रक्रिया चल्दैछ...</span>`;
+    if (window.lucide) lucide.createIcons();
+
+    try {
+        const res = await fetch('/api/auth/signup', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            document.getElementById('signupFormCard').classList.add('hidden');
+            const successCard = document.getElementById('signupSuccessCard');
+            successCard.classList.remove('hidden');
+
+            document.getElementById('successMessage').innerText = data.message;
+
+            if (data.requires_approval) {
+                document.getElementById('pendingNoticeBox').classList.remove('hidden');
+                document.getElementById('directLoginBox').classList.add('hidden');
+            } else {
+                document.getElementById('pendingNoticeBox').classList.add('hidden');
+                document.getElementById('directLoginBox').classList.remove('hidden');
+            }
+            if (window.lucide) lucide.createIcons();
+            window.scrollTo({top: 100, behavior: 'smooth'});
+        } else {
+            errBox.innerText = data.detail || 'दर्ता गर्दा त्रुटि भयो। कृपया पुनः प्रयास गर्नुहोस्।';
+            errBox.classList.remove('hidden');
+        }
+    } catch (err) {
+        errBox.innerText = 'सर्भरसँग सम्पर्क हुन सकेन। कृपया इन्टरनेट जाँच्नुहोस्।';
+        errBox.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+        if (window.lucide) lucide.createIcons();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    toggleRoleFields();
+});
+</script>
+{% endblock %}

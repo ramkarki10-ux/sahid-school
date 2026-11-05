@@ -5,6 +5,7 @@ from typing import Optional, List
 from datetime import datetime
 from app.database import get_db
 from app.auth import require_auth, get_current_user, require_role
+from app.routers.api_parent import get_current_parent
 from app.utils.excel_handler import export_leave_applications_to_excel
 
 router = APIRouter(prefix="/api/leave-applications", tags=["leave"])
@@ -67,7 +68,16 @@ def list_leave_applications(
 
 @router.post("")
 def submit_leave_application(req: LeaveApplicationCreate, request: Request):
-    """Public / Parent / Student submission of leave application."""
+    """Authenticated Student or Parent submission of leave application."""
+    user = get_current_user(request)
+    parent = get_current_parent(request)
+
+    if not user and not parent:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="बिदा निवेदन फारम भर्न र पेस गर्न कृपया पहिले लगइन वा दर्ता (Sign Up) गर्नुहोस्।"
+        )
+
     conn = get_db()
     cursor = conn.cursor()
 

@@ -16,12 +16,12 @@
 
         <form id="loginForm" class="space-y-4 text-xs">
             <div>
-                <label class="block font-bold text-slate-700 mb-1">प्रयोगकर्ता नाम (Username) *</label>
+                <label class="block font-bold text-slate-700 mb-1">प्रयोगकर्ता नाम वा मोबाइल नम्बर (Username / Mobile) *</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                         <i data-lucide="user" class="w-4 h-4"></i>
                     </span>
-                    <input type="text" id="username" name="username" required autofocus class="w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="Username (उदा: admin वा teacher)">
+                    <input type="text" id="username" name="username" required autofocus class="w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="Username वा ९८XXXXXXXX">
                 </div>
             </div>
 
@@ -49,6 +49,16 @@
             </button>
         </form>
 
+        <div class="text-center pt-2 border-t border-slate-100">
+            <p class="text-xs text-slate-600">
+                खाता छैन? 
+                <a href="/signup{% if redirect_to %}?redirect={{ redirect_to }}{% endif %}" class="font-bold text-rose-600 hover:text-rose-700 hover:underline inline-flex items-center gap-1">
+                    <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                    <span>यहाँ नयाँ दर्ता (Sign Up) गर्नुहोस्</span>
+                </a>
+            </p>
+        </div>
+
         <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-600 space-y-1">
             <p class="font-bold text-slate-800">डेमो खाताहरू (Default Accounts):</p>
             <div class="flex justify-between"><span>Super Admin:</span> <code>admin</code> / <code>admin123</code></div>
@@ -74,6 +84,10 @@
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
 
+        // Check if redirect query param exists
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectParam = urlParams.get('redirect');
+
         try {
             const res = await fetch('/api/auth/login', {
                 method: 'POST',
@@ -82,9 +96,14 @@
             });
             const data = await res.json();
             if (res.ok && data.success) {
-                // Redirect based on role
-                if (data.user.role === 'TEACHER') {
+                if (redirectParam) {
+                    window.location.href = redirectParam;
+                } else if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else if (data.user.role === 'TEACHER') {
                     window.location.href = '/teacher/dashboard';
+                } else if (data.user.role === 'STUDENT' || data.user.role === 'PARENT') {
+                    window.location.href = '/leave-application';
                 } else {
                     window.location.href = '/admin/dashboard';
                 }
@@ -98,7 +117,7 @@
         } finally {
             btn.disabled = false;
             btn.innerHTML = orig;
-            lucide.createIcons();
+            if (window.lucide) lucide.createIcons();
         }
     });
 </script>

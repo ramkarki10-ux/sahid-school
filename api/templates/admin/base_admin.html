@@ -93,6 +93,13 @@
                         <i data-lucide="clipboard-pen" class="w-4 h-4 text-red-400"></i>
                         <span>बिदा निवेदन</span>
                     </a>
+                    <a href="/admin/registrations" class="flex items-center justify-between px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'registrations' %}bg-instBlue text-white font-bold border-l-2 border-emerald-400{% endif %}">
+                        <div class="flex items-center gap-2.5">
+                            <i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i>
+                            <span>साइन-अप अनुमोदन</span>
+                        </div>
+                        <span class="text-[9px] bg-rose-600 text-white font-bold px-1.5 py-0.5 rounded-full uppercase">नयाँ</span>
+                    </a>
                     <a href="/admin/students/import" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'student_import' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="file-spreadsheet" class="w-4 h-4 text-green-400"></i>
                         <span>Excel आयात (Import)</span>

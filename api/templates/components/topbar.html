@@ -49,9 +49,15 @@
                 <button type="button" class="px-2 py-0.5 bg-instBlue text-slate-300 hover:text-white">EN</button>
             </div>
 
+            <!-- Sign Up (नयाँ दर्ता) Button -->
+            <a href="/signup" class="flex items-center gap-1 bg-rose-600 hover:bg-rose-500 text-white px-2.5 py-0.5 rounded transition font-bold text-[11px] shadow-sm">
+                <i data-lucide="user-plus" class="w-3.5 h-3.5 text-white"></i>
+                <span>दर्ता (Sign Up)</span>
+            </a>
+
             <!-- Portal Login link -->
             {% if current_user %}
-            <a href="{% if current_user.role == 'TEACHER' %}/teacher/dashboard{% else %}/admin/dashboard{% endif %}" class="flex items-center gap-1 bg-instGold-dark hover:bg-instGold text-white px-2.5 py-0.5 rounded transition font-semibold text-xs shadow-sm">
+            <a href="{% if current_user.role == 'TEACHER' %}/teacher/dashboard{% elif current_user.role in ['STUDENT', 'PARENT'] %}/leave-application{% else %}/admin/dashboard{% endif %}" class="flex items-center gap-1 bg-instGold-dark hover:bg-instGold text-white px-2.5 py-0.5 rounded transition font-semibold text-xs shadow-sm">
                 <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
                 <span>ड्यासबोर्ड</span>
             </a>
