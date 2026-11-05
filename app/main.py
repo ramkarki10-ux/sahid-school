@@ -46,23 +46,13 @@ app.add_middleware(
 # Vercel Serverless Path Normalization Middleware
 @app.middleware("http")
 async def vercel_routing_middleware(request: Request, call_next):
-    if "debug-files" in request.url.path:
-        tree = {}
-        for root, dirs, files in os.walk("/var/task"):
-            if "_vendor" in root or ".git" in root or "__pycache__" in root:
-                continue
-            tree[root] = files
-        from fastapi.responses import JSONResponse
-        return JSONResponse(tree)
-        
-    matched_path = request.headers.get("x-matched-path")
-    if matched_path and not matched_path.startswith("/api/index.py"):
-        request.scope["path"] = matched_path
-    elif request.scope["path"] == "/api/index.py":
+    p = request.scope.get("path", "")
+    if p in ["/index.py", "/api/index.py", "/api"]:
         request.scope["path"] = "/"
-    elif request.scope["path"].startswith("/api/index.py/"):
-        request.scope["path"] = request.scope["path"][len("/api/index.py"):]
-    
+    elif p.startswith("/index.py/"):
+        request.scope["path"] = p[len("/index.py"):]
+    elif p.startswith("/api/index.py/"):
+        request.scope["path"] = p[len("/api/index.py"):]
     return await call_next(request)
 
 # Static Files
