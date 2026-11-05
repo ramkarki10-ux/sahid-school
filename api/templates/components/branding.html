@@ -49,10 +49,17 @@
             </a>
         </div>
 
-        <!-- Mobile Hamburger Toggle Button -->
-        <div class="lg:hidden flex items-center">
-            <button id="mobileMenuBtn" type="button" class="p-2 rounded-md text-instBlue hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-instBlue" aria-label="Toggle Navigation">
-                <i data-lucide="menu" class="w-7 h-7"></i>
+        <!-- Mobile Hamburger Toggle Button (तीन धर्का) -->
+        <div class="lg:hidden flex items-center gap-2">
+            <a href="/parent/login" class="bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold px-2.5 py-1.5 rounded text-xs flex items-center gap-1 shadow-sm">
+                <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                <span class="hidden xs:inline">अभिभावक</span>
+            </a>
+            <button id="mobileMenuBtn" onclick="openMobileDrawer()" type="button" class="flex items-center gap-1.5 bg-instBlue hover:bg-instBlue-dark text-white font-semibold px-3 py-2 rounded-lg shadow transition focus:outline-none focus:ring-2 focus:ring-amber-400 active:scale-95" aria-label="Toggle Navigation">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+                <span class="text-xs font-bold tracking-wide">मेनु</span>
             </button>
         </div>
     </div>
