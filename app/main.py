@@ -44,10 +44,18 @@ app.add_middleware(
 )
 
 # Static Files
-static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
-if not os.path.exists(static_dir):
-    os.makedirs(static_dir, exist_ok=True)
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent.parent
+static_dir = BASE_DIR / "static"
+if not static_dir.exists():
+    static_dir = Path.cwd() / "static"
+if not static_dir.exists():
+    try:
+        static_dir.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # Include View Routers
 app.include_router(public.router)

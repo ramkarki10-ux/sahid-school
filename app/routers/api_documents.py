@@ -14,8 +14,16 @@ from app.utils.excel_handler import _style_excel
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 
 # Secure storage directory for private documents (NOT exposed under static directly)
-STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "uploads" / "documents"
-STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+IS_SERVERLESS = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+if IS_SERVERLESS:
+    STORAGE_DIR = Path("/tmp/uploads/documents")
+else:
+    STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "uploads" / "documents"
+
+try:
+    STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass
 
 ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png", ".webp"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB

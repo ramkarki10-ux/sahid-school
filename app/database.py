@@ -6,21 +6,26 @@ from pathlib import Path
 from datetime import datetime
 
 SOURCE_DB_PATH = Path(__file__).resolve().parent.parent / "school.db"
+IS_SERVERLESS = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
 
 # On Vercel / Serverless environments, copy database to /tmp so read and write operations succeed
-if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
-    TMP_DB_PATH = Path("/tmp/school.db")
-    if not TMP_DB_PATH.exists() and SOURCE_DB_PATH.exists():
+if IS_SERVERLESS:
+    DB_PATH = Path("/tmp/school.db")
+    if not DB_PATH.exists() and SOURCE_DB_PATH.exists():
         try:
-            shutil.copy2(SOURCE_DB_PATH, TMP_DB_PATH)
+            shutil.copy2(SOURCE_DB_PATH, DB_PATH)
         except Exception:
             pass
-    DB_PATH = TMP_DB_PATH if TMP_DB_PATH.exists() else SOURCE_DB_PATH
 else:
     DB_PATH = SOURCE_DB_PATH
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
+    if IS_SERVERLESS and not DB_PATH.exists() and SOURCE_DB_PATH.exists():
+        try:
+            shutil.copy2(SOURCE_DB_PATH, DB_PATH)
+        except Exception:
+            pass
+    conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn

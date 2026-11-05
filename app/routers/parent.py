@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from datetime import date
 from app.database import get_db
 from app.routers.api_parent import get_current_parent
+from app.templates import templates
 
 router = APIRouter(prefix="/parent", tags=["parent_views"])
-templates = Jinja2Templates(directory="templates")
 
 def get_school_context():
     conn = get_db()

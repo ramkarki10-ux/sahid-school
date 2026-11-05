@@ -13,8 +13,16 @@ from app.utils.excel_handler import export_homework_to_excel
 
 router = APIRouter(prefix="/api/homework", tags=["homework"])
 
-ATTACHMENTS_DIR = Path(__file__).resolve().parent.parent.parent / "static" / "uploads" / "homework"
-ATTACHMENTS_DIR.mkdir(parents=True, exist_ok=True)
+IS_SERVERLESS = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+if IS_SERVERLESS:
+    ATTACHMENTS_DIR = Path("/tmp/static/uploads/homework")
+else:
+    ATTACHMENTS_DIR = Path(__file__).resolve().parent.parent.parent / "static" / "uploads" / "homework"
+
+try:
+    ATTACHMENTS_DIR.mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass
 
 class HomeworkCreateRequest(BaseModel):
     class_id: int

@@ -1,14 +1,13 @@
 from fastapi import APIRouter, Request, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from datetime import date
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from app.database import get_db
 from app.auth import get_current_user, require_role
+from app.templates import templates
 
 router = APIRouter(prefix="/admin", tags=["admin_views"])
-templates = Jinja2Templates(directory="templates")
 
 def check_admin_auth(request: Request):
     user = get_current_user(request)

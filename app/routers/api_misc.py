@@ -18,8 +18,16 @@ from app.utils.excel_handler import (
 router = APIRouter(prefix="/api", tags=["misc"])
 
 # Universal Upload directory
-UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "static" / "uploads"
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+IS_SERVERLESS = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+if IS_SERVERLESS:
+    UPLOAD_DIR = Path("/tmp/static/uploads")
+else:
+    UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "static" / "uploads"
+
+try:
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass
 
 ALLOWED_UPLOAD_EXTS = {
     ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".csv", ".txt",
