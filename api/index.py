@@ -17,6 +17,15 @@ try:
     # Direct alias in case Vercel rewrites target path to entrypoint
     app.add_api_route("/api/index.py", page_index, methods=["GET"], response_class=HTMLResponse)
     app.add_api_route("/api", page_index, methods=["GET"], response_class=HTMLResponse)
+    
+    @app.get("/debug-files")
+    def debug_files():
+        tree = {}
+        for root, dirs, files in os.walk("/var/task"):
+            if "_vendor" in root or ".git" in root or "__pycache__" in root:
+                continue
+            tree[root] = files[:30]
+        return tree
 except Exception as e:
     err_tb = traceback.format_exc()
     from fastapi import FastAPI
