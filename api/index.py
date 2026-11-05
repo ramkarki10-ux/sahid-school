@@ -11,6 +11,12 @@ if str(root_dir) not in sys.path:
 
 try:
     from app.main import app
+    from app.routers.public import page_index
+    from fastapi.responses import HTMLResponse
+    
+    # Direct alias in case Vercel rewrites target path to entrypoint
+    app.add_api_route("/api/index.py", page_index, methods=["GET"], response_class=HTMLResponse)
+    app.add_api_route("/api", page_index, methods=["GET"], response_class=HTMLResponse)
 except Exception as e:
     err_tb = traceback.format_exc()
     from fastapi import FastAPI

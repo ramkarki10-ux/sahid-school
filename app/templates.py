@@ -8,3 +8,4 @@ if not TEMPLATES_DIR.exists():
     TEMPLATES_DIR = Path.cwd() / "templates"
 
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+

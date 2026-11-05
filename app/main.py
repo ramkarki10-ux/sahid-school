@@ -43,6 +43,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Vercel Serverless Path Normalization Middleware
+@app.middleware("http")
+async def vercel_routing_middleware(request: Request, call_next):
+    matched_path = request.headers.get("x-matched-path")
+    if matched_path and not matched_path.startswith("/api/index.py"):
+        request.scope["path"] = matched_path
+    elif request.scope["path"] == "/api/index.py":
+        request.scope["path"] = "/"
+    elif request.scope["path"].startswith("/api/index.py/"):
+        request.scope["path"] = request.scope["path"][len("/api/index.py"):]
+    
+    return await call_next(request)
+
 # Static Files
 from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
