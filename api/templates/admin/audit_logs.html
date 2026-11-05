@@ -1,0 +1,62 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}सिस्टम अडिट लग | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue">सिस्टम अडिट लग (System Audit Trail)</h1>
+            <p class="text-xs text-slate-500 mt-0.5">सिस्टममा भएका सम्पूर्ण गतिविधिको विस्तृत इतिहास (सुरक्षा, डाटा परिवर्तन, लगइन र सम्पादन)</p>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4 text-center">आईडी</th>
+                        <th class="py-3 px-4 font-mono">मिति र समय</th>
+                        <th class="py-3 px-4">प्रयोगकर्ता</th>
+                        <th class="py-3 px-4">कार्य (Action)</th>
+                        <th class="py-3 px-4">मोड्युल (Table)</th>
+                        <th class="py-3 px-4 font-mono">रेकर्ड ID</th>
+                        <th class="py-3 px-4 font-mono">IP ठेगाना</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    {% for l in logs %}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-2.5 px-4 text-center font-mono text-slate-400">#{{ l.id }}</td>
+                        <td class="py-2.5 px-4 font-mono text-slate-600">{{ l.timestamp }}</td>
+                        <td class="py-2.5 px-4 font-bold text-slate-800">{{ l.username or 'System' }}</td>
+                        <td class="py-2.5 px-4">
+                            {% if 'DELETE' in l.action %}
+                            <span class="bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded text-[10px]">{{ l.action }}</span>
+                            {% elif 'CREATE' in l.action %}
+                            <span class="bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded text-[10px]">{{ l.action }}</span>
+                            {% elif 'UPDATE' in l.action %}
+                            <span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded text-[10px]">{{ l.action }}</span>
+                            {% else %}
+                            <span class="bg-slate-100 text-slate-800 font-bold px-2 py-0.5 rounded text-[10px]">{{ l.action }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-2.5 px-4 font-mono font-semibold text-slate-700">{{ l.target_table or '-' }}</td>
+                        <td class="py-2.5 px-4 font-mono text-slate-500">{{ l.record_id or '-' }}</td>
+                        <td class="py-2.5 px-4 font-mono text-slate-500 text-[11px]">{{ l.ip_address or '-' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="py-6 text-center text-slate-500">कुनै अडिट लग भेटिएन।</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

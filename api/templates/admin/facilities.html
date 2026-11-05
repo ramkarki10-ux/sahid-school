@@ -1,0 +1,217 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}विद्यालय सुविधाहरू व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue flex items-center gap-2">
+                <i data-lucide="building" class="w-5 h-5 text-instGold"></i>
+                <span>विद्यालय सुविधाहरू (School Facilities)</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-0.5">विज्ञान प्रयोगशाला, कम्प्युटर ल्याब, पुस्तकालय, स्मार्ट कक्षा कोठा, छात्रावास तथा खेलकुद मैदान व्यवस्थापन</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="openFacilityModal()" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue-dark text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-instGold"></i>
+                <span>+ नयाँ सुविधा थप्नुहोस्</span>
+            </button>
+            <a href="/api/facilities/export" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition" title="सुविधा सूची Excel मा डाउनलोड गर्नुहोस्">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                <span>Excel निर्यात</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Facilities List Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for f in facilities %}
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition" id="facility-card-{{ f.id }}">
+            <div>
+                <div class="h-44 bg-slate-100 overflow-hidden relative">
+                    <img src="{{ f.image or '/static/images/hero-banner.jpg' }}" alt="" class="w-full h-full object-cover">
+                    <span class="absolute top-2 right-2 bg-instBlue/85 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                        क्रम: {{ f.order_index or f.display_order }}
+                    </span>
+                </div>
+                <div class="p-4 space-y-2">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="{{ f.icon or 'check-circle-2' }}" class="w-5 h-5 text-instGold flex-shrink-0"></i>
+                        <h3 class="font-bold text-sm text-instBlue">{{ f.title or f.title_ne }}</h3>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">{{ f.description or f.description_ne }}</p>
+                </div>
+            </div>
+
+            <div class="p-3 border-t bg-slate-50 flex items-center justify-between text-xs">
+                <span class="bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full text-[10px]">{{ f.status or 'सक्रिय' }}</span>
+                <div class="inline-flex items-center gap-1.5">
+                    <button onclick='openEditFacility({{ f | tojson | safe }})' class="p-1.5 rounded-md text-amber-600 hover:bg-amber-100 bg-white border border-amber-200 transition" title="सम्पादन गर्नुहोस्">
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button onclick="deleteFacility({{ f.id }}, '{{ f.title or f.title_ne }}')" class="p-1.5 rounded-md text-red-600 hover:bg-red-100 bg-white border border-red-200 transition" title="मेटाउनुहोस्">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-full bg-white p-8 rounded-xl border text-center text-slate-500 text-xs">
+            हाल कुनै सुविधा प्रविष्टि गरिएको छैन।
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- ADD / EDIT FACILITY MODAL -->
+<div id="facilityModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 id="facModalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i data-lucide="building" class="w-4 h-4 text-instGold"></i>
+                <span>नयाँ सुविधा थप्नुहोस्</span>
+            </h3>
+            <button onclick="closeFacilityModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <form id="facilitySaveForm" class="space-y-3">
+            <input type="hidden" id="fac_edit_id" value="">
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">सुविधाको नाम *</label>
+                <input type="text" id="fac_title" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="उदा: आधुनिक विज्ञान प्रयोगशाला">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">आइकन (Lucide Icon)</label>
+                    <select id="fac_icon" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="flask-conical">विज्ञान ल्याब (Flask)</option>
+                        <option value="monitor">कम्प्युटर ल्याब (Monitor)</option>
+                        <option value="book-open">पुस्तकालय (Book)</option>
+                        <option value="bed-double">छात्रावास (Hostel)</option>
+                        <option value="trophy">खेलकुद (Trophy)</option>
+                        <option value="bus">यातायात (Bus)</option>
+                        <option value="building">भवन (Building)</option>
+                        <option value="check-circle-2">साधारण (Check)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">क्रम सङ्ख्या (Order)</label>
+                    <input type="number" id="fac_order" value="1" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+            </div>
+
+            <!-- Photo Upload -->
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                <label class="block font-semibold text-slate-700">सुविधाको तस्विर अपलोड (Upload Photo)</label>
+                <input type="file" id="fac_file_input" accept=".jpg,.jpeg,.png,.webp" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-instBlue file:text-white hover:file:bg-instBlue-dark cursor-pointer" onchange="window.adminUploadFile(this, 'fac_image', 'fac_upload_status')">
+                <div id="fac_upload_status" class="text-[11px]"></div>
+                <div>
+                    <label class="block text-[10px] text-slate-500 font-medium">वा तस्विर URL</label>
+                    <input type="text" id="fac_image" value="/static/images/hero-banner.jpg" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none font-mono text-[11px]">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">सुविधाको विस्तृत विवरण *</label>
+                <textarea id="fac_desc" rows="3" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="सुविधाको विस्तृत जानकारी..."></textarea>
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeFacilityModal()" class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" id="facSubmitBtn" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded shadow transition">सुरक्षित गर्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openFacilityModal() {
+    document.getElementById('facilitySaveForm').reset();
+    document.getElementById('fac_edit_id').value = '';
+    document.getElementById('fac_upload_status').innerHTML = '';
+    document.getElementById('fac_image').value = '/static/images/hero-banner.jpg';
+    document.getElementById('facModalTitle').innerHTML = '<i data-lucide="building" class="w-4 h-4 text-instGold"></i><span>नयाँ सुविधा थप्नुहोस्</span>';
+    document.getElementById('facSubmitBtn').innerText = 'थप्नुहोस्';
+    document.getElementById('facilityModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+function openEditFacility(f) {
+    document.getElementById('fac_edit_id').value = f.id;
+    document.getElementById('fac_title').value = f.title || f.title_ne || '';
+    document.getElementById('fac_icon').value = f.icon || 'check-circle-2';
+    document.getElementById('fac_order').value = f.display_order || f.order_index || 1;
+    document.getElementById('fac_image').value = f.image || '';
+    document.getElementById('fac_desc').value = f.description || f.description_ne || '';
+    document.getElementById('fac_upload_status').innerHTML = f.image 
+        ? `<span class="text-blue-600 font-semibold">हालको तस्विर: <a href="${f.image}" target="_blank" class="underline font-mono">${f.image}</a></span>` 
+        : '';
+    document.getElementById('facModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i><span>सुविधा सम्पादन गर्नुहोस्</span>';
+    document.getElementById('facSubmitBtn').innerText = 'अद्यावधिक (Save) गर्नुहोस्';
+    document.getElementById('facilityModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+function closeFacilityModal() {
+    document.getElementById('facilityModal').classList.add('hidden');
+    document.getElementById('facilitySaveForm').reset();
+    document.getElementById('fac_edit_id').value = '';
+}
+
+document.getElementById('facilitySaveForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const editId = document.getElementById('fac_edit_id').value;
+    const payload = {
+        title: document.getElementById('fac_title').value.trim(),
+        icon: document.getElementById('fac_icon').value,
+        display_order: parseInt(document.getElementById('fac_order').value) || 1,
+        image: document.getElementById('fac_image').value.trim() || '/static/images/hero-banner.jpg',
+        description: document.getElementById('fac_desc').value.trim(),
+        status: 'सक्रिय'
+    };
+
+    const url = editId ? `/api/facilities/${editId}` : '/api/facilities';
+    const method = editId ? 'PUT' : 'POST';
+
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.detail || 'त्रुटि भयो।');
+        }
+    } catch(err) {
+        alert('सर्भर त्रुटि भयो।');
+    }
+});
+
+async function deleteFacility(id, name) {
+    if (!confirm(`के तपाईं निश्चित रूपमा सुविधा '${name}' हटाउन चाहनुहुन्छ?`)) return;
+    try {
+        const res = await fetch(`/api/facilities/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.detail || 'मेटाउन सकिएन।');
+        }
+    } catch(err) {
+        alert('सर्भर त्रुटि भयो।');
+    }
+}
+</script>
+{% endblock %}

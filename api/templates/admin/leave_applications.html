@@ -1,0 +1,147 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}विद्यार्थी बिदा निवेदन व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue">विद्यार्थी बिदा निवेदन व्यवस्थापन (Leave Applications)</h1>
+            <p class="text-xs text-slate-500 mt-0.5">विद्यार्थी तथा अभिभावकद्वारा अनलाइन दर्ता गरिएका बिदा निवेदनहरूको समीक्षा, स्वीकृति तथा तथ्याङ्क डाउनलोड</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="bg-blue-100 text-blue-800 font-bold px-3 py-1.5 rounded-lg text-xs">
+                कुल निवेदन: {{ leaves | length }}
+            </span>
+            <a href="/api/leave-applications/export" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                <i class="fas fa-file-excel"></i> Excel डाउनलोड
+            </a>
+        </div>
+    </div>
+
+    <!-- Leaves Table -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-100 text-slate-800 font-bold border-b border-slate-200">
+                    <tr>
+                        <th class="py-3 px-3 text-center w-12">क्र.सं.</th>
+                        <th class="py-3 px-4">विद्यार्थीको नाम</th>
+                        <th class="py-3 px-3 text-center">कक्षा / रोल नं.</th>
+                        <th class="py-3 px-4">निवेदक (अभिभावक) / फोन</th>
+                        <th class="py-3 px-3.5 font-mono">बिदा मिति (दिन)</th>
+                        <th class="py-3 px-5">बिदाको कारण</th>
+                        <th class="py-3 px-3 text-center">स्थिति</th>
+                        <th class="py-3 px-4">कैफियत / जाँचकर्ता</th>
+                        <th class="py-3 px-3.5 text-center">कार्य</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for l in leaves %}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-3 text-center text-slate-400 font-bold">{{ loop.index }}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">
+                            {{ l.student_name }}
+                        </td>
+                        <td class="py-3 px-3 text-center font-semibold">
+                            <span class="text-instBlue">{{ l.class_name_ne }}</span>
+                            <span class="text-slate-400 block font-mono text-[10px]">रोल: {{ l.roll_no or '-' }}</span>
+                        </td>
+                        <td class="py-3 px-4 text-slate-700">
+                            <p class="font-medium">{{ l.applicant_name }}</p>
+                            <a href="tel:{{ l.applicant_phone }}" class="text-instBlue font-mono text-[11px] hover:underline">{{ l.applicant_phone }}</a>
+                        </td>
+                        <td class="py-3 px-3.5 font-mono text-slate-600">
+                            <div>{{ l.start_date }} देखि {{ l.end_date }}</div>
+                            <span class="text-[10px] text-slate-400 font-sans font-semibold">({{ l.total_days }} दिन)</span>
+                        </td>
+                        <td class="py-3 px-5 text-slate-700 max-w-xs truncate" title="{{ l.reason }}">
+                            {{ l.reason }}
+                        </td>
+                        <td class="py-3 px-3 text-center">
+                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold
+                                {% if l.status == 'स्वीकृत' %}bg-emerald-100 text-emerald-800
+                                {% elif l.status == 'अस्वीकृत' %}bg-red-100 text-red-800
+                                {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                {{ l.status }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 text-slate-600">
+                            {% if l.review_remarks %}
+                            <p class="font-medium">{{ l.review_remarks }}</p>
+                            {% endif %}
+                            {% if l.reviewer_name %}
+                            <p class="text-[10px] text-slate-400">समीक्षक: {{ l.reviewer_name }}</p>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-3.5 text-center">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button type="button" onclick="reviewLeave({{ l.id }}, 'स्वीकृत')" class="p-1.5 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition" title="स्वीकृत गर्नुहोस्">
+                                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button type="button" onclick="reviewLeave({{ l.id }}, 'अस्वीकृत')" class="p-1.5 rounded-md bg-red-50 hover:bg-red-100 text-red-700 transition" title="अस्वीकृत गर्नुहोस्">
+                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button type="button" onclick="deleteLeave({{ l.id }})" class="p-1.5 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 transition" title="मेटाउनुहोस्">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if not leaves %}
+        <div class="py-12 text-center text-slate-400 text-xs">
+            <i data-lucide="inbox" class="w-10 h-10 mx-auto text-slate-300 mb-2"></i>
+            <p class="font-bold text-slate-600">कुनै नयाँ बिदा निवेदन दर्ता भएको छैन।</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+async function reviewLeave(id, status) {
+    const remark = prompt(`स्थिति '${status}' का लागि कैफियत (Remarks) लेख्नुहोस्:`, status === 'स्वीकृत' ? 'बिदा स्वीकृत गरियो।' : 'कारण अपर्याप्त भएकोले अस्वीकृत गरियो।');
+    if (remark === null) return;
+
+    try {
+        const res = await fetch(`/api/leave-applications/${id}/review`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ status: status, review_remarks: remark })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.detail || 'त्रुटि भयो।');
+        }
+    } catch (err) {
+        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+    }
+}
+
+async function deleteLeave(id) {
+    if (!confirm('के तपाईं निश्चित हुनुहुन्छ? यो बिदा निवेदन मेटिनेछ।')) return;
+    try {
+        const res = await fetch(`/api/leave-applications/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert(data.message || 'बिदा निवेदन हटाइयो।');
+            location.reload();
+        } else {
+            alert(data.detail || 'त्रुटि भयो।');
+        }
+    } catch (err) {
+        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+    }
+}
+</script>
+{% endblock %}

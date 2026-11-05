@@ -1,0 +1,317 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}छात्रावास व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue flex items-center gap-2">
+                <i data-lucide="bed-double" class="w-5 h-5 text-instGold"></i>
+                <span>आवासीय तथा छात्रावास व्यवस्थापन (Hostel Management)</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-0.5">सहिद स्मृति आवासीय विद्यालयका छात्रावास भवन, कोठा, क्षमता तथा वार्डेन विवरण</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="openHostelModal()" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue-dark text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-instGold"></i>
+                <span>+ नयाँ छात्रावास थप्नुहोस्</span>
+            </button>
+            <a href="/api/hostels/export" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition" title="छात्रावास सूची Excel मा डाउनलोड गर्नुहोस्">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                <span>Excel निर्यात</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Hostels Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for h in hostels %}
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition" id="hostel-card-{{ h.id }}">
+            <div class="bg-instBlue p-4 text-white flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-sm">{{ h.name_ne }}</h3>
+                    <p class="text-[11px] text-blue-200">{{ h.name_en or '' }} ({{ h.gender_type }})</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="bg-amber-400 text-slate-900 font-bold px-2 py-0.5 rounded text-[10px]">
+                        क्षमता: {{ h.capacity }} जना
+                    </span>
+                    <button onclick='openEditHostel({{ h | tojson | safe }})' class="p-1 rounded bg-white/10 hover:bg-white/20 text-white transition" title="सम्पादन">
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button onclick="deleteHostel({{ h.id }}, '{{ h.name_ne }}')" class="p-1 rounded bg-red-600/80 hover:bg-red-600 text-white transition" title="मेटाउनुहोस्">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-5 space-y-4">
+                <div class="flex items-center gap-4 text-xs">
+                    <div>
+                        <span class="text-slate-500 block">वार्डेनको नाम:</span>
+                        <span class="font-bold text-slate-800">{{ h.warden_name or 'तोकिएको छैन' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block">सम्पर्क नम्बर:</span>
+                        <span class="font-mono font-bold text-slate-800">{{ h.warden_phone or '-' }}</span>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between border-b pb-1 mb-2">
+                        <h4 class="font-bold text-xs text-slate-700">कोठाहरूको सूची (Rooms)</h4>
+                        <button onclick="openRoomModal({{ h.id }}, '{{ h.name_ne }}')" class="text-instBlue hover:underline font-bold text-[11px] flex items-center gap-1">
+                            <i data-lucide="plus" class="w-3 h-3"></i> + कोठा थप्नुहोस्
+                        </button>
+                    </div>
+                    <div class="space-y-2 max-h-48 overflow-y-auto">
+                        {% for r in h.rooms %}
+                        <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg text-xs border border-slate-100">
+                            <div>
+                                <span class="font-bold text-slate-800">कोठा नं: {{ r.room_number }}</span>
+                                <span class="text-slate-500 text-[11px] ml-2">(क्षमता: {{ r.capacity }} जना)</span>
+                            </div>
+                            <button onclick="deleteRoom({{ r.id }}, '{{ r.room_number }}')" class="text-red-500 hover:text-red-700 p-1" title="कोठा हटाउनुहोस्">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                        {% else %}
+                        <p class="text-slate-400 text-xs">कुनै कोठा प्रविष्टि गरिएको छैन।</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t bg-slate-50 flex items-center justify-between text-xs text-slate-500">
+                <span>स्थिति: <b class="text-green-700">{{ h.status }}</b></span>
+                <span class="text-[11px]">कुल कोठा: {{ h.rooms | length if h.rooms else 0 }}</span>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-full bg-white p-8 rounded-xl border text-center text-slate-500 text-xs">
+            हाल कुनै छात्रावास प्रविष्टि गरिएको छैन।
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- ADD / EDIT HOSTEL MODAL -->
+<div id="hostelModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 id="hostelModalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i data-lucide="bed-double" class="w-4 h-4 text-instGold"></i>
+                <span>नयाँ छात्रावास थप्नुहोस्</span>
+            </h3>
+            <button onclick="closeHostelModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <form id="hostelSaveForm" class="space-y-3">
+            <input type="hidden" id="hos_edit_id" value="">
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">छात्रावासको नाम (नेपाली) *</label>
+                <input type="text" id="hos_name_ne" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="उदा: सहिद स्मृति छात्र छात्रावास">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">छात्रावास प्रकार</label>
+                    <select id="hos_gender" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="छात्र">छात्र (Boys)</option>
+                        <option value="छात्रा">छात्रा (Girls)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">कुल क्षमता (जना) *</label>
+                    <input type="number" id="hos_capacity" required value="50" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">वार्डेनको नाम</label>
+                    <input type="text" id="hos_warden" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="वार्डेनको नाम">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">वार्डेन सम्पर्क फोन</label>
+                    <input type="tel" id="hos_phone" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="98XXXXXXXX">
+                </div>
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeHostelModal()" class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" id="hosSubmitBtn" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded shadow transition">सुरक्षित गर्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ADD ROOM MODAL -->
+<div id="roomModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3 text-xs">
+        <div class="flex items-center justify-between border-b pb-2">
+            <h3 class="font-bold text-sm text-instBlue flex items-center gap-1.5">
+                <i data-lucide="plus" class="w-4 h-4 text-instGold"></i>
+                <span id="roomModalHostelName">कोठा थप्नुहोस्</span>
+            </h3>
+            <button onclick="closeRoomModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+
+        <form id="roomSaveForm" class="space-y-3">
+            <input type="hidden" id="room_hostel_id" value="">
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">कोठा नम्बर *</label>
+                <input type="text" id="room_num" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="उदा: 101, 102...">
+            </div>
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">कोठा क्षमता (बेड संख्या) *</label>
+                <input type="number" id="room_cap" required value="4" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+            </div>
+
+            <div class="pt-2 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeRoomModal()" class="px-3 py-1.5 border rounded font-semibold text-slate-700">रद्द</button>
+                <button type="submit" class="px-4 py-1.5 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded shadow">कोठा थप्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openHostelModal() {
+    document.getElementById('hostelSaveForm').reset();
+    document.getElementById('hos_edit_id').value = '';
+    document.getElementById('hostelModalTitle').innerHTML = '<i data-lucide="bed-double" class="w-4 h-4 text-instGold"></i><span>नयाँ छात्रावास थप्नुहोस्</span>';
+    document.getElementById('hosSubmitBtn').innerText = 'छात्रावास थप्नुहोस्';
+    document.getElementById('hostelModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+function openEditHostel(h) {
+    document.getElementById('hos_edit_id').value = h.id;
+    document.getElementById('hos_name_ne').value = h.name_ne || '';
+    document.getElementById('hos_gender').value = h.gender_type || 'छात्र';
+    document.getElementById('hos_capacity').value = h.capacity || 50;
+    document.getElementById('hos_warden').value = h.warden_name || '';
+    document.getElementById('hos_phone').value = h.warden_phone || '';
+    document.getElementById('hostelModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i><span>छात्रावास विवरण सम्पादन</span>';
+    document.getElementById('hosSubmitBtn').innerText = 'अद्यावधिक (Save) गर्नुहोस्';
+    document.getElementById('hostelModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+function closeHostelModal() {
+    document.getElementById('hostelModal').classList.add('hidden');
+}
+
+function openRoomModal(hostelId, hostelName) {
+    document.getElementById('room_hostel_id').value = hostelId;
+    document.getElementById('roomModalHostelName').innerText = `${hostelName} - कोठा थप्नुहोस्`;
+    document.getElementById('roomSaveForm').reset();
+    document.getElementById('roomModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+function closeRoomModal() {
+    document.getElementById('roomModal').classList.add('hidden');
+}
+
+document.getElementById('hostelSaveForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const editId = document.getElementById('hos_edit_id').value;
+    const payload = {
+        name_ne: document.getElementById('hos_name_ne').value.trim(),
+        name_en: document.getElementById('hos_name_ne').value.trim(),
+        gender_type: document.getElementById('hos_gender').value,
+        capacity: parseInt(document.getElementById('hos_capacity').value) || 50,
+        warden_name: document.getElementById('hos_warden').value.trim() || null,
+        warden_phone: document.getElementById('hos_phone').value.trim() || null,
+        status: 'सक्रिय'
+    };
+
+    const url = editId ? `/api/hostels/${editId}` : '/api/hostels';
+    const method = editId ? 'PUT' : 'POST';
+
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.detail || 'त्रुटि भयो।');
+        }
+    } catch(err) {
+        alert('सर्भर त्रुटि भयो।');
+    }
+});
+
+document.getElementById('roomSaveForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const payload = {
+        hostel_id: parseInt(document.getElementById('room_hostel_id').value),
+        room_number: document.getElementById('room_num').value.trim(),
+        capacity: parseInt(document.getElementById('room_cap').value) || 4,
+        status: 'सक्रिय'
+    };
+
+    try {
+        const res = await fetch('/api/hostels/rooms', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.detail || 'त्रुटि भयो।');
+        }
+    } catch(err) {
+        alert('सर्भर त्रुटि भयो।');
+    }
+});
+
+async function deleteHostel(id, name) {
+    if (!confirm(`के तपाईं निश्चित रूपमा '${name}' हटाउन चाहनुहुन्छ? यसका सबै कोठाहरू पनि हट्नेछन्।`)) return;
+    try {
+        const res = await fetch(`/api/hostels/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.detail || 'मेटाउन सकिएन।');
+        }
+    } catch(err) {
+        alert('सर्भर त्रुटि भयो।');
+    }
+}
+
+async function deleteRoom(id, roomNum) {
+    if (!confirm(`के तपाईं कोठा नं '${roomNum}' हटाउन चाहनुहुन्छ?`)) return;
+    try {
+        const res = await fetch(`/api/hostels/rooms/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.detail || 'मेटाउन सकिएन।');
+        }
+    } catch(err) {
+        alert('सर्भर त्रुटि भयो।');
+    }
+}
+</script>
+{% endblock %}

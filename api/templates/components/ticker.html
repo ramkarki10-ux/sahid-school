@@ -1,0 +1,28 @@
+<!-- 4. NOTICE TICKER -->
+<div class="bg-amber-50 border-b border-amber-200/80 py-2 px-4 sm:px-8 text-xs">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+        <div class="flex items-center gap-2 overflow-hidden w-full sm:w-auto">
+            <span class="inline-flex items-center gap-1.5 bg-red-600 text-white font-bold px-2.5 py-1 rounded shadow-sm text-xs flex-shrink-0 animate-pulse">
+                <i data-lucide="megaphone" class="w-3.5 h-3.5"></i>
+                <span>महत्वपूर्ण सूचना</span>
+            </span>
+            <div class="truncate text-slate-800 font-medium">
+                {% if latest_notice %}
+                <a href="/notices" class="hover:text-instBlue hover:underline transition">
+                    {{ latest_notice.title_ne }}
+                    <span class="text-slate-400 font-normal ml-2 hidden md:inline">({{ latest_notice.publish_date }})</span>
+                </a>
+                {% else %}
+                <span>सहिद स्मृति आवासीय माध्यमिक विद्यालयमा नयाँ भर्ना आवेदन फाराम खुला गरिएको छ।</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="flex-shrink-0 self-end sm:self-auto">
+            <a href="/notices" class="inline-flex items-center gap-1 text-instBlue hover:text-instBlue-dark font-semibold transition hover:underline">
+                <span>सबै सूचना हेर्नुहोस्</span>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </a>
+        </div>
+    </div>
+</div>

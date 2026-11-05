@@ -1,0 +1,220 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}विद्यालय नेतृत्व व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Header -->
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue">विद्यालय नेतृत्व (School Leadership Profiles)</h1>
+            <p class="text-xs text-slate-500 mt-0.5">प्रधानाध्यापक तथा सहायक प्रधानाध्यापकको व्यक्तिगत विवरण, मन्तव्य, योग्यता र सम्पर्क व्यवस्थापन</p>
+        </div>
+    </div>
+
+    <!-- Grid: Principal & Vice Principal -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- PRINCIPAL CARD -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+            <div class="bg-instBlue p-4 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="award" class="w-5 h-5 text-instGold"></i>
+                    <h2 class="font-bold text-sm">प्रधानाध्यापक (Principal)</h2>
+                </div>
+                <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded uppercase font-mono">ROLE: PRINCIPAL</span>
+            </div>
+
+            <form id="principalForm" class="p-5 space-y-3 flex-1 flex flex-col justify-between text-xs">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">पूरा नाम (नेपाली) *</label>
+                        <input type="text" id="p_name" value="{{ principal.name if principal else 'श्री रीता फुयल' }}" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">पद (Designation) *</label>
+                        <input type="text" id="p_designation" value="{{ principal.designation if principal else 'प्रधानाध्यापक' }}" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">शैक्षिक योग्यता (Qualification)</label>
+                            <input type="text" id="p_qualification" value="{{ principal.qualification if principal else 'M.Ed. / M.A.' }}" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">अनुभव (Experience)</label>
+                            <input type="text" id="p_experience" value="{{ principal.experience if principal else '१५+ वर्ष' }}" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">फोन नम्बर</label>
+                            <input type="tel" id="p_phone" value="{{ principal.phone if principal else '९८५२०XXXXX' }}" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">इमेल</label>
+                            <input type="email" id="p_email" value="{{ principal.email if principal else 'principal@shahidsmriti.edu.np' }}" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">फोटो (Photo)</label>
+                        <div class="space-y-1.5">
+                            <input type="text" id="p_photo" value="{{ principal.photo if principal else '/static/images/principal.jpg' }}" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="/static/uploads/...">
+                            <div class="flex items-center gap-2">
+                                <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded text-[11px] font-semibold transition">
+                                    <i class="fas fa-upload text-blue-600"></i> कम्प्युटरबाट फोटो छान्नुहोस्
+                                    <input type="file" accept="image/*" class="hidden" onchange="window.adminUploadFile(this, 'p_photo', 'p_photo_status')">
+                                </label>
+                                <span id="p_photo_status" class="text-[11px]"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">प्रधानाध्यापकको मन्तव्य (Message)</label>
+                        <textarea id="p_message" rows="5" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none leading-relaxed">{{ principal.message if principal else '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t mt-4 flex justify-end">
+                    <button type="submit" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue-dark text-white font-bold px-4 py-2 rounded-lg shadow-sm">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>प्रधानाध्यापक विवरण सुरक्षित गर्नुहोस्</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- VICE PRINCIPAL CARD -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+            <div class="bg-slate-800 p-4 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="user-check" class="w-5 h-5 text-instGold"></i>
+                    <h2 class="font-bold text-sm">सहायक प्रधानाध्यापक (Vice Principal)</h2>
+                </div>
+                <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded uppercase font-mono">ROLE: VICE_PRINCIPAL</span>
+            </div>
+
+            <form id="vpForm" class="p-5 space-y-3 flex-1 flex flex-col justify-between text-xs">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">पूरा नाम (नेपाली) *</label>
+                        <input type="text" id="vp_name" value="{{ vp.name if vp else 'श्री रमेश खड्का' }}" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">पद (Designation) *</label>
+                        <input type="text" id="vp_designation" value="{{ vp.designation if vp else 'सहायक प्रधानाध्यापक' }}" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">शैक्षिक योग्यता (Qualification)</label>
+                            <input type="text" id="vp_qualification" value="{{ vp.qualification if vp else 'M.Sc. / B.Ed.' }}" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">अनुभव (Experience)</label>
+                            <input type="text" id="vp_experience" value="{{ vp.experience if vp else '१२+ वर्ष' }}" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">फोन नम्बर</label>
+                            <input type="tel" id="vp_phone" value="{{ vp.phone if vp else '९८४२०XXXXX' }}" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">इमेल</label>
+                            <input type="email" id="vp_email" value="{{ vp.email if vp else 'vp@shahidsmriti.edu.np' }}" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">फोटो (Photo)</label>
+                        <div class="space-y-1.5">
+                            <input type="text" id="vp_photo" value="{{ vp.photo if vp else '/static/images/vice_principal.jpg' }}" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="/static/uploads/...">
+                            <div class="flex items-center gap-2">
+                                <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded text-[11px] font-semibold transition">
+                                    <i class="fas fa-upload text-blue-600"></i> कम्प्युटरबाट फोटो छान्नुहोस्
+                                    <input type="file" accept="image/*" class="hidden" onchange="window.adminUploadFile(this, 'vp_photo', 'vp_photo_status')">
+                                </label>
+                                <span id="vp_photo_status" class="text-[11px]"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">सहायक प्रधानाध्यापकको मन्तव्य (Message)</label>
+                        <textarea id="vp_message" rows="5" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none leading-relaxed">{{ vp.message if vp else '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t mt-4 flex justify-end">
+                    <button type="submit" class="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-lg shadow-sm">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>सहायक प्रधानाध्यापक विवरण सुरक्षित गर्नुहोस्</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    document.getElementById('principalForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('p_name').value.trim(),
+            designation: document.getElementById('p_designation').value.trim(),
+            qualification: document.getElementById('p_qualification').value.trim(),
+            experience: document.getElementById('p_experience').value.trim(),
+            phone: document.getElementById('p_phone').value.trim(),
+            email: document.getElementById('p_email').value.trim(),
+            photo: document.getElementById('p_photo').value.trim(),
+            message: document.getElementById('p_message').value.trim()
+        };
+        try {
+            const res = await fetch('/api/committees/leadership/PRINCIPAL', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('प्रधानाध्यापक विवरण अद्यावधिक भयो!');
+                window.location.reload();
+            } else {
+                alert('त्रुटि: ' + (data.detail || 'असफल भयो'));
+            }
+        } catch (err) {
+            alert('सर्भर त्रुटि: ' + err.message);
+        }
+    });
+
+    document.getElementById('vpForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('vp_name').value.trim(),
+            designation: document.getElementById('vp_designation').value.trim(),
+            qualification: document.getElementById('vp_qualification').value.trim(),
+            experience: document.getElementById('vp_experience').value.trim(),
+            phone: document.getElementById('vp_phone').value.trim(),
+            email: document.getElementById('vp_email').value.trim(),
+            photo: document.getElementById('vp_photo').value.trim(),
+            message: document.getElementById('vp_message').value.trim()
+        };
+        try {
+            const res = await fetch('/api/committees/leadership/VICE_PRINCIPAL', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('सहायक प्रधानाध्यापक विवरण अद्यावधिक भयो!');
+                window.location.reload();
+            } else {
+                alert('त्रुटि: ' + (data.detail || 'असफल भयो'));
+            }
+        } catch (err) {
+            alert('सर्भर त्रुटि: ' + err.message);
+        }
+    });
+</script>
+{% endblock %}

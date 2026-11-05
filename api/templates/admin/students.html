@@ -1,0 +1,392 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}विद्यार्थी सूची | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Top Action Bar (Section 17) -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue">विद्यार्थी व्यवस्थापन (Student Management)</h1>
+            <p class="text-xs text-slate-500 mt-0.5">कक्षा १ देखि १२ सम्मका सम्पूर्ण विद्यार्थीहरूको सूची तथा विवरण</p>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="openStudentModal()" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue-dark text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-instGold"></i>
+                <span>+ विद्यार्थी थप्नुहोस्</span>
+            </button>
+            <a href="/admin/students/import" class="inline-flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                <span>Excel आयात</span>
+            </a>
+            <a href="/api/students/export" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-lg border border-slate-300 transition">
+                <i data-lucide="download" class="w-4 h-4 text-slate-500"></i>
+                <span>Excel निर्यात</span>
+            </a>
+            <button onclick="window.print()" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-lg border border-slate-300 transition">
+                <i data-lucide="printer" class="w-4 h-4 text-slate-500"></i>
+                <span>Print</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters Section (Section 17) -->
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <form id="filterForm" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+            <div>
+                <label class="block font-semibold text-slate-600 mb-1">कक्षा (Class)</label>
+                <select name="class_id" class="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <option value="">सबै कक्षा</option>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}">{{ c.class_name_ne }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-600 mb-1">Section</label>
+                <select name="section_id" class="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <option value="">सबै Section</option>
+                    <option value="1">Section A</option>
+                    <option value="2">Section B</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-600 mb-1">लिङ्ग (Gender)</label>
+                <select name="gender" class="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <option value="">सबै</option>
+                    <option value="छात्र">छात्र</option>
+                    <option value="छात्रा">छात्रा</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-600 mb-1">आवासीय / दिवा</label>
+                <select name="residential_status" class="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <option value="">सबै</option>
+                    <option value="आवासीय">आवासीय (Hostel)</option>
+                    <option value="दिवा">दिवा (Day)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-600 mb-1">स्थिति (Status)</label>
+                <select name="status" class="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <option value="सक्रिय">सक्रिय (Active)</option>
+                    <option value="">सबै स्थिति</option>
+                    <option value="निष्क्रिय">निष्क्रिय</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-600 mb-1">खोज्नुहोस् (Search)</label>
+                <input type="text" name="search" placeholder="नाम / Roll / ID..." class="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+            </div>
+        </form>
+    </div>
+
+    <!-- Student Table (Section 17: फोटो | Admission No | रोल नं. | विद्यार्थीको नाम | कक्षा | अभिभावक | सम्पर्क | Status | Action) -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-instBlue text-white font-semibold border-b border-instBlue-dark text-[11px] uppercase tracking-wider">
+                        <th class="py-3 px-4 text-center">फोटो</th>
+                        <th class="py-3 px-4">Admission No</th>
+                        <th class="py-3 px-4">इमिस कोड (EMIS)</th>
+                        <th class="py-3 px-4 text-center">रोल नं.</th>
+                        <th class="py-3 px-4">विद्यार्थीको नाम</th>
+                        <th class="py-3 px-4">कक्षा / Section</th>
+                        <th class="py-3 px-4">अभिभावक</th>
+                        <th class="py-3 px-4">सम्पर्क (फोन)</th>
+                        <th class="py-3 px-4 text-center">प्रकृति</th>
+                        <th class="py-3 px-4 text-center">Status</th>
+                        <th class="py-3 px-4 text-right">कार्य (Action)</th>
+                    </tr>
+                </thead>
+                <tbody id="studentTableBody" class="divide-y divide-slate-200">
+                    {% for s in students %}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-2.5 px-4 text-center">
+                            <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 mx-auto flex items-center justify-center text-slate-500 overflow-hidden">
+                                {% if s.photo %}
+                                <img src="{{ s.photo }}" alt="{{ s.name_nepali }}" class="w-full h-full object-cover">
+                                {% else %}
+                                <i data-lucide="user" class="w-4 h-4"></i>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="py-2.5 px-4 font-mono font-medium text-slate-700">{{ s.admission_no }}</td>
+                        <td class="py-2.5 px-4 font-mono font-bold text-instBlue text-[11px]">{{ s.emis_code or '-' }}</td>
+                        <td class="py-2.5 px-4 text-center font-bold text-slate-900">{{ s.roll_no }}</td>
+                        <td class="py-2.5 px-4">
+                            <a href="/admin/students/{{ s.id }}" class="font-bold text-instBlue hover:underline">{{ s.name_nepali }}</a>
+                            <span class="block text-[10px] text-slate-400 font-normal">{{ s.name_english }}</span>
+                        </td>
+                        <td class="py-2.5 px-4 font-medium text-slate-800">
+                            {{ s.class_name_ne }} {% if s.section_name %} - {{ s.section_name }}{% endif %}
+                        </td>
+                        <td class="py-2.5 px-4 text-slate-700">{{ s.guardian_name }}</td>
+                        <td class="py-2.5 px-4 font-mono text-slate-600">{{ s.guardian_phone }}</td>
+                        <td class="py-2.5 px-4 text-center">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold {% if s.residential_status == 'आवासीय' %}bg-amber-100 text-amber-900{% else %}bg-blue-100 text-blue-900{% endif %}">
+                                {{ s.residential_status }}
+                            </span>
+                        </td>
+                        <td class="py-2.5 px-4 text-center">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800">
+                                {{ s.status }}
+                            </span>
+                        </td>
+                        <td class="py-2.5 px-4 text-right">
+                            <div class="inline-flex items-center gap-1.5">
+                                <a href="/admin/students/{{ s.id }}" class="p-1 rounded text-instBlue hover:bg-blue-50" title="हेर्नुहोस्">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                </a>
+                                <button onclick="editStudent({{ s.id }})" class="p-1 rounded text-amber-600 hover:bg-amber-50" title="सम्पादन">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteStudent({{ s.id }}, '{{ s.name_nepali }}')" class="p-1 rounded text-red-600 hover:bg-red-50" title="मेटाउनुहोस्">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="10" class="py-8 text-center text-slate-500">कुनै विद्यार्थी फेला परेन।</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- STUDENT ADD/EDIT MODAL -->
+<div id="studentModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+        <div class="px-6 py-4 bg-instBlue text-white flex items-center justify-between">
+            <h3 id="modalTitle" class="font-bold text-sm flex items-center gap-2">
+                <i data-lucide="user-plus" class="w-4 h-4 text-instGold"></i>
+                <span>विद्यार्थी दर्ता फाराम</span>
+            </h3>
+            <button onclick="closeStudentModal()" class="text-slate-300 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form id="studentSaveForm" class="p-6 overflow-y-auto space-y-4 text-xs custom-scrollbar">
+            <input type="hidden" id="edit_id" name="id">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">Student ID *</label>
+                    <input type="text" id="stu_student_id" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="STU-83011">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">Admission No *</label>
+                    <input type="text" id="stu_admission_no" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="ADM-83-011">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">Registration No</label>
+                    <input type="text" id="stu_registration_no" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">नाम (नेपाली) *</label>
+                    <input type="text" id="stu_name_nepali" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">Name (English) *</label>
+                    <input type="text" id="stu_name_english" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">कक्षा *</label>
+                    <select id="stu_class_id" required class="w-full px-2 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        {% for c in classes %}
+                        <option value="{{ c.id }}">{{ c.class_name_ne }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">Section</label>
+                    <select id="stu_section_id" class="w-full px-2 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="1">Section A</option>
+                        <option value="2">Section B</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">रोल नं. *</label>
+                    <input type="number" id="stu_roll_no" min="1" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" value="1">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">लिङ्ग *</label>
+                    <select id="stu_gender" required class="w-full px-2 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="छात्र">छात्र</option>
+                        <option value="छात्रा">छात्रा</option>
+                        <option value="अन्य">अन्य</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">जन्म मिति (Date of Birth) *</label>
+                    <input type="text" id="stu_dob" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="YYYY-MM-DD">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">आवासीय प्रकृति *</label>
+                    <select id="stu_residential" class="w-full px-2 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="दिवा">दिवा (Day Scholar)</option>
+                        <option value="आवासीय">आवासीय (Hostel Resident)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">अभिभावकको नाम *</label>
+                    <input type="text" id="stu_guardian_name" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">नाता (Relation) *</label>
+                    <input type="text" id="stu_guardian_relation" value="बुबा" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">सम्पर्क फोन *</label>
+                    <input type="tel" id="stu_guardian_phone" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="9842XXXXXX">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">ठेगाना *</label>
+                <input type="text" id="stu_address" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="इटहरी-१९, सुनसरी">
+            </div>
+
+            <div class="pt-4 border-t border-slate-200 flex justify-end gap-2">
+                <button type="button" onclick="closeStudentModal()" class="px-4 py-2 border border-slate-300 rounded font-semibold text-slate-700 hover:bg-slate-100">
+                    रद्द गर्नुहोस्
+                </button>
+                <button type="submit" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded shadow transition">
+                    सुरक्षित गर्नुहोस्
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openStudentModal() {
+        document.getElementById('edit_id').value = '';
+        document.getElementById('studentSaveForm').reset();
+        document.getElementById('modalTitle').innerHTML = '<i data-lucide="user-plus" class="w-4 h-4 text-instGold"></i><span>नयाँ विद्यार्थी थप्नुहोस्</span>';
+        document.getElementById('studentModal').classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function closeStudentModal() {
+        document.getElementById('studentModal').classList.add('hidden');
+    }
+
+    async function editStudent(id) {
+        try {
+            const res = await fetch(`/api/students/${id}`);
+            const data = await res.json();
+            document.getElementById('edit_id').value = data.id;
+            document.getElementById('stu_student_id').value = data.student_id;
+            document.getElementById('stu_admission_no').value = data.admission_no;
+            document.getElementById('stu_registration_no').value = data.registration_no || '';
+            document.getElementById('stu_name_nepali').value = data.name_nepali;
+            document.getElementById('stu_name_english').value = data.name_english;
+            document.getElementById('stu_class_id').value = data.class_id;
+            document.getElementById('stu_section_id').value = data.section_id || '1';
+            document.getElementById('stu_roll_no').value = data.roll_no;
+            document.getElementById('stu_gender').value = data.gender;
+            document.getElementById('stu_dob').value = data.date_of_birth;
+            document.getElementById('stu_residential').value = data.residential_status;
+            document.getElementById('stu_guardian_name').value = data.guardian_name;
+            document.getElementById('stu_guardian_relation').value = data.guardian_relation;
+            document.getElementById('stu_guardian_phone').value = data.guardian_phone;
+            document.getElementById('stu_address').value = data.address;
+
+            document.getElementById('modalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-amber-400"></i><span>विद्यार्थी विवरण सम्पादन</span>';
+            document.getElementById('studentModal').classList.remove('hidden');
+            lucide.createIcons();
+        } catch (e) {
+            alert('विद्यार्थी विवरण लोड गर्न सकिएन।');
+        }
+    }
+
+    async function deleteStudent(id, name) {
+        if (confirm(`के तपाईं विद्यार्थी '${name}' लाई मेटाउन निश्चित हुनुहुन्छ?`)) {
+            const res = await fetch(`/api/students/${id}`, {method: 'DELETE'});
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'मेटाउन सकिएन।');
+            }
+        }
+    }
+
+    document.getElementById('studentSaveForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const editId = document.getElementById('edit_id').value;
+        const payload = {
+            student_id: document.getElementById('stu_student_id').value.trim(),
+            admission_no: document.getElementById('stu_admission_no').value.trim(),
+            registration_no: document.getElementById('stu_registration_no').value.trim() || null,
+            name_nepali: document.getElementById('stu_name_nepali').value.trim(),
+            name_english: document.getElementById('stu_name_english').value.trim(),
+            class_id: parseInt(document.getElementById('stu_class_id').value),
+            section_id: parseInt(document.getElementById('stu_section_id').value),
+            roll_no: parseInt(document.getElementById('stu_roll_no').value),
+            gender: document.getElementById('stu_gender').value,
+            date_of_birth: document.getElementById('stu_dob').value.trim(),
+            residential_status: document.getElementById('stu_residential').value,
+            guardian_name: document.getElementById('stu_guardian_name').value.trim(),
+            guardian_relation: document.getElementById('stu_guardian_relation').value.trim(),
+            guardian_phone: document.getElementById('stu_guardian_phone').value.trim(),
+            address: document.getElementById('stu_address').value.trim(),
+            academic_year_id: 1,
+            status: 'सक्रिय'
+        };
+
+        const url = editId ? `/api/students/${editId}` : '/api/students';
+        const method = editId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (res.ok && result.success) {
+            alert(result.message);
+            window.location.reload();
+        } else {
+            alert(result.detail || 'सुरक्षित गर्दा त्रुटि भयो।');
+        }
+    });
+
+    // Auto filter submission
+    document.querySelectorAll('#filterForm select, #filterForm input').forEach(el => {
+        el.addEventListener('change', () => {
+            const form = document.getElementById('filterForm');
+            const params = new URLSearchParams(new FormData(form)).toString();
+            window.location.href = `/admin/students?${params}`;
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,236 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}प्रकाशन तथा दस्तावेज व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue flex items-center gap-2">
+                <i data-lucide="file-text" class="w-5 h-5 text-instGold"></i>
+                <span>प्रकाशन तथा दस्तावेज व्यवस्थापन (Publications & Documents)</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-0.5">नागरिक वडापत्र, विद्यालय ब्रोसर, वार्षिक मुखपत्र, नियम तथा निर्देशिकाहरू</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="openPubModal()" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue-dark text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
+                <i data-lucide="file-plus" class="w-4 h-4 text-instGold"></i>
+                <span>+ नयाँ प्रकाशन थप्नुहोस्</span>
+            </button>
+            <a href="/api/publications/export" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition" title="सबै प्रकाशन तथ्याङ्क Excel मा डाउनलोड गर्नुहोस्">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                <span>Excel निर्यात (डाउनलोड)</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4 text-center">क्र.सं.</th>
+                        <th class="py-3 px-4">शीर्षक (Title)</th>
+                        <th class="py-3 px-4">वर्ग (Category)</th>
+                        <th class="py-3 px-4 text-center">प्रकार</th>
+                        <th class="py-3 px-4 font-mono text-center">कागजात (Download)</th>
+                        <th class="py-3 px-4 text-center">स्थिति</th>
+                        <th class="py-3 px-4 text-right">कार्य (Actions)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    {% for p in publications %}
+                    <tr class="hover:bg-slate-50 transition" id="pub-row-{{ p.id }}">
+                        <td class="py-3 px-4 text-center font-bold text-slate-500">{{ loop.index }}</td>
+                        <td class="py-3 px-4">
+                            <span class="font-bold text-slate-900 block">{{ p.title }}</span>
+                            <span class="text-[11px] text-slate-500 line-clamp-1">{{ p.description or '' }}</span>
+                        </td>
+                        <td class="py-3 px-4 font-semibold text-slate-700">{{ p.category or 'विवरण' }}</td>
+                        <td class="py-3 px-4 text-center font-mono font-bold text-instBlue">{{ p.file_type or 'PDF' }}</td>
+                        <td class="py-3 px-4 text-center font-mono">
+                            <a href="{{ p.file_url }}" target="_blank" download class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded border border-blue-200 hover:bg-blue-100 transition">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                <span>डाउनलोड</span>
+                            </a>
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full text-[10px]">{{ p.status or 'सक्रिय' }}</span>
+                        </td>
+                        <td class="py-3 px-4 text-right whitespace-nowrap">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button onclick='openEditPublication({{ p | tojson | safe }})' class="p-1.5 rounded-md text-amber-600 hover:bg-amber-50 border border-amber-200 transition" title="सम्पादन गर्नुहोस्">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deletePublication({{ p.id }}, '{{ p.title | escape }}')" class="p-1.5 rounded-md text-red-600 hover:bg-red-50 border border-red-200 transition" title="मेटाउनुहोस्">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="py-8 text-center text-slate-500">हाल कुनै प्रकाशन प्रविष्टि गरिएको छैन।</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ADD / EDIT PUBLICATION MODAL -->
+<div id="pubModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 id="pubModalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i data-lucide="file-text" class="w-4 h-4 text-instGold"></i>
+                <span>नयाँ प्रकाशन थप्नुहोस्</span>
+            </h3>
+            <button onclick="closePubModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <form id="pubSaveForm" class="space-y-3">
+            <input type="hidden" id="pb_edit_id" value="">
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">प्रकाशनको शीर्षक *</label>
+                <input type="text" id="pb_title" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="नागरिक वडापत्र २०८३ / विद्यालय ब्रोसर">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">वर्ग (Category)</label>
+                    <select id="pb_category" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="नागरिक वडापत्र">नागरिक वडापत्र (Citizen Charter)</option>
+                        <option value="विद्यालय प्रोफाइल">विद्यालय प्रोफाइल तथा ब्रोसर</option>
+                        <option value="वार्षिक मुखपत्र">वार्षिक मुखपत्र / पत्रिका</option>
+                        <option value="नियम तथा निर्देशिका">नियम तथा निर्देशिका</option>
+                        <option value="शैक्षिक सामग्री">शैक्षिक सामग्री / पाठ्यक्रम</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">फाइल प्रकार (Type)</label>
+                    <select id="pb_type" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="PDF">PDF Document</option>
+                        <option value="DOCX">Word Document (.docx)</option>
+                        <option value="XLSX">Excel Spreadsheet (.xlsx)</option>
+                        <option value="IMAGE">Image (.jpg/.png)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Direct File Upload -->
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                <label class="block font-semibold text-slate-700">कागजात फाइल अपलोड गर्नुहोस् (Upload File)</label>
+                <input type="file" id="pb_file_input" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.zip" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-instBlue file:text-white hover:file:bg-instBlue-dark cursor-pointer" onchange="window.adminUploadFile(this, 'pb_url', 'pb_upload_status')">
+                <div id="pb_upload_status" class="text-[11px]"></div>
+                <div>
+                    <label class="block text-[10px] text-slate-500 font-medium">वा फाइल लिङ्क (URL / Path) *</label>
+                    <input type="text" id="pb_url" required value="/static/docs/citizen_charter.pdf" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none font-mono text-[11px]">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">छोटो विवरण</label>
+                <textarea id="pb_desc" rows="2" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="यस दस्तावेजको बारेमा छोटो जानकारी..."></textarea>
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closePubModal()" class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" id="pubSubmitBtn" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded shadow transition">सुरक्षित गर्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openPubModal() {
+        document.getElementById('pubSaveForm').reset();
+        document.getElementById('pb_edit_id').value = '';
+        document.getElementById('pb_upload_status').innerHTML = '';
+        document.getElementById('pb_url').value = '/static/docs/citizen_charter.pdf';
+        document.getElementById('pubModalTitle').innerHTML = '<i data-lucide="file-plus" class="w-4 h-4 text-instGold"></i><span>नयाँ प्रकाशन थप्नुहोस्</span>';
+        document.getElementById('pubSubmitBtn').innerText = 'प्रकाशन थप्नुहोस्';
+        document.getElementById('pubModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function openEditPublication(pub) {
+        document.getElementById('pb_edit_id').value = pub.id;
+        document.getElementById('pb_title').value = pub.title || '';
+        document.getElementById('pb_category').value = pub.category || 'नागरिक वडापत्र';
+        document.getElementById('pb_type').value = pub.file_type || 'PDF';
+        document.getElementById('pb_url').value = pub.file_url || '';
+        document.getElementById('pb_desc').value = pub.description || '';
+        document.getElementById('pb_upload_status').innerHTML = pub.file_url 
+            ? `<span class="text-blue-600 font-semibold">हालको फाइल: <a href="${pub.file_url}" target="_blank" class="underline font-mono">${pub.file_url}</a></span>` 
+            : '';
+        document.getElementById('pubModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i><span>प्रकाशन सम्पादन गर्नुहोस्</span>';
+        document.getElementById('pubSubmitBtn').innerText = 'अद्यावधिक (Save) गर्नुहोस्';
+        document.getElementById('pubModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function closePubModal() {
+        document.getElementById('pubModal').classList.add('hidden');
+        document.getElementById('pubSaveForm').reset();
+        document.getElementById('pb_edit_id').value = '';
+        document.getElementById('pb_upload_status').innerHTML = '';
+    }
+
+    document.getElementById('pubSaveForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const editId = document.getElementById('pb_edit_id').value;
+        const payload = {
+            title: document.getElementById('pb_title').value.trim(),
+            category: document.getElementById('pb_category').value,
+            file_type: document.getElementById('pb_type').value,
+            file_url: document.getElementById('pb_url').value.trim(),
+            description: document.getElementById('pb_desc').value.trim() || null,
+            publish_date: '२०८३-०१-०१',
+            status: 'सक्रिय'
+        };
+
+        const url = editId ? `/api/publications/${editId}` : '/api/publications';
+        const method = editId ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert(editId ? 'प्रकाशन सफलतापूर्वक अद्यावधिक भयो!' : 'प्रकाशन सफलतापूर्वक थपियो!');
+                window.location.reload();
+            } else {
+                alert('त्रुटि: ' + (data.detail || 'असफल भयो'));
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि: ' + err.message);
+        }
+    });
+
+    async function deletePublication(id, title) {
+        if (!confirm(`के तपाईं निश्चित रूपमा "${title}" मेटाउन चाहनुहुन्छ?`)) return;
+        try {
+            const res = await fetch(`/api/publications/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                alert('प्रकाशन मेटाइयो');
+                window.location.reload();
+            } else {
+                const data = await res.json();
+                alert('त्रुटि: ' + (data.detail || 'मेटाउन सकिएन'));
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि: ' + err.message);
+        }
+    }
+</script>
+{% endblock %}

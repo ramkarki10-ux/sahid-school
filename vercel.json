@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "templates/**,static/**,school.db,api/templates/**,api/school.db"
+    }
+  },
   "rewrites": [
     {
       "source": "/(.*)",

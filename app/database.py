@@ -5,8 +5,23 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 
-SOURCE_DB_PATH = Path(__file__).resolve().parent.parent / "school.db"
 IS_SERVERLESS = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+
+def _find_source_db():
+    candidates = [
+        Path(__file__).resolve().parent.parent / "school.db",
+        Path(__file__).resolve().parent.parent / "api" / "school.db",
+        Path("/var/task/school.db"),
+        Path("/var/task/api/school.db"),
+        Path.cwd() / "school.db",
+        Path.cwd() / "api" / "school.db",
+    ]
+    for c in candidates:
+        if c.exists():
+            return c
+    return candidates[0]
+
+SOURCE_DB_PATH = _find_source_db()
 
 # On Vercel / Serverless environments, copy database to /tmp so read and write operations succeed
 if IS_SERVERLESS:
@@ -24,9 +39,10 @@ _db_initialized = False
 def get_db():
     global _db_initialized
     if IS_SERVERLESS and not DB_PATH.exists():
-        if SOURCE_DB_PATH.exists():
+        src = _find_source_db()
+        if src.exists():
             try:
-                shutil.copy2(SOURCE_DB_PATH, DB_PATH)
+                shutil.copy2(src, DB_PATH)
             except Exception:
                 pass
     conn = sqlite3.connect(str(DB_PATH))

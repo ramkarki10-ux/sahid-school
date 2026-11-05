@@ -1,0 +1,593 @@
+{% extends "base.html" %}
+
+{% block title %}शिक्षक शिक्षिका विवरण | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="bg-slate-100 py-6 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="flex items-center gap-2 text-xs text-slate-500">
+            <a href="/" class="hover:text-instBlue">गृहपृष्ठ</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <a href="/administration" class="hover:text-instBlue">विद्यालय प्रशासन</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <span class="text-slate-800 font-semibold">शिक्षक शिक्षिका</span>
+        </div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-3">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-instBlue">हाम्रा शिक्षक शिक्षिका (Our Faculty & Educators)</h1>
+                <p class="text-xs text-slate-600 mt-1">अनुभवी, समर्पित तथा विषयगत दक्ष शिक्षक शिक्षिकाहरूको आधिकारिक नामावली तथा योग्यता विवरण</p>
+            </div>
+            
+            {% if is_admin %}
+            <!-- Admin Top Controls -->
+            <div class="flex flex-wrap items-center gap-2">
+                <button type="button" onclick="openAddTeacherModal()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-bold shadow-md transition">
+                    <i data-lucide="user-plus" class="w-4 h-4 text-amber-300"></i>
+                    <span>+ नयाँ शिक्षक थप्नुहोस्</span>
+                </button>
+                <a href="/api/teachers/export" class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm transition">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                    <span>Excel डाउनलोड</span>
+                </a>
+                <a href="/admin/teachers" class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                    <span>एडमिन प्यानल</span>
+                </a>
+            </div>
+            {% else %}
+            <div class="text-xs text-slate-500">
+                <a href="/login" class="inline-flex items-center gap-1 text-slate-500 hover:text-instBlue transition font-medium">
+                    <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                    <span>एडमिन लगइन</span>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Admin Mode Notice Banner (Visible only to logged in Admin) -->
+{% if is_admin %}
+<div class="bg-gradient-to-r from-blue-900 to-instBlue text-white py-2.5 px-4 sm:px-8 border-b border-amber-400">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="font-bold text-amber-300">एडमिन मोड सक्रिय:</span>
+            <span>तपाईंलाई शिक्षकको थप विवरण, योग्यता, अनुभव, फोटो परिवर्तन गर्ने, नयाँ थप्ने वा मेटाउने अधिकार छ।</span>
+        </div>
+        <span class="text-[11px] bg-white/20 px-2.5 py-0.5 rounded font-mono">ROLE: {{ current_user.role if current_user else 'ADMIN' }}</span>
+    </div>
+</div>
+{% endif %}
+
+<div class="py-10 bg-slate-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 space-y-6">
+        
+        <!-- Filter Controls Bar -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap gap-4 items-center justify-between text-xs">
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="relative w-64">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                    <input id="teacherSearch" type="text" placeholder="शिक्षक, विषय वा योग्यता खोज्नुहोस्..." class="pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none w-full">
+                </div>
+                
+                <select id="levelFilter" class="px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <option value="">सबै तह (All Levels)</option>
+                    <option value="माध्यामिक">माध्यामिक तह (Secondary)</option>
+                    <option value="नि.मा.वि.">नि.मा.वि. तह (Lower Secondary)</option>
+                    <option value="प्राथमिक">प्राथमिक तह (Primary)</option>
+                    <option value="प्रारम्भिक">प्रारम्भिक बालविकास (ECD)</option>
+                </select>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-slate-500 font-medium">
+                    कुल शिक्षक: <strong class="text-slate-900 text-sm font-bold" id="totalTeachersCount">{{ teachers|length }}</strong> जना
+                </span>
+                {% if is_admin %}
+                <button type="button" onclick="openAddTeacherModal()" class="inline-flex items-center gap-1 text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold px-3 py-1.5 rounded-lg transition">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <span>नयाँ थप्नुहोस्</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Teachers Grid -->
+        <div id="teachersGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for t in teachers %}
+            <div class="teacher-card bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-instBlue/50 transition flex flex-col justify-between"
+                 id="teacher-card-{{ t.id }}"
+                 data-name="{{ t.name_nepali }} {{ t.name_english }}" 
+                 data-level="{{ t.level }}" 
+                 data-subject="{{ t.subject }}"
+                 data-qual="{{ t.qualification or '' }}">
+                
+                <div>
+                    <!-- Card Header: Badges & Photo -->
+                    <div class="flex gap-4 items-start">
+                        <div class="w-20 h-24 rounded-xl bg-slate-100 flex-shrink-0 border border-slate-200 overflow-hidden flex items-center justify-center text-slate-400 shadow-inner relative group">
+                            {% if t.photo %}
+                            <img src="{{ t.photo }}" alt="{{ t.name_nepali }}" class="w-full h-full object-cover">
+                            {% else %}
+                            <div class="w-full h-full bg-gradient-to-tr from-slate-200 to-slate-100 flex flex-col items-center justify-center text-instBlue">
+                                <span class="font-bold text-xl">{{ t.name_nepali[3:5] if t.name_nepali|length > 4 else t.name_nepali[:2] }}</span>
+                                <span class="text-[9px] text-slate-500 font-mono mt-0.5">शिक्षक</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="flex-grow space-y-1">
+                            <div class="flex items-center justify-between gap-1 flex-wrap">
+                                <span class="inline-block bg-blue-50 text-instBlue text-[10px] font-bold px-2 py-0.5 rounded">
+                                    {{ t.level }} • {{ t.subject }}
+                                </span>
+                                <span class="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded font-semibold">
+                                    {{ t.employment_type or 'स्थायी' }}
+                                </span>
+                            </div>
+
+                            <h3 class="font-bold text-base text-slate-900 leading-tight mt-1">{{ t.name_nepali }}</h3>
+                            {% if t.name_english %}
+                            <p class="text-[11px] text-slate-400 font-medium">{{ t.name_english }}</p>
+                            {% endif %}
+                            <p class="text-xs text-instBlue font-bold">{{ t.position }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Additional Details (अतिरिक्त विवरण) -->
+                    <div class="mt-4 pt-3 border-t border-slate-100 space-y-2 text-xs">
+                        <div class="flex items-start gap-2 text-slate-700">
+                            <i data-lucide="graduation-cap" class="w-4 h-4 text-instBlue flex-shrink-0 mt-0.5"></i>
+                            <div>
+                                <span class="text-slate-400 text-[10px] block">शैक्षिक योग्यता:</span>
+                                <strong class="font-semibold text-slate-800">{{ t.qualification or 'स्नातकोत्तर (Master Degree)' }}</strong>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 text-slate-700">
+                            <i data-lucide="clock" class="w-4 h-4 text-amber-600 flex-shrink-0"></i>
+                            <div>
+                                <span class="text-slate-400 text-[10px]">अनुभव: </span>
+                                <strong class="font-semibold text-slate-800">{{ t.experience or '५+ वर्ष' }}</strong>
+                            </div>
+                        </div>
+
+                        {% if t.phone %}
+                        <div class="flex items-center gap-2 text-slate-700">
+                            <i data-lucide="phone" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
+                            <a href="tel:{{ t.phone }}" class="font-mono text-blue-600 hover:underline font-semibold">{{ t.phone }}</a>
+                        </div>
+                        {% endif %}
+
+                        {% if t.email %}
+                        <div class="flex items-center gap-2 text-slate-700">
+                            <i data-lucide="mail" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+                            <a href="mailto:{{ t.email }}" class="font-mono text-[11px] text-slate-600 hover:underline truncate">{{ t.email }}</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Footer: Actions & Details -->
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <button type="button" onclick='viewTeacherProfile({{ t | tojson | safe }})' class="text-instBlue hover:text-instBlue-dark font-semibold inline-flex items-center gap-1 text-[11px]">
+                        <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                        <span>विस्तृत प्रोफाइल</span>
+                    </button>
+
+                    {% if is_admin %}
+                    <!-- Admin Edit & Delete Actions -->
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" 
+                                onclick='openEditTeacherModal({{ t | tojson | safe }})' 
+                                class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md font-bold text-xs transition"
+                                title="विवरण सम्पादन गर्नुहोस्">
+                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            <span>सम्पादन</span>
+                        </button>
+                        <button type="button" 
+                                onclick="deleteTeacherRecord({{ t.id }}, '{{ t.name_nepali }}')" 
+                                class="inline-flex items-center gap-1 px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-md font-bold text-xs transition"
+                                title="हटाउनुहोस्">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+            {% else %}
+            <div class="col-span-full bg-white p-12 rounded-2xl border text-center text-slate-500 text-xs">
+                हाल कुनै शिक्षक विवरण प्रविष्टि गरिएको छैन।
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 1. FULL TEACHER PROFILE VIEW MODAL         -->
+<!-- ========================================== -->
+<div id="teacherViewModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 text-xs border border-slate-200">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i data-lucide="user-check" class="w-4 h-4 text-amber-500"></i>
+                <span>शिक्षकको विस्तृत प्रोफाइल</span>
+            </h3>
+            <button onclick="closeTeacherViewModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <div class="w-20 h-24 rounded-lg bg-slate-200 overflow-hidden flex-shrink-0">
+                <img id="view_photo" src="" alt="" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h4 id="view_name" class="text-base font-bold text-slate-900"></h4>
+                <p id="view_name_en" class="text-xs text-slate-500 font-medium"></p>
+                <div class="mt-1 flex items-center gap-2">
+                    <span id="view_position" class="font-bold text-instBlue"></span>
+                    <span class="text-slate-300">•</span>
+                    <span id="view_level_sub" class="bg-blue-100 text-instBlue font-bold px-2 py-0.5 rounded text-[10px]"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-2.5 text-xs text-slate-700 divide-y divide-slate-100">
+            <div class="flex justify-between pt-2">
+                <span class="text-slate-500">कर्मचारी कोड (Employee ID):</span>
+                <strong id="view_emp_id" class="font-mono text-slate-900"></strong>
+            </div>
+            <div class="flex justify-between pt-2">
+                <span class="text-slate-500">शैक्षिक योग्यता:</span>
+                <strong id="view_qual" class="text-slate-900"></strong>
+            </div>
+            <div class="flex justify-between pt-2">
+                <span class="text-slate-500">अध्यापन अनुभव:</span>
+                <strong id="view_exp" class="text-slate-900"></strong>
+            </div>
+            <div class="flex justify-between pt-2">
+                <span class="text-slate-500">रोजगारी प्रकार:</span>
+                <span id="view_emp_type" class="font-semibold text-slate-900"></span>
+            </div>
+            <div class="flex justify-between pt-2">
+                <span class="text-slate-500">सम्पर्क फोन:</span>
+                <strong id="view_phone" class="font-mono text-blue-600"></strong>
+            </div>
+            <div class="flex justify-between pt-2">
+                <span class="text-slate-500">ईमेल:</span>
+                <span id="view_email" class="font-mono text-slate-800"></span>
+            </div>
+            <div class="flex justify-between pt-2">
+                <span class="text-slate-500">नियुक्ति मिति:</span>
+                <span id="view_appt_date" class="font-mono text-slate-700"></span>
+            </div>
+            <div class="flex justify-between pt-2">
+                <span class="text-slate-500">स्थिति:</span>
+                <span id="view_status" class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[10px]"></span>
+            </div>
+        </div>
+
+        <div class="pt-3 border-t flex justify-end">
+            <button type="button" onclick="closeTeacherViewModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold text-xs">बन्द गर्नुहोस्</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 2. ADMIN ONLY: ADD / EDIT TEACHER MODAL   -->
+<!-- ========================================== -->
+{% if is_admin %}
+<div id="teacherModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 text-xs border border-slate-200 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 id="modalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i data-lucide="user-plus" class="w-4 h-4 text-amber-500"></i>
+                <span>शिक्षक विवरण थप्नुहोस् / सम्पादन गर्नुहोस्</span>
+            </h3>
+            <button onclick="closeTeacherModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <form id="teacherSaveForm" onsubmit="handleTeacherSubmit(event)" class="space-y-3">
+            <input type="hidden" id="modal_teacher_id">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">कर्मचारी कोड (Employee ID) *</label>
+                    <input type="text" id="t_emp_id" required class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono" placeholder="EMP-101">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">पद (Position) *</label>
+                    <input type="text" id="t_position" required class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="शिक्षक / प्रधानाध्यापक">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">पूरा नाम (नेपालीमा) *</label>
+                    <input type="text" id="t_name_ne" required class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="श्री राम कुमार थापा">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">Name in English *</label>
+                    <input type="text" id="t_name_en" required class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="Ram Kumar Thapa">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">तह (Level) *</label>
+                    <select id="t_level" required class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="माध्यामिक तह">माध्यामिक तह (Secondary)</option>
+                        <option value="नि.मा.वि. तह">नि.मा.वि. तह (Lower Secondary)</option>
+                        <option value="प्राथमिक तह">प्राथमिक तह (Primary)</option>
+                        <option value="प्रारम्भिक बालविकास">प्रारम्भिक बालविकास (ECD)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">अध्यापन विषय (Subject) *</label>
+                    <input type="text" id="t_subject" required class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="गणित, विज्ञान, नेपाली...">
+                </div>
+            </div>
+
+            <!-- Additional Details (अतिरिक्त विवरण) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">शैक्षिक योग्यता (Qualification) *</label>
+                    <input type="text" id="t_qual" required class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="M.Sc. Physics / B.Ed.">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">अनुभव (Experience) *</label>
+                    <input type="text" id="t_exp" required class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="८+ वर्ष">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">सम्पर्क फोन नम्बर *</label>
+                    <input type="tel" id="t_phone" required class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono" placeholder="९८४२०XXXXX">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">ईमेल ठेगाना</label>
+                    <input type="email" id="t_email" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono" placeholder="teacher@shahidsmriti.edu.np">
+                </div>
+            </div>
+
+            <!-- Photo Upload with Local Computer Picker -->
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">तस्विर (Teacher Photo)</label>
+                <div class="space-y-1.5">
+                    <input type="text" id="t_photo" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono" placeholder="/static/uploads/teacher.jpg">
+                    <div class="flex items-center gap-2">
+                        <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-lg text-xs font-semibold transition">
+                            <i data-lucide="upload" class="w-3.5 h-3.5 text-blue-600"></i>
+                            <span>कम्प्युटरबाट फोटो छान्नुहोस्</span>
+                            <input type="file" accept="image/*" class="hidden" onchange="uploadTeacherPhoto(this)">
+                        </label>
+                        <span id="t_photo_status" class="text-xs"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">रोजगारीको किसिम (Employment Type)</label>
+                    <select id="t_emp_type" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="स्थायी">स्थायी (Permanent)</option>
+                        <option value="राहत अनुदान">राहत अनुदान (Rahat)</option>
+                        <option value="करार">करार (Contract)</option>
+                        <option value="निजी स्रोत">निजी स्रोत (Private School Source)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">स्थिति (Status)</label>
+                    <select id="t_status" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="सक्रिय">सक्रिय (Active)</option>
+                        <option value="बिदा">बिदा (On Leave)</option>
+                        <option value="निष्क्रिय">निष्क्रिय (Inactive)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeTeacherModal()" class="px-4 py-2 border rounded-lg font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" id="teacherSubmitBtn" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded-lg shadow transition">सुरक्षित गर्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<script>
+// Filter teachers function
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('teacherSearch');
+    const levelFilter = document.getElementById('levelFilter');
+    const cards = document.querySelectorAll('.teacher-card');
+    const countEl = document.getElementById('totalTeachersCount');
+
+    function filterTeachers() {
+        const query = (searchInput.value || '').toLowerCase().trim();
+        const level = (levelFilter.value || '').trim();
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const name = (card.getAttribute('data-name') || '').toLowerCase();
+            const cardLevel = card.getAttribute('data-level') || '';
+            const subject = (card.getAttribute('data-subject') || '').toLowerCase();
+            const qual = (card.getAttribute('data-qual') || '').toLowerCase();
+
+            const matchQuery = !query || name.includes(query) || subject.includes(query) || qual.includes(query);
+            const matchLevel = !level || cardLevel.includes(level);
+
+            if (matchQuery && matchLevel) {
+                card.style.display = 'flex';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        if (countEl) countEl.innerText = visibleCount;
+    }
+
+    if (searchInput) searchInput.addEventListener('input', filterTeachers);
+    if (levelFilter) levelFilter.addEventListener('change', filterTeachers);
+});
+
+// View Full Profile Modal
+function viewTeacherProfile(t) {
+    document.getElementById('view_name').innerText = t.name_nepali || '-';
+    document.getElementById('view_name_en').innerText = t.name_english || '';
+    document.getElementById('view_position').innerText = t.position || 'शिक्षक';
+    document.getElementById('view_level_sub').innerText = `${t.level || ''} • ${t.subject || ''}`;
+    document.getElementById('view_emp_id').innerText = t.employee_id || '-';
+    document.getElementById('view_qual').innerText = t.qualification || 'स्नातकोत्तर (Master Degree)';
+    document.getElementById('view_exp').innerText = t.experience || '५+ वर्ष';
+    document.getElementById('view_emp_type').innerText = t.employment_type || 'स्थायी';
+    document.getElementById('view_phone').innerText = t.phone || '-';
+    document.getElementById('view_email').innerText = t.email || '-';
+    document.getElementById('view_appt_date').innerText = t.appointment_date || '२०७८-०४-०१';
+    document.getElementById('view_status').innerText = t.status || 'सक्रिय';
+
+    const photoEl = document.getElementById('view_photo');
+    photoEl.src = t.photo || '/static/images/logo_header.png';
+
+    document.getElementById('teacherViewModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+function closeTeacherViewModal() {
+    document.getElementById('teacherViewModal').classList.add('hidden');
+}
+
+{% if is_admin %}
+// Admin Modal & Operations
+function openAddTeacherModal() {
+    document.getElementById('modal_teacher_id').value = '';
+    document.getElementById('modalTitle').innerHTML = '<i data-lucide="user-plus" class="w-4 h-4 text-amber-500"></i><span>+ नयाँ शिक्षक थप्नुहोस्</span>';
+    document.getElementById('teacherSaveForm').reset();
+    document.getElementById('t_emp_id').readOnly = false;
+    document.getElementById('t_emp_id').value = 'EMP-' + Math.floor(100 + Math.random() * 900);
+    document.getElementById('t_photo_status').innerText = '';
+    document.getElementById('teacherModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+function openEditTeacherModal(t) {
+    document.getElementById('modal_teacher_id').value = t.id;
+    document.getElementById('modalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-blue-500"></i><span>शिक्षक विवरण सम्पादन गर्नुहोस्</span>';
+    document.getElementById('t_emp_id').value = t.employee_id || '';
+    document.getElementById('t_emp_id').readOnly = true;
+    document.getElementById('t_name_ne').value = t.name_nepali || '';
+    document.getElementById('t_name_en').value = t.name_english || '';
+    document.getElementById('t_position').value = t.position || '';
+    document.getElementById('t_subject').value = t.subject || '';
+    document.getElementById('t_level').value = t.level || 'माध्यामिक तह';
+    document.getElementById('t_qual').value = t.qualification || '';
+    document.getElementById('t_exp').value = t.experience || '';
+    document.getElementById('t_phone').value = t.phone || '';
+    document.getElementById('t_email').value = t.email || '';
+    document.getElementById('t_photo').value = t.photo || '';
+    document.getElementById('t_emp_type').value = t.employment_type || 'स्थायी';
+    document.getElementById('t_status').value = t.status || 'सक्रिय';
+    document.getElementById('t_photo_status').innerText = '';
+    document.getElementById('teacherModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+function closeTeacherModal() {
+    document.getElementById('teacherModal').classList.add('hidden');
+}
+
+async function uploadTeacherPhoto(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const statusEl = document.getElementById('t_photo_status');
+    statusEl.innerHTML = '<span class="text-blue-600 font-semibold"><i class="fas fa-spinner fa-spin"></i> अपलोड हुँदैछ...</span>';
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const res = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            document.getElementById('t_photo').value = data.url;
+            statusEl.innerHTML = `<span class="text-emerald-600 font-semibold">✓ ${data.filename} अपलोड भयो!</span>`;
+        } else {
+            statusEl.innerHTML = `<span class="text-rose-600 font-semibold">त्रुटि: ${data.detail || 'असफल'}</span>`;
+        }
+    } catch(err) {
+        statusEl.innerHTML = '<span class="text-rose-600 font-semibold">अपलोड असफल भयो।</span>';
+    }
+}
+
+async function handleTeacherSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('modal_teacher_id').value;
+    const btn = document.getElementById('teacherSubmitBtn');
+
+    const payload = {
+        employee_id: document.getElementById('t_emp_id').value.trim(),
+        name_nepali: document.getElementById('t_name_ne').value.trim(),
+        name_english: document.getElementById('t_name_en').value.trim(),
+        position: document.getElementById('t_position').value.trim(),
+        subject: document.getElementById('t_subject').value.trim(),
+        level: document.getElementById('t_level').value,
+        qualification: document.getElementById('t_qual').value.trim(),
+        experience: document.getElementById('t_exp').value.trim(),
+        phone: document.getElementById('t_phone').value.trim(),
+        email: document.getElementById('t_email').value.trim() || null,
+        photo: document.getElementById('t_photo').value.trim() || null,
+        employment_type: document.getElementById('t_emp_type').value,
+        status: document.getElementById('t_status').value
+    };
+
+    btn.disabled = true;
+    btn.innerText = 'सुरक्षित हुँदैछ...';
+
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `/api/teachers/${id}` : '/api/teachers';
+
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert(data.message || 'सफलतापूर्वक सुरक्षित भयो!');
+            location.reload();
+        } else {
+            alert(data.detail || 'त्रुटि देखा पर्यो।');
+        }
+    } catch(err) {
+        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+    } finally {
+        btn.disabled = false;
+        btn.innerText = 'सुरक्षित गर्नुहोस्';
+    }
+}
+
+async function deleteTeacherRecord(id, name) {
+    if (!confirm(`के तपाईं निश्चित हुनुहुन्छ? "${name}" को सम्पूर्ण विवरण प्रणालीबाट स्थायी रूपमा हटाइनेछ।`)) return;
+    try {
+        const res = await fetch(`/api/teachers/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert(data.message || 'शिक्षक विवरण सफलतापूर्वक हटाइयो।');
+            const card = document.getElementById(`teacher-card-${id}`);
+            if (card) card.remove();
+        } else {
+            alert(data.detail || 'मेटाउन सकिएन।');
+        }
+    } catch(err) {
+        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+    }
+}
+{% endif %}
+</script>
+{% endblock %}

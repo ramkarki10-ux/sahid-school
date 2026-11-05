@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}प्रशासनिक ड्यासबोर्ड | {{ settings.name_ne }}{% endblock %}</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        instBlue: {
+                            DEFAULT: '#15305b',
+                            dark: '#0e2343',
+                            light: '#1e427b'
+                        },
+                        instGold: {
+                            DEFAULT: '#d97706',
+                            light: '#f59e0b',
+                            dark: '#b45309'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans Devanagari"', 'Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js for Admin Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="/static/css/custom.css">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased flex h-screen overflow-hidden">
+
+    <!-- SIDEBAR (Section 45) -->
+    <aside id="adminSidebar" class="w-64 bg-instBlue-dark text-slate-300 flex flex-col flex-shrink-0 z-30 transition-all duration-300">
+        <!-- School & Brand in Sidebar -->
+        <div class="h-16 px-4 bg-instBlue flex items-center justify-between border-b border-instBlue-light/60">
+            <a href="/admin/dashboard" class="flex items-center gap-2.5">
+                <img src="/static/images/logo_header.png" alt="Logo" class="h-9 w-auto object-contain">
+                <div class="overflow-hidden">
+                    <h2 class="text-xs font-bold text-white truncate leading-tight">सहिद स्मृति मा.वि.</h2>
+                    <p class="text-[10px] text-amber-400 font-semibold truncate">प्रशासनिक प्रणाली (MIS)</p>
+                </div>
+            </a>
+            <button id="sidebarToggleBtn" class="lg:hidden text-slate-300 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- Sidebar Navigation Menu -->
+        <div class="flex-grow overflow-y-auto custom-scrollbar p-3 space-y-1 text-xs font-medium">
+            
+            <a href="/admin/dashboard" class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'dashboard' %}bg-instBlue text-white font-bold border-l-4 border-amber-400{% endif %}">
+                <i data-lucide="layout-dashboard" class="w-4 h-4 text-instGold-light"></i>
+                <span>ड्यासबोर्ड</span>
+            </a>
+
+            <!-- विद्यार्थी (Student Group) -->
+            <div class="pt-2">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">विद्यार्थी व्यवस्थापन</p>
+                <div class="mt-1 space-y-0.5">
+                    <a href="/admin/students" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'students' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span>विद्यार्थी सूची</span>
+                    </a>
+                    <a href="/admin/documents" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'documents' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="file-check" class="w-4 h-4 text-emerald-400"></i>
+                        <span>कागजात प्रमाणीकरण</span>
+                    </a>
+                    <a href="/admin/homework" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'homework' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="book-open" class="w-4 h-4 text-amber-400"></i>
+                        <span>दैनिक गृहकार्य</span>
+                    </a>
+                    <a href="/admin/results" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'results' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="award" class="w-4 h-4 text-purple-400"></i>
+                        <span>परीक्षा नतिजा लेजर</span>
+                    </a>
+                    <a href="/admin/leave-applications" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'leave_applications' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="clipboard-pen" class="w-4 h-4 text-red-400"></i>
+                        <span>बिदा निवेदन</span>
+                    </a>
+                    <a href="/admin/students/import" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'student_import' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4 text-green-400"></i>
+                        <span>Excel आयात (Import)</span>
+                    </a>
+                    <a href="/admin/students/promotion" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'promotion' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="arrow-up-right" class="w-4 h-4 text-amber-400"></i>
+                        <span>कक्षा बढुवा (Promotion)</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- हाजिरी (Attendance Group) -->
+            <div class="pt-2">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">हाजिरी तथा एसएमएस</p>
+                <div class="mt-1 space-y-0.5">
+                    <a href="/admin/attendance" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="check-square" class="w-4 h-4 text-green-400"></i>
+                        <span>दैनिक हाजिरी (Daily)</span>
+                    </a>
+                    <a href="/admin/sms-gateway" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'sms_gateway' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="smartphone" class="w-4 h-4 text-amber-400"></i>
+                        <span>SMS गेटवे सेटिङ्स</span>
+                    </a>
+                    <a href="/admin/sms-history" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'sms_history' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="message-square" class="w-4 h-4 text-sky-400"></i>
+                        <span>SMS सूचना लग (History)</span>
+                    </a>
+                    <a href="/admin/attendance/reports" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_reports' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+                        <span>हाजिरी रिपोर्टहरू</span>
+                    </a>
+                    <a href="/admin/attendance/absent" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_absent' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="user-x" class="w-4 h-4 text-red-400"></i>
+                        <span>आज अनुपस्थित विद्यार्थी</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- शिक्षक तथा कर्मचारी -->
+            <div class="pt-2">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">जनशक्ति</p>
+                <div class="mt-1 space-y-0.5">
+                    <a href="/admin/teachers" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'teachers' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                        <span>शिक्षक व्यवस्थापन</span>
+                    </a>
+                    <a href="/admin/teacher-attendance" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'teacher_attendance' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i>
+                        <span>शिक्षक हाजिरी (Admin Only)</span>
+                    </a>
+                    <a href="/admin/teachers/assignments" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'teacher_assignments' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="user-plus" class="w-4 h-4 text-sky-400"></i>
+                        <span>कक्षा बाँडफाँड (Assignments)</span>
+                    </a>
+                    <a href="/admin/staff" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'staff' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="briefcase" class="w-4 h-4"></i>
+                        <span>कर्मचारी व्यवस्थापन</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- विद्यालय प्रशासन तथा समितिहरू -->
+            <div class="pt-2">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">प्रशासन तथा समिति</p>
+                <div class="mt-1 space-y-0.5">
+                    <a href="/admin/management-committee" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'mgmt_comm' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="shield" class="w-4 h-4"></i>
+                        <span>व्यवस्थापन समिति</span>
+                    </a>
+                    <a href="/admin/trustee-committee" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'trustee_comm' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="landmark" class="w-4 h-4 text-amber-400"></i>
+                        <span>गुठियार समिति</span>
+                    </a>
+                    <a href="/admin/leadership" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'leadership' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="award" class="w-4 h-4 text-instGold"></i>
+                        <span>प्रधानाध्यापक / सहायक प्र.अ.</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- आवास तथा यातायात -->
+            <div class="pt-2">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">सेवा तथा पूर्वाधार</p>
+                <div class="mt-1 space-y-0.5">
+                    <a href="/admin/hostels" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'hostels' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="bed-double" class="w-4 h-4 text-purple-400"></i>
+                        <span>छात्रावास (Hostel)</span>
+                    </a>
+                    <a href="/admin/transport" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'transport' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="bus" class="w-4 h-4 text-amber-400"></i>
+                        <span>यातायात (Transport)</span>
+                    </a>
+                    <a href="/admin/facilities" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'facilities' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="building" class="w-4 h-4"></i>
+                        <span>सुविधा (Facilities)</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- सूचना तथा मिडिया -->
+            <div class="pt-2">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">वेबसाइट सामग्री</p>
+                <div class="mt-1 space-y-0.5">
+                    <a href="/admin/notices" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'notices' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="bell" class="w-4 h-4 text-red-400"></i>
+                        <span>सूचना व्यवस्थापन</span>
+                    </a>
+                    <a href="/admin/news" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'news' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="newspaper" class="w-4 h-4"></i>
+                        <span>समाचार</span>
+                    </a>
+                    <a href="/admin/publications" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'publications' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="file-text" class="w-4 h-4 text-sky-400"></i>
+                        <span>प्रकाशन (Publications)</span>
+                    </a>
+                    <a href="/admin/gallery" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'gallery' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="image" class="w-4 h-4"></i>
+                        <span>फोटो ग्यालेरी</span>
+                    </a>
+                    <a href="/admin/videos" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'videos' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="video" class="w-4 h-4 text-red-500"></i>
+                        <span>भिडियो</span>
+                    </a>
+                    <a href="/admin/calendar" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'calendar' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="calendar" class="w-4 h-4 text-purple-400"></i>
+                        <span>शैक्षिक क्यालेन्डर</span>
+                    </a>
+                    <a href="/admin/admissions" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'admissions' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="user-plus" class="w-4 h-4 text-green-400"></i>
+                        <span>अनलाइन भर्ना आवेदन</span>
+                    </a>
+                    <a href="/admin/contact-messages" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'contact_messages' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="mail" class="w-4 h-4 text-sky-400"></i>
+                        <span>सम्पर्क सन्देशहरू</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- प्रणाली तथा सुरक्षा -->
+            <div class="pt-2 pb-6">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">सिस्टम र सेटिङ</p>
+                <div class="mt-1 space-y-0.5">
+                    <a href="/admin/users" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'users' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i>
+                        <span>प्रयोगकर्ता र भूमिका (RBAC)</span>
+                    </a>
+                    <a href="/admin/audit-logs" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'audit' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="history" class="w-4 h-4 text-slate-400"></i>
+                        <span>अडिट लग (Audit Logs)</span>
+                    </a>
+                    <a href="/admin/settings" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'settings' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="settings" class="w-4 h-4 text-amber-400"></i>
+                        <span>विद्यालय सेटिङ</span>
+                    </a>
+                    <a href="/download" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white text-emerald-400 font-bold">
+                        <i data-lucide="download-cloud" class="w-4 h-4 text-emerald-400"></i>
+                        <span>ब्याकअप तथा डाउनलोड</span>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Sidebar User Footer -->
+        <div class="p-3 border-t border-instBlue-light/60 bg-instBlue/50 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2 overflow-hidden">
+                <div class="w-8 h-8 rounded-full bg-instGold text-white font-bold flex items-center justify-center flex-shrink-0">
+                    {{ current_user.username[:1].upper() if current_user else 'A' }}
+                </div>
+                <div class="truncate">
+                    <p class="font-bold text-white leading-tight truncate">{{ current_user.full_name_ne if current_user else 'प्रशासक' }}</p>
+                    <p class="text-[10px] text-slate-400 truncate">{{ current_user.role if current_user else 'ADMIN' }}</p>
+                </div>
+            </div>
+            <button onclick="handleLogout()" class="p-1.5 rounded text-slate-400 hover:text-white hover:bg-red-600 transition" title="लगआउट">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN ADMIN CONTENT AREA -->
+    <div class="flex-grow flex flex-col h-full overflow-hidden">
+        
+        <!-- Top Admin Header Bar -->
+        <header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between flex-shrink-0 z-20">
+            <div class="flex items-center gap-3">
+                <button id="sidebarOpenBtn" class="lg:hidden p-1.5 rounded text-slate-600 hover:bg-slate-100">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                <div class="hidden sm:block">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">विद्यालय व्यवस्थापन प्रणाली</span>
+                    <h1 class="text-sm font-bold text-instBlue leading-none">{{ settings.name_ne }}</h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 sm:gap-4 text-xs">
+                <a href="/" target="_blank" class="hidden sm:flex items-center gap-1.5 text-instBlue hover:text-instBlue-dark font-semibold px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 rounded-md transition">
+                    <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+                    <span>वेबसाइट हेर्नुहोस्</span>
+                </a>
+
+                <div class="h-6 w-px bg-slate-200"></div>
+
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+                    <span class="font-bold text-slate-700 hidden sm:inline">{{ current_user.username if current_user else 'admin' }}</span>
+                    <span class="bg-blue-100 text-instBlue font-bold text-[10px] px-2 py-0.5 rounded uppercase">{{ current_user.role if current_user else 'SUPER_ADMIN' }}</span>
+                </div>
+
+                <button onclick="handleLogout()" class="inline-flex items-center gap-1 text-slate-600 hover:text-red-600 px-2.5 py-1.5 rounded hover:bg-slate-100 transition font-medium">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">लगआउट</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Page Dynamic Body -->
+        <main class="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
+            {% block admin_content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        function handleLogout() {
+            if (confirm('के तपाईं लगआउट गर्न चाहनुहुन्छ?')) {
+                fetch('/api/auth/logout', {method: 'POST'})
+                    .then(() => window.location.href = '/login');
+            }
+        }
+
+        // Global Admin Universal File Upload Helper
+        window.adminUploadFile = async function(fileInput, targetInputId, statusElId) {
+            if (!fileInput.files || !fileInput.files[0]) return;
+            const file = fileInput.files[0];
+            const statusEl = statusElId ? document.getElementById(statusElId) : null;
+            if (statusEl) {
+                statusEl.innerHTML = '<span class="text-amber-600 font-semibold animate-pulse"><i data-lucide="loader" class="w-3.5 h-3.5 inline animate-spin"></i> फाइल अपलोड हुँदैछ...</span>';
+                if (window.lucide) lucide.createIcons();
+            }
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    if (targetInputId) {
+                        const targetInput = document.getElementById(targetInputId);
+                        if (targetInput) targetInput.value = data.url;
+                    }
+                    if (statusEl) {
+                        statusEl.innerHTML = `<span class="text-emerald-600 font-bold">✓ अपलोड सम्पन्न: <a href="${data.url}" target="_blank" class="underline font-mono text-[11px]">फाइल हेर्नुहोस्</a></span>`;
+                    }
+                } else {
+                    alert('फाइल अपलोड त्रुटि: ' + (data.detail || 'अपलोड हुन सकेन'));
+                    if (statusEl) statusEl.innerHTML = '<span class="text-red-500 font-bold">अपलोड असफल!</span>';
+                }
+            } catch(err) {
+                alert('सर्भर त्रुटि: ' + err.message);
+                if (statusEl) statusEl.innerHTML = '<span class="text-red-500 font-bold">अपलोड त्रुटि!</span>';
+            }
+        };
+
+        // Mobile sidebar toggle
+        const sidebar = document.getElementById('adminSidebar');
+        const openBtn = document.getElementById('sidebarOpenBtn');
+        const closeBtn = document.getElementById('sidebarToggleBtn');
+
+        if (openBtn) {
+            openBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+            });
+        }
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+            });
+        }
+    </script>
+    <script>
+        lucide.createIcons();
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

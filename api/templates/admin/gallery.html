@@ -1,0 +1,417 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}फोटो ग्यालरी व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue">फोटो ग्यालरी (Photo Gallery Albums)</h1>
+            <p class="text-xs text-slate-500 mt-0.5">विद्यालयका एल्बम, तस्विरहरू तथा फेसबुक फोटो आयात व्यवस्थापन</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <!-- Facebook Fetch Button -->
+            <button onclick="openFbModal()" class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
+                <i class="fab fa-facebook-f"></i>
+                <span>Facebook बाट फोटो ल्याउनुहोस्</span>
+            </button>
+
+            <!-- Standard Add Album Button -->
+            <button onclick="openAlbumModal()" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue/90 text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
+                <i class="fas fa-plus text-amber-300"></i>
+                <span>+ नयाँ एल्बम थप्नुहोस्</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Official Facebook Page Banner -->
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
+                <i class="fab fa-facebook-f text-lg"></i>
+            </div>
+            <div>
+                <p class="font-bold text-slate-900">आधिकारिक फेसबुक पेज: सहिद स्मृति आवासीय माध्यमिक विद्यालय</p>
+                <a href="https://www.facebook.com/profile.php?id=100092258731456" target="_blank" rel="noopener" class="text-blue-700 font-mono text-[11px] hover:underline break-all">
+                    https://www.facebook.com/profile.php?id=100092258731456
+                </a>
+            </div>
+        </div>
+        <a href="https://www.facebook.com/profile.php?id=100092258731456" target="_blank" rel="noopener" class="inline-flex items-center gap-1 bg-white border border-blue-300 text-blue-700 hover:bg-blue-100 font-bold px-3 py-1.5 rounded-lg text-xs transition">
+            <i class="fas fa-external-link-alt"></i>
+            <span>फेसबुक पेज खोल्नुहोस्</span>
+        </a>
+    </div>
+
+    <!-- Albums Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for a in albums %}
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition">
+            <div>
+                <div class="h-44 bg-slate-100 overflow-hidden relative group">
+                    <img src="{{ a.cover_image or '/static/images/hero-banner.jpg' }}" alt="" class="w-full h-full object-cover">
+                    <span class="absolute top-2 right-2 bg-slate-900/80 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                        {{ a.photos | length if a.photos else 0 }} तस्विरहरू
+                    </span>
+                    <span class="absolute bottom-2 left-2 bg-instBlue/90 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                        {{ a.category or 'विद्यालय कार्यक्रम' }}
+                    </span>
+                </div>
+                <div class="p-4 space-y-1">
+                    <h3 class="font-bold text-sm text-instBlue">{{ a.title_ne }}</h3>
+                    <p class="text-xs text-slate-500 line-clamp-2">{{ a.description_ne or 'विवरण उपलब्ध छैन' }}</p>
+                </div>
+            </div>
+
+            <div class="p-3 border-t bg-slate-50 flex items-center justify-between text-xs">
+                <span class="text-slate-500 font-mono text-[11px]">{{ a.created_at[:10] if a.created_at else '' }}</span>
+                <div class="flex items-center gap-1">
+                    <button type="button" onclick="openAddPhotoModal({{ a.id }}, '{{ a.title_ne | escape }}')" class="p-1.5 rounded text-emerald-700 hover:bg-emerald-50 transition" title="तस्विर थप्नुहोस्">
+                        <i class="fas fa-plus-circle"></i>
+                    </button>
+                    <button type="button" onclick='openEditAlbumModal({{ a | tojson | safe }})' class="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition" title="एल्बम सम्पादन">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" onclick="deleteAlbum({{ a.id }}, '{{ a.title_ne | escape }}')" class="p-1.5 rounded text-rose-600 hover:bg-rose-50 transition" title="एल्बम मेटाउनुहोस्">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-full bg-white p-8 rounded-xl border text-center text-slate-500 text-xs">
+            हाल कुनै एल्बम सिर्जना गरिएको छैन।
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- FACEBOOK PHOTO IMPORT MODAL -->
+<div id="fbModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 class="font-bold text-sm text-blue-700 flex items-center gap-2">
+                <i class="fab fa-facebook-f text-base"></i>
+                <span>Facebook बाट फोटो / पोस्ट सिंक तथा आयात</span>
+            </h3>
+            <button onclick="closeFbModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-base"></i></button>
+        </div>
+
+        <div class="bg-blue-50 p-3 rounded-lg text-slate-700 text-[11px] leading-relaxed">
+            आधिकारिक फेसबुक पेज (ID: 100092258731456) बाट फोटो वा पोस्टको लिंक पेस्ट गरी शीर्षक र क्याटेगरी चयन गर्नुहोस्:
+        </div>
+
+        <form id="fbImportForm" onsubmit="handleFbImport(event)" class="space-y-3">
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">फेसबुक पोस्ट / फोटो URL *</label>
+                <input type="url" id="fb_url" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none font-mono text-xs" placeholder="https://www.facebook.com/permalink.php?story_fbid=...&id=100092258731456" value="https://www.facebook.com/profile.php?id=100092258731456">
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">ग्यालरी क्याटेगरी (९ मुख्य विधाहरू) *</label>
+                <select id="fb_category" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                    <option value="विद्यालय कार्यक्रम">विद्यालय कार्यक्रम (School Events)</option>
+                    <option value="शैक्षिक">शैक्षिक (Academic Activities)</option>
+                    <option value="खेलकुद">खेलकुद (Sports & Games)</option>
+                    <option value="सांस्कृतिक">सांस्कृतिक (Cultural Programs)</option>
+                    <option value="अभिभावक">अभिभावक (Parents Day / Meeting)</option>
+                    <option value="पुरस्कार">पुरस्कार (Awards & Honors)</option>
+                    <option value="भ्रमण">भ्रमण (Educational Tour)</option>
+                    <option value="छात्रावास">छात्रावास (Hostel Life)</option>
+                    <option value="अन्य">अन्य (Other Moments)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">एल्बम / फोटो शीर्षक (नेपालीमा) *</label>
+                <input type="text" id="fb_title" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none" placeholder="उदा: अन्तर-सदन फुटबल प्रतियोगिता तथा पुरस्कार वितरण">
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">फोटो इमेज URL वा पाथ *</label>
+                <div class="space-y-1.5">
+                    <input type="text" id="fb_image" required value="/static/images/hero-banner.jpg" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-blue-600 focus:outline-none font-mono text-xs">
+                    <div class="flex items-center gap-2">
+                        <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded text-[11px] font-semibold transition">
+                            <i class="fas fa-upload text-blue-600"></i> कम्प्युटरबाट फोटो छान्नुहोस्
+                            <input type="file" accept="image/*" class="hidden" onchange="window.adminUploadFile(this, 'fb_image', 'fb_img_status')">
+                        </label>
+                        <span id="fb_img_status" class="text-[11px]"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">संक्षिप्त क्याप्सन / विवरण</label>
+                <textarea id="fb_desc" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none" placeholder="फेसबुकमा उल्लेख गरिएको विस्तृत विवरण..."></textarea>
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeFbModal()" class="px-4 py-2 border rounded-lg font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" id="fbSubmitBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow">फेसबुकबाट ल्याउनुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ADD / EDIT ALBUM MODAL -->
+<div id="albumModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 id="albumModalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i class="fas fa-images text-amber-500"></i>
+                <span>नयाँ एल्बम थप्नुहोस्</span>
+            </h3>
+            <button onclick="closeAlbumModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-base"></i></button>
+        </div>
+
+        <form id="albumSaveForm" class="space-y-3" onsubmit="handleAlbumSave(event)">
+            <input type="hidden" id="alb_id">
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">एल्बमको नाम *</label>
+                <input type="text" id="alb_title" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="वार्षिकोत्सव २०८२...">
+            </div>
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">विधा / क्याटेगरी</label>
+                <select id="alb_cat" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <option value="विद्यालय कार्यक्रम">विद्यालय कार्यक्रम</option>
+                    <option value="शैक्षिक">शैक्षिक</option>
+                    <option value="खेलकुद">खेलकुद</option>
+                    <option value="सांस्कृतिक">सांस्कृतिक</option>
+                    <option value="अभिभावक">अभिभावक</option>
+                    <option value="पुरस्कार">पुरस्कार</option>
+                    <option value="भ्रमण">भ्रमण</option>
+                    <option value="छात्रावास">छात्रावास</option>
+                    <option value="अन्य">अन्य</option>
+                </select>
+            </div>
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">कभर फोटो URL / Path *</label>
+                <div class="space-y-1.5">
+                    <input type="text" id="alb_cover" required value="/static/images/hero-banner.jpg" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <div class="flex items-center gap-2">
+                        <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded text-[11px] font-semibold transition">
+                            <i class="fas fa-upload text-blue-600"></i> कम्प्युटरबाट फोटो छान्नुहोस्
+                            <input type="file" accept="image/*" class="hidden" onchange="window.adminUploadFile(this, 'alb_cover', 'alb_cover_status')">
+                        </label>
+                        <span id="alb_cover_status" class="text-[11px]"></span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">विवरण</label>
+                <textarea id="alb_desc" rows="2" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="एल्बमको छोटो जानकारी..."></textarea>
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeAlbumModal()" class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" class="px-5 py-2 bg-instBlue hover:bg-instBlue/90 text-white font-bold rounded shadow transition">सुरक्षित गर्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ADD PHOTO TO ALBUM MODAL -->
+<div id="addPhotoModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i class="fas fa-camera text-emerald-600"></i>
+                <span id="photoModalAlbumName">एल्बममा फोटो थप्नुहोस्</span>
+            </h3>
+            <button onclick="closeAddPhotoModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-base"></i></button>
+        </div>
+
+        <form id="photoSaveForm" class="space-y-3" onsubmit="handlePhotoSave(event)">
+            <input type="hidden" id="photo_alb_id">
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">फोटो URL / कम्प्युटरबाट अपलोड *</label>
+                <div class="space-y-1.5">
+                    <input type="text" id="photo_url" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="/static/uploads/...">
+                    <div class="flex items-center gap-2">
+                        <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded text-[11px] font-semibold transition">
+                            <i class="fas fa-upload text-blue-600"></i> कम्प्युटरबाट फोटो छान्नुहोस्
+                            <input type="file" accept="image/*" class="hidden" onchange="window.adminUploadFile(this, 'photo_url', 'photo_upload_status')">
+                        </label>
+                        <span id="photo_upload_status" class="text-[11px]"></span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">फोटोको क्याप्सन (वैकल्पिक)</label>
+                <input type="text" id="photo_caption" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="पुरस्कार वितरणको क्षण...">
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeAddPhotoModal()" class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded shadow transition">तस्विर सुरक्षित गर्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openFbModal() {
+    document.getElementById('fbModal').classList.remove('hidden');
+}
+function closeFbModal() {
+    document.getElementById('fbModal').classList.add('hidden');
+}
+
+function openAlbumModal() {
+    document.getElementById('alb_id').value = '';
+    document.getElementById('albumModalTitle').innerHTML = '<i class="fas fa-images text-amber-500"></i><span>+ नयाँ एल्बम थप्नुहोस्</span>';
+    document.getElementById('alb_title').value = '';
+    document.getElementById('alb_cover').value = '/static/images/hero-banner.jpg';
+    document.getElementById('alb_desc').value = '';
+    document.getElementById('albumModal').classList.remove('hidden');
+}
+
+function openEditAlbumModal(alb) {
+    document.getElementById('alb_id').value = alb.id;
+    document.getElementById('albumModalTitle').innerHTML = '<i class="fas fa-edit text-blue-600"></i><span>एल्बम सम्पादन गर्नुहोस्</span>';
+    document.getElementById('alb_title').value = alb.title_ne || '';
+    document.getElementById('alb_cat').value = alb.category || 'विद्यालय कार्यक्रम';
+    document.getElementById('alb_cover').value = alb.cover_image || '/static/images/hero-banner.jpg';
+    document.getElementById('alb_desc').value = alb.description_ne || '';
+    document.getElementById('albumModal').classList.remove('hidden');
+}
+
+function closeAlbumModal() {
+    document.getElementById('albumModal').classList.add('hidden');
+}
+
+function openAddPhotoModal(albumId, albumTitle) {
+    document.getElementById('photo_alb_id').value = albumId;
+    document.getElementById('photoModalAlbumName').innerText = `${albumTitle} - तस्विर थप्नुहोस्`;
+    document.getElementById('photo_url').value = '';
+    document.getElementById('photo_caption').value = '';
+    document.getElementById('photo_upload_status').innerText = '';
+    document.getElementById('addPhotoModal').classList.remove('hidden');
+}
+
+function closeAddPhotoModal() {
+    document.getElementById('addPhotoModal').classList.add('hidden');
+}
+
+async function handlePhotoSave(e) {
+    e.preventDefault();
+    const albumId = document.getElementById('photo_alb_id').value;
+    const imageUrl = document.getElementById('photo_url').value.trim();
+    const caption = document.getElementById('photo_caption').value.trim();
+
+    try {
+        const res = await fetch(`/api/content/albums/${albumId}/photos`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                image_url: imageUrl,
+                caption_ne: caption
+            })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert("✓ तस्विर सफलतापूर्वक थपियो!");
+            location.reload();
+        } else {
+            alert(data.detail || "त्रुटि भयो।");
+        }
+    } catch(err) {
+        alert("सर्भर त्रुटि भयो।");
+    }
+}
+
+async function deleteAlbum(id, title) {
+    if (!confirm(`के तपाईं निश्चित हुनुहुन्छ? "${title}" एल्बम र यसभित्रका सबै तस्विरहरू मेटिनेछन्।`)) return;
+    try {
+        const res = await fetch(`/api/content/albums/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert(data.message || "एल्बम सफलतापूर्वक हटाइयो।");
+            location.reload();
+        } else {
+            alert(data.detail || "मेटाउन सकिएन।");
+        }
+    } catch(err) {
+        alert("सर्भर त्रुटि भयो।");
+    }
+}
+
+async function handleFbImport(e) {
+    e.preventDefault();
+    const btn = document.getElementById('fbSubmitBtn');
+    const title = document.getElementById('fb_title').value.trim();
+    const cover = document.getElementById('fb_image').value.trim();
+    const cat = document.getElementById('fb_category').value;
+    const desc = document.getElementById('fb_desc').value.trim();
+    const fbUrl = document.getElementById('fb_url').value.trim();
+
+    btn.disabled = true;
+    btn.innerText = 'आयात हुँदैछ...';
+
+    try {
+        const res = await fetch('/api/content/albums', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                title_ne: title,
+                title_en: title,
+                cover_image: cover,
+                category: cat,
+                description_ne: desc ? `${desc} (फेसबुक पोस्ट: ${fbUrl})` : `फेसबुक पोस्ट: ${fbUrl}`
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert("✓ फेसबुक फोटो एल्बममा सफलतापूर्वक आयात भयो!");
+            location.reload();
+        } else {
+            alert(data.detail || "त्रुटि भयो।");
+        }
+    } catch(err) {
+        alert("त्रुटि भयो।");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = 'फेसबुकबाट ल्याउनुहोस्';
+    }
+}
+
+async function handleAlbumSave(e) {
+    e.preventDefault();
+    const id = document.getElementById('alb_id').value;
+    const title = document.getElementById('alb_title').value.trim();
+    const cover = document.getElementById('alb_cover').value.trim();
+    const cat = document.getElementById('alb_cat').value;
+    const desc = document.getElementById('alb_desc').value.trim();
+
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `/api/content/albums/${id}` : '/api/content/albums';
+
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                title_ne: title,
+                cover_image: cover,
+                category: cat,
+                description_ne: desc
+            })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert(data.message || "✓ एल्बम सफलतापूर्वक सुरक्षित भयो!");
+            location.reload();
+        } else {
+            alert(data.detail || "त्रुटि भयो।");
+        }
+    } catch(err) {
+        alert("सर्भर त्रुटि भयो।");
+    }
+}
+</script>
+{% endblock %}

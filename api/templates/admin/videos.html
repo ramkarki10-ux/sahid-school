@@ -1,0 +1,186 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}भिडियो ग्यालरी व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue">भिडियो ग्यालरी व्यवस्थापन (Video Gallery)</h1>
+            <p class="text-xs text-slate-500 mt-0.5">विद्यालयका युट्युब भिडियोहरू, सांस्कृतिक कार्यक्रम तथा वृत्तचित्रहरूको व्यवस्थापन</p>
+        </div>
+
+        <button onclick="openVideoModal()" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue/90 text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
+            <i class="fas fa-video text-amber-300"></i>
+            <span>+ नयाँ भिडियो थप्नुहोस्</span>
+        </button>
+    </div>
+
+    <!-- Videos Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for v in videos %}
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition">
+            <div>
+                <div class="h-44 bg-slate-900 relative group overflow-hidden">
+                    <img src="{{ v.thumbnail or 'https://img.youtube.com/vi/' + (v.youtube_id or 'dQw4w9WgXcQ') + '/hqdefault.jpg' }}" alt="" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition duration-300">
+                    <a href="{{ v.youtube_url }}" target="_blank" class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition">
+                        <div class="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg transform group-hover:scale-110 transition">
+                            <i class="fas fa-play text-lg ml-0.5"></i>
+                        </div>
+                    </a>
+                </div>
+                <div class="p-4 space-y-1.5">
+                    <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium">
+                        <span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-semibold">{{ v.category or 'सांस्कृतिक' }}</span>
+                        <span class="font-mono text-slate-400">{{ v.publish_date or '' }}</span>
+                    </div>
+                    <h3 class="font-bold text-sm text-instBlue line-clamp-1">{{ v.title }}</h3>
+                    <p class="text-xs text-slate-500 line-clamp-2">{{ v.description or 'विवरण उपलब्ध छैन' }}</p>
+                </div>
+            </div>
+
+            <div class="p-3 border-t bg-slate-50 flex items-center justify-between text-xs">
+                <span class="text-slate-400 font-mono text-[10px]">ID: {{ v.youtube_id }}</span>
+                <div class="flex items-center gap-1.5">
+                    <button onclick='openEditVideoModal({{ v | tojson | safe }})' class="p-1.5 rounded text-blue-600 hover:bg-blue-100 transition" title="सम्पादन गर्नुहोस्">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteVideo({{ v.id }}, '{{ v.title | escape }}')" class="p-1.5 rounded text-rose-600 hover:bg-rose-100 transition" title="मेटाउनुहोस्">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-full bg-white p-8 rounded-xl border text-center text-slate-500 text-xs">
+            हाल कुनै भिडियो प्रविष्टि गरिएको छैन।
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div id="videoModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 id="modalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i class="fab fa-youtube text-red-600 text-base"></i>
+                <span>युट्युब भिडियो विवरण</span>
+            </h3>
+            <button onclick="closeVideoModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-base"></i></button>
+        </div>
+
+        <form id="videoSaveForm" onsubmit="saveVideo(event)" class="space-y-3">
+            <input type="hidden" id="vd_id">
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">भिडियोको शीर्षक *</label>
+                <input type="text" id="vd_title" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="विद्यालय परिचय वृत्तचित्र २०८२...">
+            </div>
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">युट्युब भिडियो लिङ्क (YouTube URL) *</label>
+                <input type="url" id="vd_url" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="https://www.youtube.com/watch?v=...">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">वर्ग (Category)</label>
+                    <select id="vd_category" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="सांस्कृतिक">सांस्कृतिक</option>
+                        <option value="वृत्तचित्र">विद्यालय वृत्तचित्र</option>
+                        <option value="शैक्षिक">शैक्षिक गतिविधि</option>
+                        <option value="खेलकुद">खेलकुद</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">मिति</label>
+                    <input type="text" id="vd_date" value="२०८२-११-२५" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+            </div>
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">विवरण</label>
+                <textarea id="vd_desc" rows="3" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="भिडियोको संक्षिप्त विवरण..."></textarea>
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeVideoModal()" class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" class="px-5 py-2 bg-instBlue hover:bg-instBlue/90 text-white font-bold rounded shadow transition">सुरक्षित गर्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openVideoModal() { 
+        document.getElementById('vd_id').value = '';
+        document.getElementById('modalTitle').innerHTML = '<i class="fab fa-youtube text-red-600 text-base"></i><span>+ नयाँ भिडियो थप्नुहोस्</span>';
+        document.getElementById('videoSaveForm').reset();
+        document.getElementById('videoModal').classList.remove('hidden'); 
+    }
+
+    function openEditVideoModal(v) {
+        document.getElementById('vd_id').value = v.id;
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit text-blue-600 text-base"></i><span>भिडियो सम्पादन गर्नुहोस्</span>';
+        document.getElementById('vd_title').value = v.title || '';
+        document.getElementById('vd_url').value = v.youtube_url || '';
+        document.getElementById('vd_category').value = v.category || 'सांस्कृतिक';
+        document.getElementById('vd_date').value = v.publish_date || '';
+        document.getElementById('vd_desc').value = v.description || '';
+        document.getElementById('videoModal').classList.remove('hidden');
+    }
+
+    function closeVideoModal() { 
+        document.getElementById('videoModal').classList.add('hidden'); 
+        document.getElementById('videoSaveForm').reset();
+    }
+
+    async function saveVideo(e) {
+        e.preventDefault();
+        const id = document.getElementById('vd_id').value;
+        const payload = {
+            title: document.getElementById('vd_title').value.trim(),
+            youtube_url: document.getElementById('vd_url').value.trim(),
+            category: document.getElementById('vd_category').value,
+            publish_date: document.getElementById('vd_date').value.trim(),
+            description: document.getElementById('vd_desc').value.trim() || null
+        };
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/videos/${id}` : '/api/videos';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message || 'सफलतापूर्वक सुरक्षित भयो!');
+                window.location.reload();
+            } else {
+                alert('त्रुटि: ' + (data.detail || 'असफल भयो'));
+            }
+        } catch (err) {
+            alert('सर्भर त्रुटि: ' + err.message);
+        }
+    }
+
+    async function deleteVideo(id, title) {
+        if (!confirm(`के तपाईं निश्चित रूपमा "${title}" मेटाउन चाहनुहुन्छ?`)) return;
+        try {
+            const res = await fetch(`/api/videos/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                alert('भिडियो मेटाइयो');
+                window.location.reload();
+            } else {
+                const data = await res.json();
+                alert('त्रुटि: ' + (data.detail || 'मेटाउन सकिएन'));
+            }
+        } catch (err) {
+            alert('सर्भर त्रुटि: ' + err.message);
+        }
+    }
+</script>
+{% endblock %}

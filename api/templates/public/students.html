@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+
+{% block title %}विद्यार्थी विवरण तथा छात्रावास जीवन | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="bg-slate-100 py-6 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="flex items-center gap-2 text-xs text-slate-500">
+            <a href="/" class="hover:text-instBlue">गृहपृष्ठ</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <span class="text-slate-800 font-semibold">विद्यार्थी</span>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <span class="text-instBlue font-semibold">विद्यार्थी विवरण</span>
+        </div>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-3">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-instBlue">विद्यार्थी विवरण तथा नामावली</h1>
+                <p class="text-xs text-slate-600 mt-1">प्रारम्भिक बाल विकास (नर्सरी, एलकेजी, युकेजी) देखि कक्षा १२ सम्म अध्ययनरत सम्पूर्ण विद्यार्थीहरूको आधिकारिक विवरण</p>
+            </div>
+            <!-- Quick Action Links -->
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="/admission" class="inline-flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-2 rounded-md shadow-sm transition">
+                    <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                    <span>नयाँ भर्ना आवेदन</span>
+                </a>
+                <a href="/leave-application" class="inline-flex items-center gap-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold px-3 py-2 rounded-md transition">
+                    <i data-lucide="clipboard-pen" class="w-3.5 h-3.5 text-red-600"></i>
+                    <span>बिदा निवेदन</span>
+                </a>
+                <a href="/parent/login" class="inline-flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-bold px-3 py-2 rounded-md shadow-sm transition">
+                    <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                    <span>अभिभावक पोर्टल</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="py-8 bg-slate-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 space-y-6">
+        
+        <!-- Tab Navigation -->
+        <div class="flex border-b border-slate-200 gap-2 bg-white p-2 rounded-xl shadow-sm">
+            <button id="tabBtnDirectory" onclick="switchTab('directory')" class="px-5 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-instBlue text-white shadow-sm">
+                <i data-lucide="table" class="w-4 h-4"></i>
+                <span>विद्यार्थी नामावली विवरण (Directory)</span>
+            </button>
+            <button id="tabBtnHostel" onclick="switchTab('hostel')" class="px-5 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-100">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span>छात्रावास तथा विद्यार्थी जीवन (Residential Life)</span>
+            </button>
+        </div>
+
+        <!-- TAB 1: STUDENT DIRECTORY TABLE -->
+        <div id="tabDirectory" class="space-y-6">
+            
+            <!-- Summary Counters -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                    <div class="text-2xl font-black text-instBlue">{{ stats.total_students }}</div>
+                    <div class="text-xs text-slate-600 font-medium">कुल अध्ययनरत विद्यार्थी</div>
+                </div>
+                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                    <div class="text-2xl font-black text-amber-600">{{ stats.residential_students }}</div>
+                    <div class="text-xs text-slate-600 font-medium">छात्रावास आवासीय विद्यार्थी</div>
+                </div>
+                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                    <div class="text-2xl font-black text-emerald-600">{{ stats.day_students }}</div>
+                    <div class="text-xs text-slate-600 font-medium">दिवा विद्यार्थी (Day Scholars)</div>
+                </div>
+                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                    <div class="text-2xl font-black text-purple-600">{{ classes|length }}</div>
+                    <div class="text-xs text-slate-600 font-medium">कक्षा तह (केजी देखि १२ सम्म)</div>
+                </div>
+            </div>
+
+            <!-- Search and Filter Bar -->
+            <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                    <!-- Search Input -->
+                    <div class="md:col-span-5 relative">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+                        <input 
+                            type="text" 
+                            id="searchStudentInput" 
+                            placeholder="विद्यार्थीको नाम, रोल नं., इमिस कोड वा सम्पर्कबाट खोज्नुहोस्..." 
+                            class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-instBlue focus:outline-none"
+                            oninput="filterStudentsTable()"
+                        >
+                    </div>
+
+                    <!-- Class Filter Dropdown -->
+                    <div class="md:col-span-3">
+                        <select 
+                            id="classFilterSelect" 
+                            class="w-full py-2 px-3 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-instBlue focus:outline-none"
+                            onchange="filterStudentsTable()"
+                        >
+                            <option value="">सबै कक्षाहरू (All Classes)</option>
+                            {% for c in classes %}
+                            <option value="{{ c.class_name_ne }}">{{ c.class_name_ne }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Gender Filter Dropdown -->
+                    <div class="md:col-span-2">
+                        <select 
+                            id="genderFilterSelect" 
+                            class="w-full py-2 px-3 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-instBlue focus:outline-none"
+                            onchange="filterStudentsTable()"
+                        >
+                            <option value="">सबै लिङ्ग</option>
+                            <option value="छात्र">छात्र (Boys)</option>
+                            <option value="छात्रा">छात्रा (Girls)</option>
+                        </select>
+                    </div>
+
+                    <!-- Status Filter Dropdown -->
+                    <div class="md:col-span-2">
+                        <select 
+                            id="residentialFilterSelect" 
+                            class="w-full py-2 px-3 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-instBlue focus:outline-none"
+                            onchange="filterStudentsTable()"
+                        >
+                            <option value="">सबै प्रकार</option>
+                            <option value="आवासीय">आवासीय</option>
+                            <option value="दिवा">दिवा</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-100">
+                    <span>देखाउन खोजिएको: <strong id="visibleCount" class="text-instBlue font-bold">{{ students_list|length }}</strong> जना विद्यार्थी</span>
+                    <button type="button" onclick="resetFilters()" class="text-red-600 hover:underline font-semibold flex items-center gap-1">
+                        <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
+                        <span>फिल्टर रिसेट गर्नुहोस्</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Student Directory Table -->
+            <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs" id="studentsTable">
+                        <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-200">
+                            <tr>
+                                <th class="py-3 px-3 text-center w-12">क्र.सं.</th>
+                                <th class="py-3 px-3 text-center">इमिस कोड</th>
+                                <th class="py-3 px-4">विद्यार्थीको नाम</th>
+                                <th class="py-3 px-3 text-center">कक्षा</th>
+                                <th class="py-3 px-3 text-center">रोल नं.</th>
+                                <th class="py-3 px-3 text-center">लिङ्ग</th>
+                                <th class="py-3 px-4">ठेगाना</th>
+                                <th class="py-3 px-4">अभिभावकको नाम</th>
+                                <th class="py-3 px-3.5">सम्पर्क नं.</th>
+                                <th class="py-3 px-3 text-center">प्रकार</th>
+                                <th class="py-3 px-3.5 text-center">कार्य (Action)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200" id="studentsTableBody">
+                            {% for s in students_list %}
+                            <tr class="student-row hover:bg-blue-50/50 transition" 
+                                data-name="{{ s.name_nepali }} {{ s.name_english }}"
+                                data-class="{{ s.class_name_ne }}"
+                                data-roll="{{ s.roll_no }}"
+                                data-gender="{{ s.gender }}"
+                                data-phone="{{ s.guardian_phone }}"
+                                data-res="{{ s.residential_status }}"
+                                data-emis="{{ s.emis_code }}"
+                            >
+                                <td class="py-3 px-3 text-center text-slate-500 font-semibold row-sn">{{ loop.index }}</td>
+                                <td class="py-3 px-3 text-center font-mono font-bold text-instBlue text-[11px] bg-slate-50/60">
+                                    {{ s.emis_code or '-' }}
+                                </td>
+                                <td class="py-3 px-4 font-bold text-slate-900">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-full bg-instBlue/10 text-instBlue flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                            {{ s.name_nepali[0] }}
+                                        </div>
+                                        <div>
+                                            <p class="leading-tight">{{ s.name_nepali }}</p>
+                                            <p class="text-[11px] text-slate-400 font-normal">{{ s.name_english }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-3 text-center">
+                                    <span class="inline-block px-2 py-0.5 rounded bg-blue-100 text-blue-900 font-bold text-[11px]">
+                                        {{ s.class_name_ne }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-3 text-center font-bold text-slate-800">
+                                    {{ s.roll_no }}
+                                </td>
+                                <td class="py-3 px-3 text-center">
+                                    <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold {% if s.gender == 'छात्रा' %}bg-pink-100 text-pink-800{% else %}bg-sky-100 text-sky-800{% endif %}">
+                                        {{ s.gender }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-slate-600 truncate max-w-[160px]" title="{{ s.address }}">
+                                    {{ s.address }}
+                                </td>
+                                <td class="py-3 px-4 text-slate-800 font-medium">
+                                    {{ s.guardian_name }}
+                                </td>
+                                <td class="py-3 px-3.5 text-slate-700 font-mono">
+                                    <a href="tel:{{ s.guardian_phone }}" class="text-instBlue hover:underline">{{ s.guardian_phone }}</a>
+                                </td>
+                                <td class="py-3 px-3 text-center">
+                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold {% if s.residential_status == 'आवासीय' %}bg-amber-100 text-amber-800{% else %}bg-slate-100 text-slate-700{% endif %}">
+                                        {{ s.residential_status }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-3.5 text-center">
+                                    <div class="inline-flex items-center gap-1">
+                                        <button 
+                                            type="button" 
+                                            onclick='openStudentModal({{ s|tojson|safe }})'
+                                            class="inline-flex items-center gap-1 bg-instBlue hover:bg-instBlue-dark text-white px-2.5 py-1 rounded text-[11px] font-semibold shadow-sm transition"
+                                            title="विद्यार्थीको पूर्ण विवरण हेर्नुहोस्"
+                                        >
+                                            <i data-lucide="eye" class="w-3 h-3"></i>
+                                            <span>हेर्नुहोस्</span>
+                                        </button>
+                                        {% if current_user and current_user.role in ['SUPER_ADMIN', 'PRINCIPAL'] %}
+                                        <a href="/admin/students/{{ s.id }}" class="p-1 text-slate-500 hover:text-amber-600 rounded transition" title="सम्पादन">
+                                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty state -->
+                <div id="noStudentsMsg" class="hidden py-12 text-center text-slate-500 text-xs">
+                    <i data-lucide="user-x" class="w-10 h-10 mx-auto text-slate-400 mb-2"></i>
+                    <p class="font-bold text-sm text-slate-700">कुनै विद्यार्थी फेला परेन।</p>
+                    <p class="text-slate-400 mt-1">कृपया फरक खोजी शब्द वा फिल्टर प्रयोग गर्नुहोस्।</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- TAB 2: RESIDENTIAL LIFE & HOSTEL INFORMATION -->
+        <div id="tabHostel" class="hidden space-y-6">
+            <!-- Residential Life Highlight -->
+            <div class="border border-slate-200 rounded-2xl p-6 sm:p-8 bg-gradient-to-r from-blue-50 to-white shadow-sm">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                    <div class="md:col-span-8 space-y-3">
+                        <span class="bg-instGold text-white text-[11px] font-bold px-2.5 py-0.5 rounded uppercase">नमुना छात्रावास</span>
+                        <h2 class="text-xl sm:text-2xl font-bold text-slate-900">पारिवारिक वातावरणमा छात्र तथा छात्रा छात्रावास</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed text-justify">
+                            सहिद स्मृति आवासीय माध्यमिक विद्यालय इटहरी–१९ परिसरभित्र छात्र र छात्राका लागि छुट्टाछुट्टै अत्याधुनिक सुविधायुक्त भवनहरू रहेका छन्। पूर्णकालीन अनुभवी वार्डेन, नियमित बिहानी तथा साँझको अध्ययन तालिका (Evening Study), शुद्ध शाकाहारी तथा पोषणयुक्त भोजन, दैनिक योग तथा खेलकुद र नियमित स्वास्थ्य परीक्षणको प्रत्याभूति गरिएको छ।
+                        </p>
+                        <div class="flex flex-wrap gap-4 pt-2 text-xs">
+                            <span class="flex items-center gap-1.5 text-slate-700 font-semibold"><i data-lucide="check" class="w-4 h-4 text-green-600"></i>२४सै घण्टा सुरक्षा तथा निगरानी</span>
+                            <span class="flex items-center gap-1.5 text-slate-700 font-semibold"><i data-lucide="check" class="w-4 h-4 text-green-600"></i>नियमित स्वास्थ्य जाँच तथा प्राथमिक उपचार</span>
+                            <span class="flex items-center gap-1.5 text-slate-700 font-semibold"><i data-lucide="check" class="w-4 h-4 text-green-600"></i>ई–लाइब्रेरी र अध्ययन कक्ष</span>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-4 bg-white border border-slate-200 p-4 rounded-xl shadow-sm space-y-3 text-xs">
+                        <h3 class="font-bold text-slate-900 border-b pb-2 flex items-center gap-1.5">
+                            <i data-lucide="clock" class="w-3.5 h-3.5 text-instBlue"></i>
+                            <span>दैनिक छात्रावास दिनचर्या</span>
+                        </h3>
+                        <div class="space-y-1.5 text-slate-600">
+                            <div class="flex justify-between"><span>बिहान ५:३० :</span> <span class="font-medium text-slate-800">उठ्ने तथा योग/शारीरिक अभ्यास</span></div>
+                            <div class="flex justify-between"><span>बिहान ६:३०–८:०० :</span> <span class="font-medium text-slate-800">बिहानी अध्ययन सत्र</span></div>
+                            <div class="flex justify-between"><span>बिहान ८:३० :</span> <span class="font-medium text-slate-800">बिहानी भोजन</span></div>
+                            <div class="flex justify-between"><span>९:४५–४:०० :</span> <span class="font-medium text-slate-800">नियमित कक्षा सञ्चालन</span></div>
+                            <div class="flex justify-between"><span>बेलुकी ४:३०–५:३० :</span> <span class="font-medium text-slate-800">खेलकुद तथा अतिरिक्त क्रियाकलाप</span></div>
+                            <div class="flex justify-between"><span>बेलुकी ६:३०–८:३० :</span> <span class="font-medium text-slate-800">साँझको स्व-अध्ययन</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code of Conduct -->
+            <div class="border border-slate-200 rounded-xl p-6 bg-white shadow-sm">
+                <h3 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+                    <i data-lucide="shield" class="w-4 h-4 text-instBlue"></i>
+                    <span>विद्यार्थी आचारसंहिता तथा अनुशासन नियमहरू</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600">
+                    <ul class="space-y-1.5 list-disc pl-5">
+                        <li>विद्यालयको तोकिएको पोसाक (Uniform) मा सफा र चिटिक्क भएर उपस्थित हुनुपर्नेछ।</li>
+                        <li>प्रात:कालीन प्रार्थना सभा (Assembly) मा समयमै अनिवार्य उपस्थित हुनुपर्नेछ।</li>
+                        <li>विद्यालयको भौतिक सम्पत्ति, पुस्तकालयका पुस्तक र प्रयोगशालाका उपकरणहरूको संरक्षण गर्नुपर्नेछ।</li>
+                    </ul>
+                    <ul class="space-y-1.5 list-disc pl-5">
+                        <li>आपसी सहिष्णुता, भ्रातृत्व र गुरुजनप्रति उच्च आदरभाव प्रदर्शन गर्नुपर्नेछ।</li>
+                        <li>मोबाइल फोन तथा अनाधिकृत विद्युतीय उपकरण विद्यालय समयमा निषेध गरिएको छ।</li>
+                        <li>अनुपस्थित हुँदा अभिभावकको लिखित निवेदन वा पूर्वजानकारी अनिवार्य छ।</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- STUDENT DETAILS MODAL -->
+<div id="studentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+        <button type="button" onclick="closeStudentModal()" class="absolute top-4 right-4 p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+
+        <div class="flex items-center gap-4 border-b border-slate-200 pb-4">
+            <div class="w-14 h-14 rounded-full bg-instBlue/10 text-instBlue flex items-center justify-center font-bold text-xl flex-shrink-0" id="modalInitial">
+                वि
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-slate-900" id="modalNameNe">विद्यार्थीको नाम</h3>
+                <p class="text-xs text-slate-500 font-medium" id="modalNameEn">Student Name</p>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="bg-blue-100 text-blue-900 text-[10px] font-bold px-2 py-0.5 rounded" id="modalClass">कक्षा</span>
+                    <span class="bg-slate-100 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded" id="modalRoll">रोल नं: ०</span>
+                    <span class="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded" id="modalStatus">प्रकार</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 py-4 text-xs text-slate-600 border-b border-slate-100">
+            <div>
+                <p class="text-slate-400 text-[10px]">भर्ना नम्बर / ID</p>
+                <p class="font-mono font-bold text-slate-800" id="modalStudentId">-</p>
+            </div>
+            <div>
+                <p class="text-slate-400 text-[10px]">इमिस कोड (EMIS Code)</p>
+                <p class="font-mono font-bold text-instBlue" id="modalEmisCode">-</p>
+            </div>
+            <div>
+                <p class="text-slate-400 text-[10px]">लिङ्ग</p>
+                <p class="font-bold text-slate-800" id="modalGender">-</p>
+            </div>
+            <div>
+                <p class="text-slate-400 text-[10px]">अभिभावकको नाम</p>
+                <p class="font-bold text-slate-800" id="modalGuardian">-</p>
+            </div>
+            <div>
+                <p class="text-slate-400 text-[10px]">अभिभावक सम्पर्क नम्बर</p>
+                <p class="font-mono font-bold text-instBlue" id="modalPhone">-</p>
+            </div>
+            <div>
+                <p class="text-slate-400 text-[10px]">ठेगाना</p>
+                <p class="font-medium text-slate-800" id="modalAddress">-</p>
+            </div>
+        </div>
+
+        <div class="pt-4 flex justify-end gap-2">
+            <button type="button" onclick="closeStudentModal()" class="px-4 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100">
+                बन्द गर्नुहोस्
+            </button>
+            <a href="/parent/login" class="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-900 rounded-lg text-xs font-bold shadow-sm">
+                अभिभावक पोर्टल लगइन
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function switchTab(tab) {
+    const tabDir = document.getElementById('tabDirectory');
+    const tabHost = document.getElementById('tabHostel');
+    const btnDir = document.getElementById('tabBtnDirectory');
+    const btnHost = document.getElementById('tabBtnHostel');
+
+    if (tab === 'directory') {
+        tabDir.classList.remove('hidden');
+        tabHost.classList.add('hidden');
+        btnDir.className = "px-5 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-instBlue text-white shadow-sm";
+        btnHost.className = "px-5 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-100";
+    } else {
+        tabDir.classList.add('hidden');
+        tabHost.classList.remove('hidden');
+        btnHost.className = "px-5 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-instBlue text-white shadow-sm";
+        btnDir.className = "px-5 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-100";
+    }
+    if (window.lucide) lucide.createIcons();
+}
+
+function filterStudentsTable() {
+    const query = document.getElementById('searchStudentInput').value.trim().toLowerCase();
+    const classVal = document.getElementById('classFilterSelect').value;
+    const genderVal = document.getElementById('genderFilterSelect').value;
+    const resVal = document.getElementById('residentialFilterSelect').value;
+
+    const rows = document.querySelectorAll('.student-row');
+    let visibleCount = 0;
+
+    rows.forEach((row, idx) => {
+        const name = (row.dataset.name || '').toLowerCase();
+        const cName = row.dataset.class || '';
+        const roll = row.dataset.roll || '';
+        const gender = row.dataset.gender || '';
+        const phone = (row.dataset.phone || '').toLowerCase();
+        const res = row.dataset.res || '';
+
+        const emis = (row.dataset.emis || '').toLowerCase();
+        const matchesQuery = !query || name.includes(query) || roll === query || phone.includes(query) || emis.includes(query);
+        const matchesClass = !classVal || cName === classVal;
+        const matchesGender = !genderVal || gender === genderVal;
+        const matchesRes = !resVal || res === resVal;
+
+        if (matchesQuery && matchesClass && matchesGender && matchesRes) {
+            row.style.display = '';
+            visibleCount++;
+            const snCell = row.querySelector('.row-sn');
+            if (snCell) snCell.innerText = visibleCount;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    document.getElementById('visibleCount').innerText = visibleCount;
+    const noMsg = document.getElementById('noStudentsMsg');
+    if (visibleCount === 0) {
+        noMsg.classList.remove('hidden');
+    } else {
+        noMsg.classList.add('hidden');
+    }
+}
+
+function resetFilters() {
+    document.getElementById('searchStudentInput').value = '';
+    document.getElementById('classFilterSelect').value = '';
+    document.getElementById('genderFilterSelect').value = '';
+    document.getElementById('residentialFilterSelect').value = '';
+    filterStudentsTable();
+}
+
+function openStudentModal(stu) {
+    document.getElementById('modalInitial').innerText = (stu.name_nepali || 'वि')[0];
+    document.getElementById('modalNameNe').innerText = stu.name_nepali || '';
+    document.getElementById('modalNameEn').innerText = stu.name_english || '';
+    document.getElementById('modalClass').innerText = stu.class_name_ne || '';
+    document.getElementById('modalRoll').innerText = 'रोल नं: ' + (stu.roll_no || '');
+    document.getElementById('modalStatus').innerText = stu.residential_status || 'दिवा';
+    document.getElementById('modalStudentId').innerText = stu.student_id || stu.admission_no || '-';
+    document.getElementById('modalEmisCode').innerText = stu.emis_code || '-';
+    document.getElementById('modalGender').innerText = stu.gender || '-';
+    document.getElementById('modalGuardian').innerText = stu.guardian_name || '-';
+    document.getElementById('modalPhone').innerText = stu.guardian_phone || '-';
+    document.getElementById('modalAddress').innerText = stu.address || '-';
+    document.getElementById('studentModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+function closeStudentModal() {
+    document.getElementById('studentModal').classList.add('hidden');
+}
+</script>
+{% endblock %}

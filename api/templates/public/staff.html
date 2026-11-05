@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}कर्मचारी विवरण | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-100 py-6 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="flex items-center gap-2 text-xs text-slate-500">
+            <a href="/" class="hover:text-instBlue">गृहपृष्ठ</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <a href="/administration" class="hover:text-instBlue">विद्यालय प्रशासन</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <span class="text-slate-800 font-semibold">कर्मचारी विवरण</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-instBlue mt-2">प्रशासनिक तथा सहयोगी कर्मचारीहरू</h1>
+        <p class="text-xs text-slate-600 mt-1">विद्यालय सञ्चालन तथा व्यवस्थापनमा सक्रिय जनशक्ति</p>
+    </div>
+</div>
+
+<div class="py-10 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {% for s in staff %}
+            <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow transition text-center">
+                <div class="w-20 h-20 mx-auto rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden flex items-center justify-center text-slate-400 mb-3">
+                    {% if s.photo %}
+                    <img src="{{ s.photo }}" alt="{{ s.name_nepali }}" class="w-full h-full object-cover">
+                    {% else %}
+                    <i data-lucide="user" class="w-10 h-10 text-slate-400"></i>
+                    {% endif %}
+                </div>
+
+                <span class="bg-purple-50 text-purple-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">
+                    {{ s.department }}
+                </span>
+                
+                <h3 class="font-bold text-sm text-slate-900 mt-2">{{ s.name_nepali }}</h3>
+                <p class="text-xs font-semibold text-instBlue mt-0.5">{{ s.position }}</p>
+                {% if s.qualification %}
+                <p class="text-[11px] text-slate-500 mt-1">योग्यता: {{ s.qualification }}</p>
+                {% endif %}
+                
+                {% if s.phone %}
+                <p class="text-[11px] text-slate-600 mt-2 flex items-center justify-center gap-1">
+                    <i data-lucide="phone" class="w-3 h-3 text-slate-400"></i>
+                    <span>{{ s.phone }}</span>
+                </p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

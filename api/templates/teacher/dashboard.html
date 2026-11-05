@@ -1,0 +1,108 @@
+{% extends "teacher/base_teacher.html" %}
+
+{% block title %}शिक्षक ड्यासबोर्ड | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <!-- Welcome Header -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue flex items-center gap-2">
+                <span>नमस्ते, {{ user.full_name or user.username }} शिक्षक ज्यू!</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">आजको मिति: <b class="font-mono text-slate-700">{{ today_date }}</b> (दैनिक हाजिरी, गृहकार्य तथा कक्षा व्यवस्थापन पोर्टल)</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-lg">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>सक्रिय शिक्षक सत्र</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- 4 PROMINENT QUICK BUTTONS -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <!-- 1. हाजिरी -->
+        <a href="/teacher/attendance" class="bg-gradient-to-br from-blue-700 to-instBlue text-white p-5 rounded-2xl shadow hover:shadow-lg transition transform hover:-translate-y-0.5 flex flex-col items-center justify-center text-center space-y-2 group">
+            <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition">
+                <i data-lucide="check-circle-2" class="w-6 h-6 text-amber-300"></i>
+            </div>
+            <span class="font-bold text-sm tracking-wide">हाजिरी</span>
+            <span class="text-[11px] text-blue-200">पहिलो घण्टी / दैनिक</span>
+        </a>
+
+        <!-- 2. गृहकार्य थप्नुहोस् -->
+        <a href="/admin/homework" class="bg-gradient-to-br from-amber-600 to-amber-700 text-white p-5 rounded-2xl shadow hover:shadow-lg transition transform hover:-translate-y-0.5 flex flex-col items-center justify-center text-center space-y-2 group">
+            <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition">
+                <i data-lucide="book-plus" class="w-6 h-6 text-white"></i>
+            </div>
+            <span class="font-bold text-sm tracking-wide">गृहकार्य थप्नुहोस्</span>
+            <span class="text-[11px] text-amber-100">दैनिक अभ्यास तोक्नुहोस्</span>
+        </a>
+
+        <!-- 3. विद्यार्थी हेर्नुहोस् -->
+        <a href="/students" class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-5 rounded-2xl shadow hover:shadow-lg transition transform hover:-translate-y-0.5 flex flex-col items-center justify-center text-center space-y-2 group">
+            <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition">
+                <i data-lucide="users" class="w-6 h-6 text-white"></i>
+            </div>
+            <span class="font-bold text-sm tracking-wide">विद्यार्थी हेर्नुहोस्</span>
+            <span class="text-[11px] text-emerald-100">कक्षा अनुसार नामावली</span>
+        </a>
+
+        <!-- 4. रिपोर्ट -->
+        <a href="/admin/attendance/reports" class="bg-gradient-to-br from-purple-700 to-indigo-800 text-white p-5 rounded-2xl shadow hover:shadow-lg transition transform hover:-translate-y-0.5 flex flex-col items-center justify-center text-center space-y-2 group">
+            <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition">
+                <i data-lucide="bar-chart-3" class="w-6 h-6 text-white"></i>
+            </div>
+            <span class="font-bold text-sm tracking-wide">रिपोर्ट</span>
+            <span class="text-[11px] text-purple-100">हाजिरी तथा शैक्षिक तथ्याङ्क</span>
+        </a>
+    </div>
+
+    <!-- Assigned Classes Grid -->
+    <div>
+        <h2 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+            <i data-lucide="book-open" class="w-4 h-4 text-instBlue"></i>
+            <span>तपाईंलाई तोकिएका कक्षाहरू (Your Assigned Classes)</span>
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for c in assigned_classes %}
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between hover:border-instBlue transition">
+                <div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-instBlue bg-blue-50 px-2.5 py-1 rounded-md">कक्षा {{ c.class_numeric }}</span>
+                        <span class="text-xs font-mono font-bold text-slate-500">सेक्सन {{ c.section or 'A' }}</span>
+                    </div>
+                    <h3 class="font-bold text-base text-slate-900 mt-3">{{ c.class_name_ne }}</h3>
+                    <p class="text-xs text-slate-500 mt-1">विषय: <b class="text-slate-800">{{ c.subject_name or 'सम्पूर्ण विषय / कक्षा शिक्षक' }}</b></p>
+                </div>
+
+                <div class="pt-4 border-t mt-4 flex items-center justify-between">
+                    <span class="text-xs text-slate-600">विद्यार्थी: <b class="font-mono">{{ c.student_count or 0 }} जना</b></span>
+                    <a href="/teacher/attendance?class_id={{ c.class_id }}" class="inline-flex items-center gap-1 text-xs font-bold text-instBlue hover:text-instBlue-dark">
+                        <span>हाजिरी लिनुहोस्</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-span-full bg-white p-8 rounded-xl border text-center text-slate-500 text-xs">
+                हाल तपाईंलाई कुनै विशेष कक्षा तोकिएको छैन। कृपया प्रशासनसँग सम्पर्क गर्नुहोस्।
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Quick Tips -->
+    <div class="bg-blue-50/60 border border-blue-200 rounded-xl p-4 text-xs text-blue-900 space-y-1">
+        <p class="font-bold flex items-center gap-1.5">
+            <i data-lucide="info" class="w-4 h-4 text-blue-700"></i>
+            हाजिरी तथा अनुपस्थिति एसएमएस जानकारी:
+        </p>
+        <p class="text-slate-600">पहिलो घण्टी हाजिरी लिँदा अनुपस्थित विद्यार्थीहरूको अभिभावकको मोबाइलमा स्वचालित रूपमा उपस्थिति सम्बन्धी जानकारी (SMS) पठाइन्छ।</p>
+    </div>
+
+</div>
+{% endblock %}

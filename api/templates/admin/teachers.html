@@ -1,0 +1,309 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}शिक्षक व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Top Action Bar -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue flex items-center gap-2">
+                <i data-lucide="graduation-cap" class="w-5 h-5 text-instGold"></i>
+                <span>शिक्षक व्यवस्थापन (Teacher Management)</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-0.5">शिक्षक विवरण, विषय, तह तथा कक्षा जिम्मेवारी</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="openTeacherModal()" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue-dark text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-instGold"></i>
+                <span>+ शिक्षक थप्नुहोस्</span>
+            </button>
+            <a href="/api/teachers/export" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition" title="सबै शिक्षक तथ्याङ्क Excel मा डाउनलोड गर्नुहोस्">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                <span>Excel निर्यात</span>
+            </a>
+            <a href="/api/teachers/template" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-lg border border-slate-300 transition" title="Excel Import Template डाउनलोड">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>Template</span>
+            </a>
+            <button onclick="document.getElementById('teacherExcelInput').click()" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-lg border border-slate-300 transition">
+                <i data-lucide="upload" class="w-4 h-4"></i>
+                <span>Excel Import</span>
+            </button>
+            <input type="file" id="teacherExcelInput" accept=".xlsx" class="hidden" onchange="uploadTeacherExcel(this)">
+        </div>
+    </div>
+
+    <!-- Teachers Table -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4">Employee ID</th>
+                        <th class="py-3 px-4">शिक्षकको नाम</th>
+                        <th class="py-3 px-4">पद (Position)</th>
+                        <th class="py-3 px-4">विषय</th>
+                        <th class="py-3 px-4">तह</th>
+                        <th class="py-3 px-4 font-mono">फोन</th>
+                        <th class="py-3 px-4 text-center">स्थिति</th>
+                        <th class="py-3 px-4 text-right">कार्य (Actions)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    {% for t in teachers %}
+                    <tr class="hover:bg-slate-50 transition" id="teacher-row-{{ t.id }}">
+                        <td class="py-3 px-4 font-mono font-bold text-instBlue">{{ t.employee_id }}</td>
+                        <td class="py-3 px-4">
+                            <strong class="text-slate-900 block">{{ t.name_nepali }}</strong>
+                            <span class="text-[10px] text-slate-400 font-normal">{{ t.name_english }}</span>
+                        </td>
+                        <td class="py-3 px-4 font-semibold text-slate-700">{{ t.position }}</td>
+                        <td class="py-3 px-4 text-slate-800 font-medium">{{ t.subject }}</td>
+                        <td class="py-3 px-4">
+                            <span class="bg-blue-50 text-instBlue px-2 py-0.5 rounded text-[10px] font-bold">{{ t.level }}</span>
+                        </td>
+                        <td class="py-3 px-4 font-mono text-slate-700">{{ t.phone }}</td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full text-[10px]">{{ t.status }}</span>
+                        </td>
+                        <td class="py-3 px-4 text-right whitespace-nowrap">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button onclick='openEditTeacher({{ t | tojson | safe }})' class="p-1.5 rounded-md text-amber-600 hover:bg-amber-50 border border-amber-200 transition" title="सम्पादन गर्नुहोस्">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteTeacher({{ t.id }}, '{{ t.name_nepali }}')" class="p-1.5 rounded-md text-red-600 hover:bg-red-50 border border-red-200 transition" title="मेटाउनुहोस्">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="py-8 text-center text-slate-500">हाल कुनै शिक्षक प्रविष्टि गरिएको छैन।</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- TEACHER ADD / EDIT MODAL -->
+<div id="teacherModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 id="teacherModalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i data-lucide="graduation-cap" class="w-4 h-4 text-instGold"></i>
+                <span>शिक्षक थप्नुहोस् (Add Teacher)</span>
+            </h3>
+            <button onclick="closeTeacherModal()" class="text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form id="teacherSaveForm" class="space-y-3 text-xs">
+            <input type="hidden" id="tea_edit_id" value="">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">Employee ID *</label>
+                    <input type="text" id="tea_employee_id" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="EMP-007">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">पद (Position) *</label>
+                    <input type="text" id="tea_position" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="मावि शिक्षक">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">नाम (नेपाली) *</label>
+                    <input type="text" id="tea_name_nepali" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">Name (English) *</label>
+                    <input type="text" id="tea_name_english" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">अध्यापन विषय *</label>
+                    <input type="text" id="tea_subject" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="गणित / विज्ञान">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">तह *</label>
+                    <select id="tea_level" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="माध्यमिक">माध्यमिक</option>
+                        <option value="निम्न माध्यमिक">निम्न माध्यमिक</option>
+                        <option value="प्राथमिक">प्राथमिक</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">योग्यता (Qualification)</label>
+                    <input type="text" id="tea_qualification" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="M.Sc. / B.Ed.">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">अनुभव (Experience)</label>
+                    <input type="text" id="tea_experience" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="८+ वर्ष">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">फोन नम्बर *</label>
+                    <input type="tel" id="tea_phone" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="9842XXXXXX">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">ईमेल (Email)</label>
+                    <input type="email" id="tea_email" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none font-mono" placeholder="teacher@mail.com">
+                </div>
+            </div>
+
+            <!-- Photo Upload -->
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                <label class="block font-semibold text-slate-700">शिक्षकको फोटो अपलोड (Upload Photo)</label>
+                <input type="file" id="tea_file_input" accept=".jpg,.jpeg,.png,.webp" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-instBlue file:text-white hover:file:bg-instBlue-dark cursor-pointer" onchange="window.adminUploadFile(this, 'tea_photo', 'tea_photo_status')">
+                <div id="tea_photo_status" class="text-[11px]"></div>
+                <div>
+                    <label class="block text-[10px] text-slate-500 font-medium">वा फोटो URL</label>
+                    <input type="text" id="tea_photo" placeholder="/static/images/teachers/sample.jpg" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none font-mono text-[11px]">
+                </div>
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeTeacherModal()" class="px-4 py-2 border border-slate-300 rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" id="teaSubmitBtn" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded shadow transition">सुरक्षित गर्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openTeacherModal() {
+        document.getElementById('teacherSaveForm').reset();
+        document.getElementById('tea_edit_id').value = '';
+        document.getElementById('tea_photo_status').innerHTML = '';
+        document.getElementById('tea_employee_id').removeAttribute('readonly');
+        document.getElementById('teacherModalTitle').innerHTML = '<i data-lucide="graduation-cap" class="w-4 h-4 text-instGold"></i><span>शिक्षक थप्नुहोस् (Add Teacher)</span>';
+        document.getElementById('teaSubmitBtn').innerText = 'शिक्षक थप्नुहोस्';
+        document.getElementById('teacherModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function openEditTeacher(t) {
+        document.getElementById('tea_edit_id').value = t.id;
+        document.getElementById('tea_employee_id').value = t.employee_id || '';
+        document.getElementById('tea_employee_id').setAttribute('readonly', 'true');
+        document.getElementById('tea_name_nepali').value = t.name_nepali || '';
+        document.getElementById('tea_name_english').value = t.name_english || '';
+        document.getElementById('tea_position').value = t.position || '';
+        document.getElementById('tea_subject').value = t.subject || '';
+        document.getElementById('tea_level').value = t.level || 'माध्यमिक';
+        document.getElementById('tea_qualification').value = t.qualification || '';
+        document.getElementById('tea_experience').value = t.experience || '';
+        document.getElementById('tea_phone').value = t.phone || '';
+        document.getElementById('tea_email').value = t.email || '';
+        document.getElementById('tea_photo').value = t.photo || '';
+        document.getElementById('tea_photo_status').innerHTML = t.photo 
+            ? `<span class="text-blue-600 font-semibold">हालको फोटो: <a href="${t.photo}" target="_blank" class="underline font-mono">${t.photo}</a></span>` 
+            : '';
+        document.getElementById('teacherModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i><span>शिक्षक विवरण सम्पादन</span>';
+        document.getElementById('teaSubmitBtn').innerText = 'अद्यावधिक (Save) गर्नुहोस्';
+        document.getElementById('teacherModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function closeTeacherModal() {
+        document.getElementById('teacherModal').classList.add('hidden');
+        document.getElementById('teacherSaveForm').reset();
+        document.getElementById('tea_edit_id').value = '';
+        document.getElementById('tea_photo_status').innerHTML = '';
+    }
+
+    document.getElementById('teacherSaveForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const editId = document.getElementById('tea_edit_id').value;
+        const payload = {
+            employee_id: document.getElementById('tea_employee_id').value.trim(),
+            name_nepali: document.getElementById('tea_name_nepali').value.trim(),
+            name_english: document.getElementById('tea_name_english').value.trim(),
+            position: document.getElementById('tea_position').value.trim(),
+            subject: document.getElementById('tea_subject').value.trim(),
+            level: document.getElementById('tea_level').value,
+            qualification: document.getElementById('tea_qualification').value.trim() || null,
+            experience: document.getElementById('tea_experience').value.trim() || null,
+            phone: document.getElementById('tea_phone').value.trim(),
+            email: document.getElementById('tea_email').value.trim() || null,
+            photo: document.getElementById('tea_photo').value.trim() || null,
+            academic_year_id: 1,
+            status: 'सक्रिय'
+        };
+
+        const url = editId ? `/api/teachers/${editId}` : '/api/teachers';
+        const method = editId ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'त्रुटि भयो।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि: ' + err.message);
+        }
+    });
+
+    async function deleteTeacher(id, name) {
+        if (!confirm(`के तपाईं शिक्षक '${name}' लाई मेटाउन चाहनुहुन्छ?`)) return;
+        try {
+            const res = await fetch(`/api/teachers/${id}`, {method: 'DELETE'});
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'मेटाउन सकिएन।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि: ' + err.message);
+        }
+    }
+
+    async function uploadTeacherExcel(input) {
+        if (!input.files || !input.files[0]) return;
+        const formData = new FormData();
+        formData.append('file', input.files[0]);
+
+        try {
+            const res = await fetch('/api/teachers/import', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'आयात गर्न सकिएन।');
+            }
+        } catch (e) {
+            alert('फाइल आयात गर्दा त्रुटि भयो।');
+        }
+    }
+</script>
+{% endblock %}

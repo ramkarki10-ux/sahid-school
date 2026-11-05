@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}कर्मचारी तथा शिक्षक लगइन | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<div class="py-16 bg-slate-100 flex items-center justify-center px-4">
+    <div class="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
+        
+        <div class="text-center space-y-2">
+            <img src="/static/images/logo_header.png" alt="Logo" class="h-14 mx-auto object-contain">
+            <h1 class="text-xl font-bold text-instBlue">{{ settings.name_ne }}</h1>
+            <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">विद्यालय व्यवस्थापन प्रणाली लगइन</p>
+        </div>
+
+        <div id="loginError" class="hidden p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs font-semibold"></div>
+
+        <form id="loginForm" class="space-y-4 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">प्रयोगकर्ता नाम (Username) *</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <i data-lucide="user" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text" id="username" name="username" required autofocus class="w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="Username (उदा: admin वा teacher)">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">पासवर्ड (Password) *</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <i data-lucide="lock" class="w-4 h-4"></i>
+                    </span>
+                    <input type="password" id="password" name="password" required class="w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="••••••••">
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between text-[11px]">
+                <label class="flex items-center gap-1.5 text-slate-600 cursor-pointer">
+                    <input type="checkbox" class="rounded text-instBlue focus:ring-instBlue">
+                    <span>मलाई सम्झनुहोस् (Remember me)</span>
+                </label>
+                <a href="/contact" class="text-instBlue hover:underline">पासवर्ड बिर्सनुभयो?</a>
+            </div>
+
+            <button type="submit" id="loginSubmitBtn" class="w-full bg-instBlue hover:bg-instBlue-dark text-white font-bold py-2.5 rounded-lg transition shadow flex items-center justify-center gap-2">
+                <i data-lucide="log-in" class="w-4 h-4 text-instGold"></i>
+                <span>लगइन गर्नुहोस्</span>
+            </button>
+        </form>
+
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-600 space-y-1">
+            <p class="font-bold text-slate-800">डेमो खाताहरू (Default Accounts):</p>
+            <div class="flex justify-between"><span>Super Admin:</span> <code>admin</code> / <code>admin123</code></div>
+            <div class="flex justify-between"><span>Principal:</span> <code>principal</code> / <code>principal123</code></div>
+            <div class="flex justify-between"><span>Teacher:</span> <code>teacher</code> / <code>teacher123</code></div>
+            <div class="flex justify-between"><span>Hostel Warden:</span> <code>warden</code> / <code>warden123</code></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const errBox = document.getElementById('loginError');
+        errBox.classList.add('hidden');
+
+        const btn = document.getElementById('loginSubmitBtn');
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = 'प्रमाणीकरण हुँदैछ...';
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                // Redirect based on role
+                if (data.user.role === 'TEACHER') {
+                    window.location.href = '/teacher/dashboard';
+                } else {
+                    window.location.href = '/admin/dashboard';
+                }
+            } else {
+                errBox.innerText = data.detail || 'गलत प्रयोगकर्ता नाम वा पासवर्ड।';
+                errBox.classList.remove('hidden');
+            }
+        } catch (err) {
+            errBox.innerText = 'लगइन गर्दा प्राविधिक त्रुटि भयो।';
+            errBox.classList.remove('hidden');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = orig;
+            lucide.createIcons();
+        }
+    });
+</script>
+{% endblock %}

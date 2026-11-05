@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}वेबसाइट डाउनलोड तथा फाइल ब्याकअप | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="bg-slate-100 py-6 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="flex items-center gap-2 text-xs text-slate-500">
+            <a href="/" class="hover:text-instBlue">गृहपृष्ठ</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <span class="text-instBlue font-semibold">वेबसाइट डाउनलोड तथा ब्याकअप</span>
+        </div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-3">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-instBlue">वेबसाइट डाउनलोड तथा ब्याकअप केन्द्र</h1>
+                <p class="text-xs text-slate-600 mt-1">सम्पूर्ण स्रोत कोड, डेटाबेस, विद्यार्थी विवरण तथा स्थानीय फाइल व्यवस्थापन</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="http://localhost:3000/" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue-dark text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm transition">
+                    <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                    <span>गृहपृष्ठमा जानुहोस्</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="py-10 bg-slate-50 min-h-screen">
+    <div class="max-w-6xl mx-auto px-4 sm:px-8 space-y-8">
+
+        <!-- Banner Card -->
+        <div class="bg-gradient-to-r from-instBlue to-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-md flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="space-y-2 text-center md:text-left">
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-amber-300 text-xs font-bold border border-white/20">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                    <span>रेडी-टु-रन (Ready to Run Production Package)</span>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold">{{ settings.name_ne }}</h2>
+                <p class="text-xs sm:text-sm text-slate-200 max-w-2xl leading-relaxed">
+                    यो वेबसाइट तथा स्कुल म्यानेजमेन्ट सिस्टम पूर्ण रूपमा अफलाइन वा अनलाइन जुनसुकै कम्प्युटर तथा सर्भरमा चलाउन मिल्ने गरी तयार गरिएको छ। एक क्लिकमा सम्पूर्ण वेबसाइट वा डेटाबेस ब्याकअप डाउनलोड गर्नुहोस्।
+                </p>
+            </div>
+            <a href="/download-project" class="flex-shrink-0 inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold text-sm px-6 py-3.5 rounded-xl shadow-lg transition">
+                <i data-lucide="download" class="w-5 h-5"></i>
+                <span>सम्पूर्ण वेबसाइट ZIP डाउनलोड गर्नुहोस्</span>
+            </a>
+        </div>
+
+        <!-- 3 Primary Download Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- 1. Full Website ZIP -->
+            <div class="bg-white border-2 border-emerald-500/40 rounded-2xl p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-5">
+                <div class="space-y-3">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                        <i data-lucide="file-archive" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full uppercase">Complete Package</span>
+                    <h3 class="text-lg font-bold text-slate-900">सम्पूर्ण वेबसाइट ZIP</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        FastAPI ब्याकएन्ड, SQLite डेटाबेस, Tailwind UI, टेम्प्लेटहरू, १६ शिक्षक र १२ कर्मचारीको विवरण, सबै तस्विर तथा लगइन प्रणाली सहितको सम्पूर्ण प्याकेज।
+                    </p>
+                    <ul class="text-[11px] text-slate-500 space-y-1 pt-2">
+                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i> साइज: करिब १.२ MB</li>
+                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i> फर्म्याट: .ZIP आर्काइभ</li>
+                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i> पोर्टेबल र तत्काल चल्ने</li>
+                    </ul>
+                </div>
+                <a href="/download-project" class="w-full inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3 px-4 rounded-xl shadow transition">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>वेबसाइट ZIP डाउनलोड गर्नुहोस्</span>
+                </a>
+            </div>
+
+            <!-- 2. SQLite Database Backup -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-5">
+                <div class="space-y-3">
+                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-instBlue flex items-center justify-center">
+                        <i data-lucide="database" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-[10px] font-bold bg-blue-100 text-instBlue px-2 py-0.5 rounded-full uppercase">Database Only</span>
+                    <h3 class="text-lg font-bold text-slate-900">डेटाबेस ब्याकअप (.DB)</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        विद्यार्थी, शिक्षक हाजिरी, शैक्षिक क्यालेन्डर, बिदा निवेदन, भर्ना फारम र सूचनाहरू समावेश भएको आधिकारिक SQLite डेटाबेस फाइल।
+                    </p>
+                    <ul class="text-[11px] text-slate-500 space-y-1 pt-2">
+                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-blue-500"></i> फाइल: <code>school.db</code></li>
+                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-blue-500"></i> सुरक्षित नियमित ब्याकअप</li>
+                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-blue-500"></i> सजिलै रिस्टोर गर्न मिल्ने</li>
+                    </ul>
+                </div>
+                <a href="/download-db" class="w-full inline-flex items-center justify-center gap-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold text-xs py-3 px-4 rounded-xl shadow transition">
+                    <i data-lucide="database-backup" class="w-4 h-4"></i>
+                    <span>डेटाबेस (.DB) डाउनलोड गर्नुहोस्</span>
+                </a>
+            </div>
+
+            <!-- 3. Students Master Excel Sheet -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-5">
+                <div class="space-y-3">
+                    <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                        <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-[10px] font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full uppercase">Excel / EMIS Master</span>
+                    <h3 class="text-lg font-bold text-slate-900">विद्यार्थी एक्सेल डाटा</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        विद्यालयमा अध्ययनरत सम्पूर्ण विद्यार्थीहरूको आधिकारिक रोल नम्बर, नाम, कक्षा, सेक्सन, इमिस कोड (EMIS Code) तथा अभिभावक फोन नम्बरको एक्सेल पाना।
+                    </p>
+                    <ul class="text-[11px] text-slate-500 space-y-1 pt-2">
+                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-purple-500"></i> फर्म्याट: Excel (.csv / .xlsx)</li>
+                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-purple-500"></i> EMIS कोड सहित</li>
+                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-purple-500"></i> प्रिन्ट वा रिपोर्टिङका लागि उपयुक्त</li>
+                    </ul>
+                </div>
+                <a href="/api/students/export" class="w-full inline-flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs py-3 px-4 rounded-xl shadow transition">
+                    <i data-lucide="sheet" class="w-4 h-4"></i>
+                    <span>विद्यार्थी Excel डाउनलोड गर्नुहोस्</span>
+                </a>
+            </div>
+
+        </div>
+
+        <!-- HOW TO SAVE AND RUN GUIDE -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
+            <div class="flex items-center gap-2.5 border-b border-slate-100 pb-4">
+                <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
+                    <i data-lucide="help-circle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-base text-slate-900">फाइल कसरी सेभ गर्ने र स्थानीय रूपमा कसरी चलाउने? (Local Save & Usage Guide)</h3>
+                    <p class="text-xs text-slate-500">कम्प्युटरमा फाइल सुरक्षित राख्ने र अर्को डिभाइसमा सार्ने सजिलो तरिका</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-700">
+                <!-- Option 1: File Location on disk -->
+                <div class="space-y-3 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                    <h4 class="font-bold text-slate-900 flex items-center gap-1.5 text-sm">
+                        <i data-lucide="folder" class="w-4 h-4 text-instBlue"></i>
+                        <span>१. हालको कम्प्युटरमा फाइल कहाँ सेभ भएको छ?</span>
+                    </h4>
+                    <p class="leading-relaxed">
+                        यो सम्पूर्ण परियोजना तपाइँको कम्प्युटरको निम्न फोल्डरमा स्थायी रूपमा सुरक्षित (Saved) छ:
+                    </p>
+                    <div class="p-2.5 bg-slate-800 text-emerald-400 font-mono rounded-lg break-all select-all">
+                        C:\Users\SNM\.gemini\antigravity\scratch\shahid-smriti-school
+                    </div>
+                    <p class="text-[11px] text-slate-500">
+                        यस फोल्डरभित्रका कुनै पनि फाइल सम्पादन गरेपछि <strong>Ctrl + S</strong> थिच्दा सिधै सेभ हुन्छ।
+                    </p>
+                </div>
+
+                <!-- Option 2: Automatic DB save -->
+                <div class="space-y-3 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                    <h4 class="font-bold text-slate-900 flex items-center gap-1.5 text-sm">
+                        <i data-lucide="save" class="w-4 h-4 text-emerald-600"></i>
+                        <span>२. नयाँ डेटा कसरी सेभ (Save) हुन्छ?</span>
+                    </h4>
+                    <p class="leading-relaxed">
+                        तपाइँले एडमिन प्यानल वा वेबसाइटबाट थप्नुभएको नयाँ विद्यार्थी, शिक्षक हाजिरी, गृहकार्य वा सूचना स्वतः तत्काल <strong>school.db</strong> मा सेभ हुन्छ।
+                    </p>
+                    <p class="text-[11px] text-slate-500">
+                        कुनै छुट्टै सेभ बटन थिच्नु पर्दैन, प्रणालीले तत्काल डेटाबेस कमिट (Database Commit) गर्दछ।
+                    </p>
+                </div>
+
+                <!-- Option 3: Download and transfer -->
+                <div class="space-y-3 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                    <h4 class="font-bold text-slate-900 flex items-center gap-1.5 text-sm">
+                        <i data-lucide="hard-drive-download" class="w-4 h-4 text-purple-600"></i>
+                        <span>३. पेनड्राइभ वा अर्को कम्प्युटरमा कसरी लैजाने?</span>
+                    </h4>
+                    <p class="leading-relaxed">
+                        १. माथिको <strong>"वेबसाइट ZIP डाउनलोड गर्नुहोस्"</strong> बटन थिच्नुहोस्।<br>
+                        २. डाउनलोड भएको <code>Shahid_Smriti_School_Website_Complete.zip</code> फाइललाई पेनड्राइभमा कपी गर्नुहोस्।<br>
+                        ३. अर्को कम्प्युटरमा लगेर <strong>Extract All (अनजिप)</strong> गर्नुहोस्।
+                    </p>
+                </div>
+
+                <!-- Option 4: How to run -->
+                <div class="space-y-3 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                    <h4 class="font-bold text-slate-900 flex items-center gap-1.5 text-sm">
+                        <i data-lucide="terminal" class="w-4 h-4 text-amber-600"></i>
+                        <span>४. डाउनलोड गरेपछि कसरी चलाउने? (Commands)</span>
+                    </h4>
+                    <p class="leading-relaxed">
+                        नयाँ कम्प्युटरको टर्मिनल (PowerShell / CMD) मा प्रोजेक्ट फोल्डरभित्र गई यी दुई कमान्ड चलाउनुहोस्:
+                    </p>
+                    <div class="p-2.5 bg-slate-800 text-amber-300 font-mono rounded-lg space-y-1">
+                        <div>pip install -r requirements.txt</div>
+                        <div>python run.py</div>
+                    </div>
+                    <p class="text-[11px] text-slate-500">
+                        त्यसपछि ब्राउजरमा <code>http://localhost:3000/</code> खोल्नासाथ वेबसाइट तुरुन्तै चल्नेछ।
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links Return -->
+        <div class="text-center pt-4">
+            <a href="http://localhost:3000/" class="inline-flex items-center gap-2 text-instBlue hover:underline text-xs font-bold">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>मुख्य वेबसाइट http://localhost:3000/ मा फर्कनुहोस्</span>
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

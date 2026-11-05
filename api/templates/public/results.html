@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}वार्षिक तथा त्रैमासिक परीक्षा नतिजा | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-100 py-6 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="flex items-center gap-2 text-xs text-slate-500">
+            <a href="/" class="hover:text-instBlue">गृहपृष्ठ</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <span class="text-instBlue font-semibold">परीक्षा नतिजा</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-instBlue mt-2">परीक्षा नतिजा तथा लब्धांक पत्र (Exam Results)</h1>
+        <p class="text-xs text-slate-600 mt-1">कक्षा १ देखि १२ सम्मका त्रैमासिक, अर्धवार्षिक तथा वार्षिक परीक्षाको नतिजा खोजी तथा डिजिटल लब्धांक पत्र (मार्कसिट - Marksheet) हेर्नुहोस्</p>
+    </div>
+</div>
+
+<div class="py-10 bg-slate-50 min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 sm:px-8 space-y-6">
+
+        <!-- Search Box -->
+        <div class="bg-white border border-slate-200 p-6 sm:p-8 rounded-2xl shadow-sm space-y-4">
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="search" class="w-4 h-4 text-instBlue"></i>
+                <span>आफ्नो नतिजा खोज्नुहोस्</span>
+            </h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">परीक्षा छनोट गर्नुहोस्:</label>
+                    <select id="resExamSelect" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        {% for e in exams %}
+                        <option value="{{ e.id }}">{{ e.name_ne }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">कक्षा:</label>
+                    <select id="resClassSelect" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        {% for c in classes %}
+                        <option value="{{ c.id }}">{{ c.class_name_ne }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">रोल नम्बर वा विद्यार्थी ID:</label>
+                    <input type="text" id="resRollInput" placeholder="उदा: १ वा STU-83001" value="१" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-medium">
+                </div>
+            </div>
+
+            <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <p class="text-[11px] text-slate-500">
+                    * आफ्नो कक्षा र रोल नम्बर वा आईडी प्रविष्ट गरी "नतिजा हेर्नुहोस्" थिच्नुहोस्।
+                </p>
+                <button type="button" id="searchResultBtn" onclick="searchResult()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold py-2.5 px-6 rounded-lg text-xs shadow transition">
+                    <i data-lucide="file-check" class="w-4 h-4 text-amber-300"></i>
+                    <span>नतिजा हेर्नुहोस् (View Result)</span>
+                </button>
+            </div>
+
+            <div id="searchErrorBox" class="hidden p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold"></div>
+        </div>
+
+        <!-- Result Marksheet Container -->
+        <div id="marksheetContainer" class="hidden bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-md space-y-6 print:shadow-none print:border-none print:p-0">
+            <!-- School Header for Marksheet -->
+            <div class="text-center border-b border-slate-200 pb-5 space-y-1.5">
+                <div class="flex items-center justify-center gap-3 mb-1">
+                    <img src="/static/images/logo_header.png" alt="Logo" class="h-14 w-auto object-contain">
+                    <div>
+                        <h3 class="text-xl font-black text-instBlue leading-tight">{{ settings.name_ne }}</h3>
+                        <p class="text-xs text-slate-600 font-bold uppercase tracking-wider">{{ settings.name_en }}</p>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 font-medium">{{ settings.address_ne }} | सम्पर्क: {{ settings.phone }}</p>
+                <div class="pt-2">
+                    <span class="inline-block px-4 py-1.5 bg-blue-100 text-instBlue font-black text-xs rounded-full shadow-sm" id="resTitle">
+                        लब्धांक पत्र (Marksheet / Grade-sheet)
+                    </span>
+                </div>
+            </div>
+
+            <!-- Student Demographics Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 bg-slate-50 p-4 rounded-xl text-xs text-slate-700 border border-slate-200">
+                <div>
+                    <span class="text-slate-400 block text-[11px]">विद्यार्थीको नाम:</span>
+                    <strong id="resStuName" class="text-slate-900 font-bold text-sm block mt-0.5">-</strong>
+                    <span id="resStuNameEn" class="text-[10px] text-slate-500 font-normal"></span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[11px]">कक्षा / संकाय:</span>
+                    <strong id="resStuClass" class="text-slate-900 font-bold text-sm block mt-0.5">-</strong>
+                    <span id="resStuSection" class="text-[10px] text-slate-500 font-normal"></span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[11px]">रोल नम्बर / विद्यार्थी ID:</span>
+                    <strong id="resStuRoll" class="text-slate-900 font-bold text-sm block mt-0.5">-</strong>
+                    <span id="resStuCode" class="text-[10px] font-mono text-instBlue font-semibold"></span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[11px]">ग्रेड पोइन्ट औसत (GPA):</span>
+                    <strong id="resStuGpa" class="text-emerald-600 font-black text-base block mt-0.5">0.00</strong>
+                    <span id="resOverallGradeBadge" class="inline-block px-2 py-0.2 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">Grade: -</span>
+                </div>
+            </div>
+
+            <!-- Subject-wise Marks Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs text-left border border-slate-200 rounded-lg overflow-hidden">
+                    <thead class="bg-instBlue text-white font-bold border-b border-slate-200 text-[11px]">
+                        <tr>
+                            <th class="py-2.5 px-3 text-center w-12">क्र.सं.</th>
+                            <th class="py-2.5 px-4">विषय (Subjects)</th>
+                            <th class="py-2.5 px-3 text-center">पूर्णाङ्क (FM)</th>
+                            <th class="py-2.5 px-3 text-center">उत्तीर्णाङ्क (PM)</th>
+                            <th class="py-2.5 px-3 text-center">सैद्धान्तिक (TH)</th>
+                            <th class="py-2.5 px-3 text-center">प्रयोगात्मक (PR)</th>
+                            <th class="py-2.5 px-3 text-center">जम्मा प्राप्ताङ्क</th>
+                            <th class="py-2.5 px-3 text-center">ग्रेड (Grade)</th>
+                            <th class="py-2.5 px-3 text-center">ग्रेड पोइन्ट (GP)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100" id="resSubjectList">
+                    </tbody>
+                    <tfoot class="bg-slate-50 font-bold text-slate-900 border-t-2 border-slate-300">
+                        <tr>
+                            <td colspan="2" class="py-2.5 px-4 text-right">कुल योग (Total):</td>
+                            <td class="py-2.5 px-3 text-center" id="footFullMarks">-</td>
+                            <td class="py-2.5 px-3 text-center">-</td>
+                            <td colspan="2" class="py-2.5 px-3 text-center">प्रतिशत: <span id="footPercentage" class="text-instBlue">0%</span></td>
+                            <td class="py-2.5 px-3 text-center font-black text-slate-900" id="footTotalObtained">-</td>
+                            <td colspan="2" class="py-2.5 px-3 text-center text-emerald-700 font-black" id="footGpaSummary">GPA: -</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Result Summary & Actions -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600 pt-3 border-t border-slate-200">
+                <div class="space-y-0.5 text-center sm:text-left">
+                    <div>नतिजा स्थिति: <strong id="resStatusText" class="text-emerald-600 font-bold text-sm">उत्तीर्ण (PASSED)</strong></div>
+                    <p class="text-[11px] text-slate-400">यो डिजिटल लब्धांक पत्र विद्यालयको अनलाइन प्रणालीबाट जारी गरिएको हो।</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="window.print()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-semibold transition shadow-sm">
+                        <i data-lucide="printer" class="w-4 h-4"></i>
+                        <span>प्रिन्ट / PDF सेभ गर्नुहोस्</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+async function searchResult() {
+    const examId = document.getElementById('resExamSelect').value;
+    const classId = document.getElementById('resClassSelect').value;
+    const roll = document.getElementById('resRollInput').value.trim();
+    const btn = document.getElementById('searchResultBtn');
+    const errBox = document.getElementById('searchErrorBox');
+    const container = document.getElementById('marksheetContainer');
+
+    errBox.classList.add('hidden');
+    errBox.innerText = '';
+
+    if (!roll) {
+        errBox.classList.remove('hidden');
+        errBox.innerText = 'कृपया रोल नम्बर वा विद्यार्थी ID राख्नुहोस्।';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin text-amber-300"></i><span>खोज्दैछ...</span>`;
+    if (window.lucide) lucide.createIcons();
+
+    try {
+        const res = await fetch(`/api/results/search?exam_id=${examId}&class_id=${classId}&query=${encodeURIComponent(roll)}`);
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            container.classList.add('hidden');
+            errBox.classList.remove('hidden');
+            errBox.innerText = data.detail || 'उक्त कक्षा तथा रोल नम्बरको नतिजा फेला परेन।';
+            return;
+        }
+
+        // Populate Marksheet
+        document.getElementById('resTitle').innerText = `${data.exam.name_ne} - लब्धांक पत्र (Marksheet)`;
+        document.getElementById('resStuName').innerText = data.student.name_nepali;
+        document.getElementById('resStuNameEn').innerText = data.student.name_english || '';
+        document.getElementById('resStuClass').innerText = data.student.class_name_ne;
+        document.getElementById('resStuSection').innerText = `सेक्सन: ${data.student.section_name || 'A'}`;
+        document.getElementById('resStuRoll').innerText = `रोल नं. ${data.student.roll_no}`;
+        document.getElementById('resStuCode').innerText = `ID: ${data.student.student_id}`;
+        document.getElementById('resStuGpa').innerText = Number(data.summary.gpa).toFixed(2);
+        document.getElementById('resOverallGradeBadge').innerText = `Grade: ${data.summary.overall_grade}`;
+
+        // Populate Subjects Table
+        const tbody = document.getElementById('resSubjectList');
+        tbody.innerHTML = '';
+
+        data.subjects.forEach((s, idx) => {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-slate-50 transition';
+            const gradeColor = (s.grade === 'NG' || s.grade === 'ABS') ? 'text-rose-600 font-bold' : 'text-emerald-700 font-bold';
+
+            tr.innerHTML = `
+                <td class="py-2.5 px-3 text-center text-slate-500 font-mono">${idx + 1}</td>
+                <td class="py-2.5 px-4 font-bold text-slate-800">
+                    <div>${s.subject_name_ne}</div>
+                    <div class="text-[10px] text-slate-400 font-normal">${s.subject_name_en || s.subject_code || ''}</div>
+                </td>
+                <td class="py-2.5 px-3 text-center font-mono">${s.full_marks}</td>
+                <td class="py-2.5 px-3 text-center font-mono text-slate-500">${s.pass_marks}</td>
+                <td class="py-2.5 px-3 text-center font-mono">${s.theory_obtained != null ? s.theory_obtained : '-'}</td>
+                <td class="py-2.5 px-3 text-center font-mono">${s.practical_obtained != null ? s.practical_obtained : '-'}</td>
+                <td class="py-2.5 px-3 text-center font-mono font-bold text-slate-900">${s.total_obtained != null ? s.total_obtained : '-'}</td>
+                <td class="py-2.5 px-3 text-center ${gradeColor}">${s.grade || '-'}</td>
+                <td class="py-2.5 px-3 text-center font-mono font-semibold">${s.grade_point != null ? Number(s.grade_point).toFixed(2) : '-'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Summary Foot
+        document.getElementById('footFullMarks').innerText = data.summary.total_full_marks;
+        document.getElementById('footPercentage').innerText = `${data.summary.percentage}%`;
+        document.getElementById('footTotalObtained').innerText = data.summary.total_obtained;
+        document.getElementById('footGpaSummary').innerText = `GPA: ${Number(data.summary.gpa).toFixed(2)} (${data.summary.overall_grade})`;
+
+        const statusEl = document.getElementById('resStatusText');
+        statusEl.innerText = data.summary.status;
+        if (data.summary.is_passed) {
+            statusEl.className = 'text-emerald-600 font-bold text-sm';
+        } else {
+            statusEl.className = 'text-rose-600 font-bold text-sm';
+        }
+
+        container.classList.remove('hidden');
+        container.scrollIntoView({ behavior: 'smooth' });
+    } catch(err) {
+        container.classList.add('hidden');
+        errBox.classList.remove('hidden');
+        errBox.innerText = 'सर्भरसँग सम्पर्क हुन सकेन। कृपया इन्टरनेट जाँच गर्नुहोस्।';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="file-check" class="w-4 h-4 text-amber-300"></i><span>नतिजा हेर्नुहोस् (View Result)</span>`;
+        if (window.lucide) lucide.createIcons();
+    }
+}
+
+// Auto search on enter key in roll input
+document.getElementById('resRollInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') searchResult();
+});
+</script>
+{% endblock %}
