@@ -55,6 +55,17 @@
                 <span>दर्ता (Sign Up)</span>
             </a>
 
+            <!-- Account Approval Link for Super Admin -->
+            {% if current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL'] %}
+            <a href="/admin/registrations" class="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-0.5 rounded transition font-bold text-[11px] shadow-sm" title="एकाउन्ट Approval">
+                <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-200"></i>
+                <span>एकाउन्ट Approval</span>
+                {% if pending_registrations_count is defined and pending_registrations_count > 0 %}
+                <span class="bg-rose-500 text-white font-black text-[9px] px-1 rounded-full animate-bounce">{{ pending_registrations_count }}</span>
+                {% endif %}
+            </a>
+            {% endif %}
+
             <!-- Portal Login link -->
             {% if current_user %}
             <a href="{% if current_user.role == 'TEACHER' %}/teacher/dashboard{% elif current_user.role in ['STUDENT', 'PARENT'] %}/leave-application{% else %}/admin/dashboard{% endif %}" class="flex items-center gap-1 bg-instGold-dark hover:bg-instGold text-white px-2.5 py-0.5 rounded transition font-semibold text-xs shadow-sm">

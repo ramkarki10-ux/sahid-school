@@ -416,12 +416,12 @@ def approve_registration(reg_id: int, request: Request):
 
 @router.post("/registrations/{reg_id}/reject")
 def reject_registration(reg_id: int, request: Request):
-    """Super Admin rejection of registration."""
+    """Super Admin rejection / cancellation of registration."""
     admin_user = require_admin_role(request)
     conn = get_db()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT id, full_name_ne FROM user_registrations WHERE id = ?", (reg_id,))
+    cursor.execute("SELECT id, full_name_ne, phone FROM user_registrations WHERE id = ?", (reg_id,))
     reg = cursor.fetchone()
     if not reg:
         conn.close()
@@ -432,12 +432,21 @@ def reject_registration(reg_id: int, request: Request):
         SET status = 'अस्वीकृत', reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP
         WHERE id = ?
     """, (admin_user["user_id"], reg_id))
+
+    # Deactivate in users table so rejected user cannot log in
+    phone = reg["phone"]
+    cursor.execute("""
+        UPDATE users 
+        SET status = 'INACTIVE' 
+        WHERE (username = ? OR phone = ?) AND role NOT IN ('SUPER_ADMIN', 'ADMIN')
+    """, (phone, phone))
+
     conn.commit()
     conn.close()
 
     log_audit("REJECT_REGISTRATION", "AUTH", record_id=str(reg_id), user=admin_user, request=request)
 
-    return {"success": True, "message": f"{reg['full_name_ne']} को दर्ता आवेदन अस्वीकृत गरियो।"}
+    return {"success": True, "message": f"{reg['full_name_ne']} को खाता/दर्ता आवेदन रद्द (अस्वीकृत) गरियो।"}
 
 @router.delete("/registrations/{reg_id}")
 def delete_registration(reg_id: int, request: Request):
@@ -452,7 +461,13 @@ def delete_registration(reg_id: int, request: Request):
         conn.close()
         raise HTTPException(status_code=404, detail="दर्ता रेकर्ड फेला परेन।")
 
+    phone = reg["phone"]
     cursor.execute("DELETE FROM user_registrations WHERE id = ?", (reg_id,))
+    cursor.execute("""
+        DELETE FROM users 
+        WHERE (username = ? OR phone = ?) AND role NOT IN ('SUPER_ADMIN', 'ADMIN')
+    """, (phone, phone))
+
     conn.commit()
     conn.close()
 

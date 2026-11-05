@@ -50,19 +50,23 @@ def get_db():
     conn.execute("PRAGMA foreign_keys = ON;")
     
     if not _db_initialized:
+        _db_initialized = True
         try:
             cur = conn.cursor()
             cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='school_settings'")
             if not cur.fetchone():
                 init_db()
-            _db_initialized = True
         except Exception:
             pass
 
     return conn
 
 def init_db():
-    conn = get_db()
+    global _db_initialized
+    _db_initialized = True
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON;")
     cursor = conn.cursor()
     
     # 1. School Settings

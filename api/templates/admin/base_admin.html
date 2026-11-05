@@ -96,9 +96,13 @@
                     <a href="/admin/registrations" class="flex items-center justify-between px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'registrations' %}bg-instBlue text-white font-bold border-l-2 border-emerald-400{% endif %}">
                         <div class="flex items-center gap-2.5">
                             <i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i>
-                            <span>साइन-अप अनुमोदन</span>
+                            <span>एकाउन्ट Approval (अनुमोदन)</span>
                         </div>
-                        <span class="text-[9px] bg-rose-600 text-white font-bold px-1.5 py-0.5 rounded-full uppercase">नयाँ</span>
+                        {% if pending_registrations_count is defined and pending_registrations_count > 0 %}
+                        <span class="text-[10px] bg-rose-600 text-white font-black px-1.5 py-0.2 rounded-full animate-pulse">{{ pending_registrations_count }}</span>
+                        {% else %}
+                        <span class="text-[9px] bg-slate-700 text-slate-300 font-bold px-1.5 py-0.5 rounded-full">०</span>
+                        {% endif %}
                     </a>
                     <a href="/admin/students/import" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'student_import' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="file-spreadsheet" class="w-4 h-4 text-green-400"></i>
@@ -323,10 +327,23 @@
 
                 <div class="h-6 w-px bg-slate-200"></div>
 
+                <!-- एकाउन्ट Approval (प्रमुख एडमिनको छेउमा) -->
+                <a href="/admin/registrations" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-sm transition active:scale-95 border border-emerald-500" title="विद्यार्थी तथा शिक्षक एकाउन्ट Approval (स्वीकृत / अस्वीकृत)">
+                    <i data-lucide="user-check" class="w-4 h-4 text-emerald-200"></i>
+                    <span>एकाउन्ट Approval</span>
+                    {% if pending_registrations_count is defined and pending_registrations_count > 0 %}
+                    <span class="bg-rose-500 text-white font-black text-[10px] px-1.5 py-0.2 rounded-full animate-bounce shadow">
+                        {{ pending_registrations_count }}
+                    </span>
+                    {% endif %}
+                </a>
+
+                <div class="h-6 w-px bg-slate-200"></div>
+
                 <div class="flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
                     <span class="font-bold text-slate-700 hidden sm:inline">{{ current_user.username if current_user else 'admin' }}</span>
-                    <span class="bg-blue-100 text-instBlue font-bold text-[10px] px-2 py-0.5 rounded uppercase">{{ current_user.role if current_user else 'SUPER_ADMIN' }}</span>
+                    <span class="bg-blue-100 text-instBlue font-bold text-[10px] px-2 py-0.5 rounded uppercase">प्रमुख एडमिन ({{ current_user.role if current_user else 'SUPER_ADMIN' }})</span>
                 </div>
 
                 <button onclick="handleLogout()" class="inline-flex items-center gap-1 text-slate-600 hover:text-red-600 px-2.5 py-1.5 rounded hover:bg-slate-100 transition font-medium">

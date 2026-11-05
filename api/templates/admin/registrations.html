@@ -263,16 +263,16 @@
                             <div class="flex items-center justify-end gap-1.5">
                                 
                                 {% if r.status != 'स्वीकृत' %}
-                                <button type="button" onclick="handleApprove({{ r.id }}, '{{ r.full_name_ne }}')" class="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded-lg text-[11px] shadow-sm transition active:scale-95" title="स्वीकृत गर्नुहोस् (Approve)">
+                                <button type="button" onclick="handleApprove({{ r.id }}, '{{ r.full_name_ne }}')" class="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded-lg text-[11px] shadow-sm transition active:scale-95" title="खाता स्वीकृत गर्नुहोस् (Approve)">
                                     <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
-                                    <span>एप्रोभ (स्वीकृत)</span>
+                                    <span>एप्रुभ (स्वीकृत)</span>
                                 </button>
                                 {% endif %}
 
-                                {% if r.status == 'विचाराधीन' %}
-                                <button type="button" onclick="handleReject({{ r.id }}, '{{ r.full_name_ne }}')" class="inline-flex items-center gap-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold px-2 py-1 rounded-lg text-[11px] transition" title="अस्वीकृत गर्नुहोस् (Reject)">
-                                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-amber-700"></i>
-                                    <span>अस्वीकृत</span>
+                                {% if r.status != 'अस्वीकृत' %}
+                                <button type="button" onclick="handleReject({{ r.id }}, '{{ r.full_name_ne }}')" class="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-2.5 py-1 rounded-lg text-[11px] shadow-sm transition active:scale-95" title="खाता रद्द / अस्वीकृत गर्नुहोस् (Reject / Cancel)">
+                                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-slate-950"></i>
+                                    <span>रद्द / अस्वीकृत</span>
                                 </button>
                                 {% endif %}
 
@@ -322,7 +322,7 @@ async function handleApprove(id, name) {
 }
 
 async function handleReject(id, name) {
-    if (!confirm(`के तपाईं "${name}" को दर्ता आवेदनलाई अस्वीकृत (Reject) गर्न चाहनुहुन्छ?`)) return;
+    if (!confirm(`के तपाईं "${name}" को खाता/आवेदनलाई रद्द वा अस्वीकृत (Reject / Cancel) गर्न निश्चित हुनुहुन्छ?`)) return;
 
     try {
         const res = await fetch(`/api/auth/registrations/${id}/reject`, {

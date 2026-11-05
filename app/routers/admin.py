@@ -30,6 +30,14 @@ def get_admin_context(request: Request, active_page: str = "dashboard"):
     current_academic_year = dict(ay_row) if ay_row else {"year_ne": "२०८२/८३", "id": 1}
     cursor.execute("SELECT * FROM academic_years ORDER BY id DESC")
     academic_years = [dict(r) for r in cursor.fetchall()]
+    
+    # Live pending registrations count for Super Admin approval badge
+    try:
+        cursor.execute("SELECT COUNT(*) FROM user_registrations WHERE status = 'विचाराधीन'")
+        pending_registrations_count = cursor.fetchone()[0]
+    except Exception:
+        pending_registrations_count = 0
+
     conn.close()
     return user, {
         "user": user,
@@ -38,7 +46,8 @@ def get_admin_context(request: Request, active_page: str = "dashboard"):
         "settings": settings,
         "active_page": active_page,
         "current_academic_year": current_academic_year,
-        "academic_years": academic_years
+        "academic_years": academic_years,
+        "pending_registrations_count": pending_registrations_count
     }
 
 @router.get("/dashboard", response_class=HTMLResponse)
@@ -1086,6 +1095,10 @@ def admin_registrations(
     if not user:
         return RedirectResponse(url="/login", status_code=303)
 
+    # Safe extraction of query parameters
+    st_val = status_filter if isinstance(status_filter, str) else request.query_params.get("status")
+    ut_val = user_type if isinstance(user_type, str) else request.query_params.get("user_type")
+
     conn = get_db()
     cursor = conn.cursor()
 
@@ -1112,12 +1125,12 @@ def admin_registrations(
         WHERE 1=1
     """
     params = []
-    if status_filter and status_filter != "all":
+    if st_val and st_val != "all":
         query += " AND r.status = ?"
-        params.append(status_filter)
-    if user_type and user_type != "all":
+        params.append(st_val)
+    if ut_val and ut_val != "all":
         query += " AND r.user_type = ?"
-        params.append(user_type.upper())
+        params.append(ut_val.upper())
 
     query += " ORDER BY r.id DESC"
     cursor.execute(query, params)
@@ -1131,8 +1144,8 @@ def admin_registrations(
         "teacher_reg_count": teacher_reg_count,
         "parent_reg_count": parent_reg_count,
         "total_reg_count": total_reg_count,
-        "current_status": status_filter or "all",
-        "current_type": user_type or "all"
+        "current_status": st_val or "all",
+        "current_type": ut_val or "all"
     })
     return templates.TemplateResponse(request, "admin/registrations.html", ctx)
 
