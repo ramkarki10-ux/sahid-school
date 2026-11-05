@@ -1,0 +1,77 @@
+{% extends "teacher/base_teacher.html" %}
+
+{% block title %}मेरो प्रोफाइल | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Header Card -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6">
+        <div class="w-24 h-24 rounded-full bg-instBlue/10 text-instBlue flex items-center justify-center font-bold text-3xl border-2 border-instBlue/20 shadow-inner">
+            {% if teacher_info.photo %}
+            <img src="{{ teacher_info.photo }}" alt="{{ teacher_info.name_nepali }}" class="w-full h-full object-cover rounded-full">
+            {% else %}
+            <i data-lucide="user" class="w-12 h-12 text-instBlue"></i>
+            {% endif %}
+        </div>
+
+        <div class="flex-1 text-center sm:text-left space-y-2">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                    <h1 class="text-xl font-black text-slate-900">{{ teacher_info.name_nepali or user.full_name or user.username }}</h1>
+                    <p class="text-xs text-slate-500 font-mono">{{ teacher_info.name_english or user.username }}</p>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 self-center sm:self-auto">
+                    {{ teacher_info.designation or 'शिक्षक (Teacher)' }}
+                </span>
+            </div>
+
+            <p class="text-xs text-slate-600 font-medium">
+                सहिद स्मृति आवासीय माध्यमिक विद्यालय, इटहरी-१९, सुनसरी
+            </p>
+
+            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-slate-500 pt-2 border-t border-slate-100">
+                <span class="inline-flex items-center gap-1.5">
+                    <i data-lucide="phone" class="w-3.5 h-3.5 text-instBlue"></i>
+                    <strong class="text-slate-700 font-mono">{{ teacher_info.phone or user.phone or '-' }}</strong>
+                </span>
+                <span class="inline-flex items-center gap-1.5">
+                    <i data-lucide="mail" class="w-3.5 h-3.5 text-instBlue"></i>
+                    <strong class="text-slate-700">{{ teacher_info.email or user.email or '-' }}</strong>
+                </span>
+                <span class="inline-flex items-center gap-1.5">
+                    <i data-lucide="book" class="w-3.5 h-3.5 text-instBlue"></i>
+                    <strong class="text-slate-700">{{ teacher_info.subject or 'सामान्य' }}</strong>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assigned Classes Box -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <h2 class="text-sm font-bold text-instBlue flex items-center gap-2">
+            <i data-lucide="award" class="w-4 h-4 text-instGold"></i>
+            <span>जिम्मेवारी तोकिएका कक्षाहरू (Assigned Classes)</span>
+        </h2>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {% if assigned_classes %}
+                {% for c in assigned_classes %}
+                <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                    <div>
+                        <div class="font-bold text-xs text-slate-800">{{ c.class_name_ne }}</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">विद्यार्थी संख्या: {{ c.student_count }} जना</div>
+                    </div>
+                    <a href="/teacher/attendance?class_id={{ c.class_id }}" class="px-2.5 py-1 bg-instBlue hover:bg-instBlue-dark text-white text-[11px] font-bold rounded shadow-xs">
+                        हाजिरी
+                    </a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-xs text-slate-400">कुनै विशेष कक्षा तोकिएको छैन।</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,75 +1,112 @@
 {% extends "teacher/base_teacher.html" %}
 
-{% block title %}कक्षा हाजिरी तथा अनुपस्थिति एसएमएस | {{ settings.name_ne }}{% endblock %}
+{% block title %}विद्यार्थी हाजिरी फारम | {{ settings.name_ne }}{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
     
-    <!-- Top Filter & Selector -->
-    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-        <div>
-            <h1 class="text-lg font-bold text-instBlue flex items-center gap-2">
-                <i data-lucide="check-square" class="w-5 h-5 text-instGold"></i>
-                <span>दैनिक विद्यार्थी हाजिरी (Daily Attendance & SMS)</span>
-            </h1>
-            <p class="text-xs text-slate-500 mt-0.5">पहिलो घण्टी हाजिरी लिँदा अनुपस्थित विद्यार्थीको अभिभावकलाई स्वचालित एसएमएस पठाउन सकिन्छ</p>
+    <!-- Top Step 1 & Step 2 Selection Box (Section 3.1) -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div>
+                <h1 class="text-lg font-black text-instBlue flex items-center gap-2">
+                    <i data-lucide="check-square" class="w-5 h-5 text-emerald-600"></i>
+                    <span>विद्यार्थी दैनिक अनलाइन हाजिरी (Student Attendance Portal)</span>
+                </h1>
+                <p class="text-xs text-slate-500 mt-0.5">मिति र कक्षा छनोट गरी उपस्थित, अनुपस्थित वा बिदा चिन्ह लगाउनुहोस्</p>
+            </div>
+            
+            <div class="text-xs text-slate-600">
+                हाजिरी लिने शिक्षक: <strong class="text-slate-900 font-bold">{{ user.full_name or user.username }}</strong>
+            </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-            <!-- Event Type -->
-            <select id="t_event_type" class="px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold text-instBlue focus:ring-2 focus:ring-instBlue focus:outline-none">
-                <option value="FIRST_PERIOD">पहिलो घण्टी हाजिरी (1st Period - SMS सहित)</option>
-                <option value="FINAL_ATTENDANCE">अन्तिम हाजिरी (Final Attendance)</option>
-            </select>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            <!-- Step 1: Date Selection -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">
+                    Step 1: हाजिरी मिति छनोट गर्नुहोस् *
+                </label>
+                <input type="date" id="t_att_date" value="{{ today_date }}" max="{{ today_date }}" onchange="loadTeacherAttendance()" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-bold font-mono focus:ring-2 focus:ring-instBlue focus:outline-none">
+                <span class="text-[10px] text-slate-400 mt-0.5 block">* भविष्यको मितिमा हाजिरी गर्न मिल्दैन।</span>
+            </div>
 
-            <!-- Class Select -->
-            <select id="t_class_select" onchange="loadTeacherAttendance()" class="px-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-instBlue focus:outline-none">
-                <option value="">-- कक्षा छान्नुहोस् --</option>
-                {% for c in assigned_classes %}
-                <option value="{{ c.class_id }}" {% if selected_class_id == c.class_id %}selected{% endif %}>
-                    {{ c.class_name_ne }} (सेक्सन {{ c.section or 'A' }})
-                </option>
-                {% endfor %}
-            </select>
+            <!-- Step 2: Class Selection (Classes 1 to 12) -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">
+                    Step 2: कक्षा छनोट गर्नुहोस् *
+                </label>
+                <select id="t_class_select" onchange="loadTeacherAttendance()" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <option value="">-- कक्षा छनोट गर्नुहोस् (१ देखि १२) --</option>
+                    {% for c in assigned_classes %}
+                    <option value="{{ c.class_id }}" {% if selected_class_id == c.class_id %}selected{% endif %}>
+                        {{ c.class_name_ne }} (विद्यार्थी: {{ c.student_count }} जना)
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-            <input type="date" id="t_att_date" value="{{ today_date }}" onchange="loadTeacherAttendance()" class="px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono font-semibold focus:ring-2 focus:ring-instBlue focus:outline-none">
-
-            <button onclick="markAllPresent()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs">
-                सबै उपस्थित
-            </button>
+            <!-- Quick Bulk Action -->
+            <div class="flex items-end">
+                <button type="button" onclick="markAllPresent()" class="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center justify-center gap-1.5">
+                    <i data-lucide="check-check" class="w-4 h-4"></i>
+                    <span>सबैलाई उपस्थित (Mark All Present)</span>
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- SMS Notification Alert Bar -->
-    <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl flex items-center justify-between text-xs text-amber-900">
-        <div class="flex items-center gap-2">
-            <i data-lucide="smartphone" class="w-4 h-4 text-amber-600"></i>
-            <span>अनुपस्थित भएका विद्यार्थीको अभिभावकलाई स्वचालित अनुपस्थिति एसएमएस (Absence SMS) पठाउने:</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <input type="checkbox" id="sendSmsToggle" checked class="w-4 h-4 text-instBlue rounded">
-            <label for="sendSmsToggle" class="font-bold">एसएमएस सक्रिय (Enabled)</label>
+    <!-- Duplicate Submission Notice (Shown if attendance is already recorded for this date & class) -->
+    <div id="alreadySubmittedAlert" class="hidden p-4 rounded-xl border border-amber-300 bg-amber-50 text-amber-900 text-xs flex items-start gap-3 shadow-xs">
+        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
+        <div class="space-y-1">
+            <h4 class="font-bold text-sm">सूचना: यस कक्षाको आजको हाजिरी दर्ता भइसकेको छ!</h4>
+            <p id="submittedDetails" class="leading-relaxed"></p>
+            <p class="text-[11px] text-amber-700 font-semibold" id="duplicateWarningText">
+                * दोहोरो दर्ता रोक्न शिक्षकको लागि यो फारम सुरक्षित गरिएको छ। कुनै सच्याउनुपर्ने भएमा Admin सँग सम्पर्क गर्नुहोस्।
+            </p>
         </div>
     </div>
 
-    <!-- Attendance Sheet Container -->
+    <!-- Attendance Form / Sheet Container -->
     <div id="attendanceContainer" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-8 text-center text-slate-500 text-xs">
-            माथिबाट कक्षा छनोट गर्नुहोस्।
+        <div class="p-10 text-center text-slate-400 text-xs">
+            <i data-lucide="layers" class="w-8 h-8 text-slate-300 mx-auto mb-2"></i>
+            कृपया माथिका विकल्पबाट कक्षा छनोट गर्नुहोस्।
         </div>
     </div>
 
-    <!-- Save Button Floating/Bottom -->
-    <div id="saveBar" class="hidden sticky bottom-4 z-20 bg-slate-900/90 backdrop-blur text-white p-4 rounded-2xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div class="text-xs">
-            कुल: <span id="stat_total" class="font-bold font-mono">0</span> | 
-            उपस्थित: <span id="stat_present" class="font-bold text-emerald-400 font-mono">0</span> | 
-            अनुपस्थित: <span id="stat_absent" class="font-bold text-rose-400 font-mono">0</span> | 
-            बिदा: <span id="stat_leave" class="font-bold text-amber-400 font-mono">0</span>
+    <!-- Real-time Summary Card & Submit Button Floating Bar (Section 3.3) -->
+    <div id="saveBar" class="hidden sticky bottom-4 z-30 bg-slate-900/95 backdrop-blur text-white p-4 rounded-2xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-slate-800">
+        <div class="flex flex-wrap items-center gap-4 text-xs">
+            <div class="flex items-center gap-1.5">
+                <span class="text-slate-400 font-medium">कुल विद्यार्थी:</span>
+                <span id="stat_total" class="font-mono font-bold text-white text-sm">0</span>
+            </div>
+            <div class="flex items-center gap-1.5 bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-800/40">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
+                <span class="text-emerald-300 font-semibold">उपस्थित:</span>
+                <span id="stat_present" class="font-mono font-bold text-emerald-400 text-sm">0</span>
+            </div>
+            <div class="flex items-center gap-1.5 bg-rose-950/60 px-2.5 py-1 rounded-lg border border-rose-800/40">
+                <span class="w-2.5 h-2.5 rounded-full bg-rose-400 inline-block"></span>
+                <span class="text-rose-300 font-semibold">अनुपस्थित:</span>
+                <span id="stat_absent" class="font-mono font-bold text-rose-400 text-sm">0</span>
+            </div>
+            <div class="flex items-center gap-1.5 bg-amber-950/60 px-2.5 py-1 rounded-lg border border-amber-800/40">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>
+                <span class="text-amber-300 font-semibold">बिदा:</span>
+                <span id="stat_leave" class="font-mono font-bold text-amber-400 text-sm">0</span>
+            </div>
+            <div class="flex items-center gap-1.5 bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-800/40">
+                <span class="text-indigo-300 font-semibold">हाजिरी प्रतिशत:</span>
+                <span id="stat_percentage" class="font-mono font-bold text-indigo-300 text-sm">0%</span>
+            </div>
         </div>
-        <button onclick="saveAttendance()" id="saveAttBtn" class="px-6 py-2.5 bg-instGold hover:bg-amber-400 text-slate-900 font-extrabold rounded-xl text-xs shadow transition flex items-center gap-2">
+
+        <button type="button" onclick="saveAttendance()" id="saveAttBtn" class="w-full md:w-auto px-6 py-2.5 bg-instGold hover:bg-amber-400 text-slate-900 font-black rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-2">
             <i data-lucide="save" class="w-4 h-4"></i>
-            <span>हाजिरी सुरक्षित गर्नुहोस् (Save Attendance)</span>
+            <span>हाजिरी Submit गर्नुहोस् (Submit Attendance)</span>
         </button>
     </div>
 
@@ -77,29 +114,57 @@
 
 <script>
     let currentStudents = [];
+    const currentUserRole = "{{ user.role }}";
+    let isAlreadySubmitted = false;
 
     async function loadTeacherAttendance() {
         const classId = document.getElementById('t_class_select').value;
         const attDate = document.getElementById('t_att_date').value;
         const container = document.getElementById('attendanceContainer');
         const saveBar = document.getElementById('saveBar');
+        const alertBox = document.getElementById('alreadySubmittedAlert');
 
         if (!classId) {
-            container.innerHTML = '<div class="p-8 text-center text-slate-500 text-xs">कृपया कक्षा छनोट गर्नुहोस्।</div>';
+            container.innerHTML = '<div class="p-10 text-center text-slate-400 text-xs">कृपया कक्षा छनोट गर्नुहोस्।</div>';
             saveBar.classList.add('hidden');
+            alertBox.classList.add('hidden');
             return;
         }
 
-        container.innerHTML = '<div class="p-8 text-center text-slate-500 text-xs"><i data-lucide="loader" class="w-6 h-6 animate-spin mx-auto mb-2 text-instBlue"></i>लोड हुँदैछ...</div>';
+        container.innerHTML = '<div class="p-10 text-center text-slate-500 text-xs"><i data-lucide="loader" class="w-6 h-6 animate-spin mx-auto mb-2 text-instBlue"></i>लोड हुँदैछ...</div>';
         if (window.lucide) lucide.createIcons();
 
         try {
+            // Check submission status first
+            const checkRes = await fetch(`/api/attendance/check-class-status?class_id=${classId}&attendance_date=${attDate}`);
+            const checkData = await checkRes.json();
+            
+            isAlreadySubmitted = checkData.submitted;
+            if (isAlreadySubmitted) {
+                alertBox.classList.remove('hidden');
+                document.getElementById('submittedDetails').innerText = 
+                    `रेकर्ड गर्ने शिक्षक: ${checkData.recorder || 'शिक्षक'} | समय: ${checkData.submitted_at || '-'} | उपस्थित: ${checkData.present} | अनुपस्थित: ${checkData.absent} | बिदा: ${checkData.leave}`;
+                
+                // If regular teacher, lock submit button
+                if (currentUserRole === 'TEACHER') {
+                    document.getElementById('saveAttBtn').disabled = true;
+                    document.getElementById('saveAttBtn').classList.add('opacity-50', 'cursor-not-allowed');
+                    document.getElementById('saveAttBtn').title = 'हाजिरी दर्ता भइसकेको छ। सच्याउन Admin सँग सम्पर्क गर्नुहोस्।';
+                }
+            } else {
+                alertBox.classList.add('hidden');
+                document.getElementById('saveAttBtn').disabled = false;
+                document.getElementById('saveAttBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+                document.getElementById('saveAttBtn').title = '';
+            }
+
+            // Fetch sheet
             const res = await fetch(`/api/attendance/sheet?class_id=${classId}&attendance_date=${attDate}`);
             const data = await res.json();
             currentStudents = data.sheet || [];
 
             if (currentStudents.length === 0) {
-                container.innerHTML = '<div class="p-8 text-center text-slate-500 text-xs">यस कक्षामा कुनै सक्रिय विद्यार्थी भेटिएन।</div>';
+                container.innerHTML = '<div class="p-10 text-center text-slate-500 text-xs">यस कक्षामा कुनै सक्रिय विद्यार्थी भेटिएन।</div>';
                 saveBar.classList.add('hidden');
                 return;
             }
@@ -108,7 +173,7 @@
             saveBar.classList.remove('hidden');
             updateCounters();
         } catch (e) {
-            container.innerHTML = '<div class="p-8 text-center text-red-500 text-xs">डेटा लोड गर्न सकिएन: ' + e.message + '</div>';
+            container.innerHTML = '<div class="p-10 text-center text-red-500 text-xs">डेटा लोड गर्न सकिएन: ' + e.message + '</div>';
         }
     }
 
@@ -119,11 +184,10 @@
             <table class="w-full text-left text-xs border-collapse">
                 <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
                     <tr>
-                        <th class="py-3 px-4 text-center w-12">रोल</th>
-                        <th class="py-3 px-4">विद्यार्थीको नाम</th>
-                        <th class="py-3 px-4">अभिभावक / सम्पर्क</th>
-                        <th class="py-3 px-4 text-center w-24">प्रकार</th>
-                        <th class="py-3 px-4 text-center w-72">हाजिरी स्थिति (Large Touch Buttons)</th>
+                        <th class="py-3 px-3 text-center w-14">रोल नं.</th>
+                        <th class="py-3 px-4">विद्यार्थीको नाम र थर</th>
+                        <th class="py-3 px-4">अभिभावक / फोन</th>
+                        <th class="py-3 px-4 text-center w-80">हाजिरी स्थिति छनोट (Exclusive Buttons)</th>
                         <th class="py-3 px-4">कैफियत (Remarks)</th>
                     </tr>
                 </thead>
@@ -133,29 +197,43 @@
         currentStudents.forEach((s, idx) => {
             const st = s.attendance_status || s.status || 'PRESENT';
             s.status = st;
+            s.attendance_status = st;
+            
             html += `
             <tr class="hover:bg-slate-50 transition" id="row_${s.student_id}">
-                <td class="py-3 px-4 text-center font-bold text-slate-600 font-mono">${s.roll_no || idx + 1}</td>
+                <td class="py-3 px-3 text-center font-bold text-slate-700 font-mono text-sm">${s.roll_no || idx + 1}</td>
                 <td class="py-3 px-4">
-                    <span class="font-bold text-slate-900 block">${s.name_nepali}</span>
+                    <span class="font-bold text-slate-900 block text-sm">${s.name_nepali}</span>
                     <span class="text-[10px] text-slate-400 font-mono">${s.name_english || ''}</span>
                 </td>
                 <td class="py-3 px-4 text-slate-600">
-                    <p class="font-medium">${s.guardian_name || '-'}</p>
+                    <p class="font-medium text-slate-800">${s.guardian_name || '-'}</p>
                     <p class="text-[11px] font-mono text-instBlue">${s.guardian_phone || '-'}</p>
                 </td>
                 <td class="py-3 px-4 text-center">
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded ${s.residential_status === 'आवासीय' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700'}">${s.residential_status || 'दिवा'}</span>
-                </td>
-                <td class="py-3 px-4 text-center">
-                    <div class="inline-flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
-                        <button type="button" onclick="setStatus(${s.student_id}, 'PRESENT')" id="btn_p_${s.student_id}" class="px-3.5 py-2 rounded-lg font-extrabold text-xs transition ${st === 'PRESENT' ? 'bg-emerald-600 text-white shadow' : 'bg-transparent text-slate-600 hover:bg-slate-200'}">P हाजिर</button>
-                        <button type="button" onclick="setStatus(${s.student_id}, 'ABSENT')" id="btn_a_${s.student_id}" class="px-3.5 py-2 rounded-lg font-extrabold text-xs transition ${st === 'ABSENT' ? 'bg-rose-600 text-white shadow' : 'bg-transparent text-slate-600 hover:bg-slate-200'}">A गैरहाजिर</button>
-                        <button type="button" onclick="setStatus(${s.student_id}, 'LEAVE')" id="btn_l_${s.student_id}" class="px-3.5 py-2 rounded-lg font-extrabold text-xs transition ${st === 'LEAVE' ? 'bg-amber-500 text-white shadow' : 'bg-transparent text-slate-600 hover:bg-slate-200'}">L बिदा</button>
+                    <div class="inline-flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200 shadow-inner">
+                        <!-- Present Button (Green) -->
+                        <button type="button" onclick="setStatus(${s.student_id}, 'PRESENT')" id="btn_p_${s.student_id}" 
+                            class="px-4 py-2 rounded-lg font-black text-xs transition flex items-center gap-1 ${st === 'PRESENT' ? 'bg-emerald-600 text-white shadow-md' : 'bg-transparent text-slate-600 hover:bg-slate-200'}">
+                            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                            <span>उपस्थित</span>
+                        </button>
+                        <!-- Absent Button (Red) -->
+                        <button type="button" onclick="setStatus(${s.student_id}, 'ABSENT')" id="btn_a_${s.student_id}" 
+                            class="px-4 py-2 rounded-lg font-black text-xs transition flex items-center gap-1 ${st === 'ABSENT' ? 'bg-rose-600 text-white shadow-md' : 'bg-transparent text-slate-600 hover:bg-slate-200'}">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            <span>अनुपस्थित</span>
+                        </button>
+                        <!-- Leave Button (Amber) -->
+                        <button type="button" onclick="setStatus(${s.student_id}, 'LEAVE')" id="btn_l_${s.student_id}" 
+                            class="px-4 py-2 rounded-lg font-black text-xs transition flex items-center gap-1 ${st === 'LEAVE' ? 'bg-amber-500 text-white shadow-md' : 'bg-transparent text-slate-600 hover:bg-slate-200'}">
+                            <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                            <span>बिदा</span>
+                        </button>
                     </div>
                 </td>
                 <td class="py-3 px-4">
-                    <input type="text" id="rem_${s.student_id}" value="${s.remark || s.remarks || ''}" placeholder="कैफियत..." class="w-full px-2 py-1 border border-slate-200 rounded text-xs">
+                    <input type="text" id="rem_${s.student_id}" value="${s.remark || ''}" placeholder="कैफियत लेख्नुहोस्..." class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-instBlue focus:outline-none">
                 </td>
             </tr>
             `;
@@ -171,51 +249,87 @@
         if (student) {
             student.status = newStatus;
             student.attendance_status = newStatus;
+
             ['PRESENT', 'ABSENT', 'LEAVE'].forEach(type => {
                 const b = document.getElementById(`btn_${type[0].toLowerCase()}_${studentId}`);
                 if (!b) return;
                 if (type === newStatus) {
-                    b.className = `px-3.5 py-2 rounded-lg font-extrabold text-xs transition ${type === 'PRESENT' ? 'bg-emerald-600 text-white shadow' : (type === 'ABSENT' ? 'bg-rose-600 text-white shadow' : 'bg-amber-500 text-white shadow')}`;
+                    if (type === 'PRESENT') b.className = 'px-4 py-2 rounded-lg font-black text-xs transition flex items-center gap-1 bg-emerald-600 text-white shadow-md';
+                    else if (type === 'ABSENT') b.className = 'px-4 py-2 rounded-lg font-black text-xs transition flex items-center gap-1 bg-rose-600 text-white shadow-md';
+                    else b.className = 'px-4 py-2 rounded-lg font-black text-xs transition flex items-center gap-1 bg-amber-500 text-white shadow-md';
                 } else {
-                    b.className = 'px-3.5 py-2 rounded-lg font-extrabold text-xs transition bg-transparent text-slate-600 hover:bg-slate-200';
+                    b.className = 'px-4 py-2 rounded-lg font-black text-xs transition flex items-center gap-1 bg-transparent text-slate-600 hover:bg-slate-200';
                 }
             });
+
             updateCounters();
         }
     }
 
     function markAllPresent() {
+        if (currentStudents.length === 0) return;
         currentStudents.forEach(s => setStatus(s.student_id, 'PRESENT'));
     }
 
     function updateCounters() {
-        document.getElementById('stat_total').innerText = currentStudents.length;
-        document.getElementById('stat_present').innerText = currentStudents.filter(s => (s.status || s.attendance_status) === 'PRESENT').length;
-        document.getElementById('stat_absent').innerText = currentStudents.filter(s => (s.status || s.attendance_status) === 'ABSENT').length;
-        document.getElementById('stat_leave').innerText = currentStudents.filter(s => (s.status || s.attendance_status) === 'LEAVE').length;
+        const total = currentStudents.length;
+        const present = currentStudents.filter(s => (s.status || s.attendance_status) === 'PRESENT').length;
+        const absent = currentStudents.filter(s => (s.status || s.attendance_status) === 'ABSENT').length;
+        const leave = currentStudents.filter(s => (s.status || s.attendance_status) === 'LEAVE').length;
+        const pct = total > 0 ? ((present / total) * 100).toFixed(1) : '0';
+
+        document.getElementById('stat_total').innerText = total;
+        document.getElementById('stat_present').innerText = present;
+        document.getElementById('stat_absent').innerText = absent;
+        document.getElementById('stat_leave').innerText = leave;
+        document.getElementById('stat_percentage').innerText = pct + '%';
     }
 
     async function saveAttendance() {
+        if (isAlreadySubmitted && currentUserRole === 'TEACHER') {
+            alert('यस कक्षाको आजको हाजिरी दर्ता भइसकेको छ। शिक्षकले दोहोरो दर्ता गर्न मिल्दैन। सच्याउन आवश्यक भएमा Admin सँग सम्पर्क गर्नुहोस्।');
+            return;
+        }
+
         const classId = document.getElementById('t_class_select').value;
         const attDate = document.getElementById('t_att_date').value;
-        const eventType = document.getElementById('t_event_type').value;
-        const sendSms = document.getElementById('sendSmsToggle').checked;
         const btn = document.getElementById('saveAttBtn');
+
+        if (!classId) {
+            alert('कृपया कक्षा छनोट गर्नुहोस्।');
+            return;
+        }
+
+        // Validate that all students have a valid status
+        const unassigned = currentStudents.filter(s => !['PRESENT', 'ABSENT', 'LEAVE'].includes(s.status));
+        if (unassigned.length > 0) {
+            alert(`कृपया सबै विद्यार्थीहरूको हाजिरी चिन्ह लगाउनुहोस्। (${unassigned.length} जना बाँकी)`);
+            return;
+        }
+
+        const presentCount = currentStudents.filter(s => s.status === 'PRESENT').length;
+        const absentCount = currentStudents.filter(s => s.status === 'ABSENT').length;
+        const leaveCount = currentStudents.filter(s => s.status === 'LEAVE').length;
+        const pct = ((presentCount / currentStudents.length) * 100).toFixed(1);
+
+        const confirmMsg = `हाजिरी विवरण:\n- कुल विद्यार्थी: ${currentStudents.length}\n- उपस्थित: ${presentCount}\n- अनुपस्थित: ${absentCount}\n- बिदा: ${leaveCount}\n- हाजिरी प्रतिशत: ${pct}%\n\nके तपाईं यो हाजिरी सुरक्षित गर्न निश्चित हुनुहुन्छ?`;
+        if (!confirm(confirmMsg)) return;
 
         const payload = {
             class_id: parseInt(classId),
             attendance_date: attDate,
-            event_type: eventType,
-            send_sms_notification: sendSms,
+            event_type: "FIRST_PERIOD",
+            send_sms_notification: false,
             records: currentStudents.map(s => ({
                 student_id: s.student_id,
-                status: s.status || s.attendance_status || 'PRESENT',
+                status: s.status,
                 remark: document.getElementById(`rem_${s.student_id}`) ? document.getElementById(`rem_${s.student_id}`).value.trim() : null
             }))
         };
 
         btn.disabled = true;
-        btn.innerText = 'सुरक्षित गरिँदैछ...';
+        btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>सुरक्षित गरिँदैछ...</span>';
+        if (window.lucide) lucide.createIcons();
 
         try {
             const res = await fetch('/api/attendance/bulk', {
@@ -225,22 +339,17 @@
             });
             const data = await res.json();
             if (res.ok) {
-                let msg = data.message;
-                if (data.sms_sent_count > 0) {
-                    msg += `\n✓ ${data.sms_sent_count} जना अनुपस्थित विद्यार्थीका अभिभावकलाई SMS पठाइयो।`;
-                }
-                if (data.sms_skipped_count > 0) {
-                    msg += `\n(${data.sms_skipped_count} जनालाई आज पहिले नै SMS गइसकेकोले दोहोरिन दिइएन)`;
-                }
-                alert(msg);
+                alert(`✓ सफलतापूर्वक हाजिरी सुरक्षित भयो!\n\nकुल दर्ता: ${data.saved_count}\nउपस्थित: ${data.present_count}\nअनुपस्थित: ${data.absent_count}\nबिदा: ${data.leave_count}`);
+                loadTeacherAttendance();
             } else {
-                alert('त्रुटि: ' + (data.detail || 'असफल भयो'));
+                alert('त्रुटि: ' + (data.detail || 'हाजिरी सुरक्षित गर्न सकिएन।'));
             }
         } catch (e) {
             alert('सर्भर त्रुटि: ' + e.message);
         } finally {
             btn.disabled = false;
-            btn.innerText = '💾 हाजिरी सुरक्षित गर्नुहोस् (Save Attendance)';
+            btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i><span>हाजिरी Submit गर्नुहोस् (Submit Attendance)</span>';
+            if (window.lucide) lucide.createIcons();
         }
     }
 

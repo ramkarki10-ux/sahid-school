@@ -48,6 +48,26 @@
     <!-- 10-Step Workflow Progress & Results Container -->
     <div id="validationResultArea" class="hidden space-y-6">
         
+        <!-- 4 Summary Stat Cards (Section 2.3) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+                <span class="text-xs text-slate-500 font-semibold">कुल विद्यार्थी संख्या (Total)</span>
+                <div id="statTotalRows" class="text-2xl font-black text-slate-800 mt-1">0</div>
+            </div>
+            <div class="bg-emerald-50/70 p-4 rounded-xl border border-emerald-200 shadow-sm text-center">
+                <span class="text-xs text-emerald-700 font-semibold">नयाँ विद्यार्थी (New)</span>
+                <div id="statNewCount" class="text-2xl font-black text-emerald-600 mt-1">0</div>
+            </div>
+            <div class="bg-sky-50/70 p-4 rounded-xl border border-sky-200 shadow-sm text-center">
+                <span class="text-xs text-sky-700 font-semibold">पहिले दर्ता भएका (Existing)</span>
+                <div id="statDuplicateCount" class="text-2xl font-black text-sky-600 mt-1">0</div>
+            </div>
+            <div class="bg-rose-50/70 p-4 rounded-xl border border-rose-200 shadow-sm text-center">
+                <span class="text-xs text-rose-700 font-semibold">त्रुटि भएका विवरण (Errors)</span>
+                <div id="statErrorCount" class="text-2xl font-black text-rose-600 mt-1">0</div>
+            </div>
+        </div>
+
         <!-- Status Box -->
         <div id="statusAlertBox" class="p-4 rounded-xl text-xs font-semibold flex items-start gap-3">
             <div id="statusIcon"></div>
@@ -188,27 +208,39 @@
             commitBtn.disabled = true;
         }
 
-        document.getElementById('previewStatsBadge').innerText = `कुल: ${data.total_rows} | मान्य: ${data.valid_rows_count}`;
+        document.getElementById('statTotalRows').innerText = data.total_rows || 0;
+        document.getElementById('statNewCount').innerText = data.new_count || 0;
+        document.getElementById('statDuplicateCount').innerText = data.duplicate_count || 0;
+        document.getElementById('statErrorCount').innerText = data.error_count || 0;
+        document.getElementById('previewStatsBadge').innerText = `कुल: ${data.total_rows} | नयाँ: ${data.new_count || 0} | विद्यमान: ${data.duplicate_count || 0} | त्रुटि: ${data.error_count || 0}`;
 
         // Populate table
         const tbody = document.getElementById('previewTableBody');
         tbody.innerHTML = '';
         (data.rows || []).forEach(r => {
-            const hasError = r._errors && r._errors.length > 0;
+            const hasError = (r._errors && r._errors.length > 0) || r._status === 'ERROR' || r._status === 'DUPLICATE_ROLL';
             const tr = document.createElement('tr');
-            tr.className = hasError ? 'bg-red-50/60 text-red-900' : 'hover:bg-slate-50';
+            tr.className = hasError ? 'bg-rose-50/60 text-rose-900' : 'hover:bg-slate-50';
+            
+            let statusBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800">नयाँ विद्यार्थी</span>';
+            if (hasError) {
+                statusBadge = `<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-800" title="${(r._errors || []).join(', ')}">त्रुटि (${(r._errors || []).join(', ')})</span>`;
+            } else if (r._status === 'EXISTING') {
+                statusBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-sky-100 text-sky-800">पहिले दर्ता भएको</span>';
+            }
+
             tr.innerHTML = `
                 <td class="p-2.5 font-bold">${r._row_number}</td>
-                <td class="p-2.5 font-mono">${r['Student ID']}</td>
-                <td class="p-2.5 font-mono">${r['Admission No']}</td>
-                <td class="p-2.5 font-bold">${r['Name Nepali']}</td>
-                <td class="p-2.5">${r['Name English']}</td>
-                <td class="p-2.5">${r['Class']}</td>
-                <td class="p-2.5 text-center">${r['Section']}</td>
+                <td class="p-2.5 font-mono text-[11px]">${r['Student ID'] || '-'}</td>
+                <td class="p-2.5 font-mono text-[11px]">${r['Admission No'] || '-'}</td>
+                <td class="p-2.5 font-bold text-slate-800">${r['Name Nepali'] || '-'}</td>
+                <td class="p-2.5 text-slate-600">${r['Name English'] || '-'}</td>
+                <td class="p-2.5 text-center font-bold">कक्षा ${r['Class']}</td>
+                <td class="p-2.5 text-center">${r['Section'] || 'A'}</td>
                 <td class="p-2.5 font-bold text-center">${r['Roll No']}</td>
-                <td class="p-2.5">${r['Guardian Name']}</td>
-                <td class="p-2.5 font-mono">${r['Guardian Contact']}</td>
-                <td class="p-2.5">${hasError ? '<span class="text-red-600 font-bold">त्रुटि</span>' : '<span class="text-green-600 font-bold">मान्य</span>'}</td>
+                <td class="p-2.5">${r['Guardian Name'] || '-'}</td>
+                <td class="p-2.5 font-mono text-[11px]">${r['Guardian Contact'] || '-'}</td>
+                <td class="p-2.5 whitespace-nowrap">${statusBadge}</td>
             `;
             tbody.appendChild(tr);
         });

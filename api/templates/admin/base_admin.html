@@ -111,13 +111,41 @@
                 </div>
             </div>
 
-            <!-- हाजिरी (Attendance Group) -->
+            <!-- हाजिरी (Attendance Group - Section 4) -->
             <div class="pt-2">
-                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">हाजिरी तथा एसएमएस</p>
+                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">विद्यार्थी हाजिरी व्यवस्थापन</p>
                 <div class="mt-1 space-y-0.5">
-                    <a href="/admin/attendance" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance' %}bg-instBlue text-white font-bold{% endif %}">
-                        <i data-lucide="check-square" class="w-4 h-4 text-green-400"></i>
-                        <span>दैनिक हाजिरी (Daily)</span>
+                    <a href="/admin/attendance/daily" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_daily' or admin_active == 'attendance' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="check-square" class="w-4 h-4 text-emerald-400"></i>
+                        <span>दैनिक हाजिरी (Daily Attendance)</span>
+                    </a>
+                    <a href="/admin/attendance/class-wise" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_class_wise' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="layers" class="w-4 h-4 text-sky-400"></i>
+                        <span>कक्षागत हाजिरी (Class-wise)</span>
+                    </a>
+                    <a href="/admin/attendance/monthly" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_monthly' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="calendar" class="w-4 h-4 text-amber-400"></i>
+                        <span>मासिक हाजिरी (Monthly)</span>
+                    </a>
+                    <a href="/admin/attendance/quarterly" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_quarterly' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="pie-chart" class="w-4 h-4 text-purple-400"></i>
+                        <span>त्रैमासिक हाजिरी (Quarterly)</span>
+                    </a>
+                    <a href="/admin/attendance/annual" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_annual' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="award" class="w-4 h-4 text-indigo-400"></i>
+                        <span>वार्षिक हाजिरी (Annual)</span>
+                    </a>
+                    <a href="/admin/attendance/correction" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_correction' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="edit-3" class="w-4 h-4 text-rose-400"></i>
+                        <span>हाजिरी सच्याउने (Correction)</span>
+                    </a>
+                    <a href="/admin/attendance/export" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_export' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
+                        <span>हाजिरी Export (Excel)</span>
+                    </a>
+                    <a href="/admin/attendance/absent" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_absent' %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="user-x" class="w-4 h-4 text-rose-400"></i>
+                        <span>आज अनुपस्थित विद्यार्थी</span>
                     </a>
                     <a href="/admin/sms-gateway" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'sms_gateway' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="smartphone" class="w-4 h-4 text-amber-400"></i>
@@ -126,14 +154,6 @@
                     <a href="/admin/sms-history" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'sms_history' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="message-square" class="w-4 h-4 text-sky-400"></i>
                         <span>SMS सूचना लग (History)</span>
-                    </a>
-                    <a href="/admin/attendance/reports" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_reports' %}bg-instBlue text-white font-bold{% endif %}">
-                        <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
-                        <span>हाजिरी रिपोर्टहरू</span>
-                    </a>
-                    <a href="/admin/attendance/absent" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_absent' %}bg-instBlue text-white font-bold{% endif %}">
-                        <i data-lucide="user-x" class="w-4 h-4 text-red-400"></i>
-                        <span>आज अनुपस्थित विद्यार्थी</span>
                     </a>
                 </div>
             </div>

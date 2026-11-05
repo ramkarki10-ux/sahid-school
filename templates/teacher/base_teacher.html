@@ -54,20 +54,28 @@
         </div>
     </header>
 
-    <!-- Navigation Bar for Teacher -->
+    <!-- Navigation Bar for Teacher (Section 3) -->
     <nav class="bg-instBlue-dark text-white border-t border-white/10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-1 overflow-x-auto text-xs py-1.5">
-            <a href="/teacher/dashboard" class="px-3 py-1.5 rounded hover:bg-white/10 flex items-center gap-1.5 font-medium whitespace-nowrap">
+            <a href="/teacher/dashboard" class="px-3 py-1.5 rounded hover:bg-white/10 flex items-center gap-1.5 font-medium whitespace-nowrap {% if active_page == 'dashboard' %}bg-white/15 text-white font-bold{% endif %}">
                 <i data-lucide="layout-dashboard" class="w-3.5 h-3.5 text-instGold"></i>
-                <span>ड्यासबोर्ड</span>
+                <span>Home</span>
             </a>
-            <a href="/teacher/attendance" class="px-3 py-1.5 rounded hover:bg-white/10 flex items-center gap-1.5 font-medium whitespace-nowrap">
-                <i data-lucide="calendar-check" class="w-3.5 h-3.5 text-green-400"></i>
-                <span>दैनिक हाजिरी लिनुहोस्</span>
+            <a href="/teacher/attendance" class="px-3 py-1.5 rounded hover:bg-white/10 flex items-center gap-1.5 font-medium whitespace-nowrap {% if active_page == 'attendance' %}bg-white/15 text-white font-bold{% endif %}">
+                <i data-lucide="calendar-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span>Student Attendance</span>
             </a>
-            <a href="/teacher/absent" class="px-3 py-1.5 rounded hover:bg-white/10 flex items-center gap-1.5 font-medium whitespace-nowrap">
-                <i data-lucide="user-x" class="w-3.5 h-3.5 text-red-400"></i>
-                <span>अनुपस्थित विद्यार्थी सूची</span>
+            <a href="/teacher/daily-report" class="px-3 py-1.5 rounded hover:bg-white/10 flex items-center gap-1.5 font-medium whitespace-nowrap {% if active_page == 'daily_report' %}bg-white/15 text-white font-bold{% endif %}">
+                <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-sky-400"></i>
+                <span>Daily Attendance Report</span>
+            </a>
+            <a href="/teacher/absent" class="px-3 py-1.5 rounded hover:bg-white/10 flex items-center gap-1.5 font-medium whitespace-nowrap {% if active_page == 'teacher_absent' %}bg-white/15 text-white font-bold{% endif %}">
+                <i data-lucide="user-x" class="w-3.5 h-3.5 text-rose-400"></i>
+                <span>अनुपस्थित सूची (Absent List)</span>
+            </a>
+            <a href="/teacher/profile" class="px-3 py-1.5 rounded hover:bg-white/10 flex items-center gap-1.5 font-medium whitespace-nowrap {% if active_page == 'profile' %}bg-white/15 text-white font-bold{% endif %}">
+                <i data-lucide="user" class="w-3.5 h-3.5 text-amber-300"></i>
+                <span>My Profile</span>
             </a>
         </div>
     </nav>

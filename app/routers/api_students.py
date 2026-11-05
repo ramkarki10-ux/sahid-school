@@ -199,87 +199,111 @@ async def import_students(
     commit: bool = Form(False),
     academic_year_id: Optional[int] = Form(None)
 ):
-    user = require_role("SUPER_ADMIN", "PRINCIPAL")(request)
+    user = require_role("SUPER_ADMIN", "PRINCIPAL", "ADMIN")(request)
     content = await file.read()
     parse_result = validate_and_parse_student_excel(content)
-    
-    if not parse_result["valid"] and not commit:
-        return {
-            "success": False,
-            "preview": True,
-            "errors": parse_result["errors"],
-            "total_rows": parse_result["total_rows"],
-            "valid_rows_count": parse_result["valid_rows_count"],
-            "rows": parse_result["rows"][:50]
-        }
-        
+
     if not commit:
-        # Step 10: Display Preview
+        # Return Validation Preview
         return {
-            "success": True,
+            "success": parse_result["valid"],
             "preview": True,
             "total_rows": parse_result["total_rows"],
+            "new_count": parse_result["new_count"],
+            "duplicate_count": parse_result["duplicate_count"],
+            "error_count": parse_result["error_count"],
             "valid_rows_count": parse_result["valid_rows_count"],
-            "rows": parse_result["rows"][:50],
-            "message": "फाइल परीक्षण सफल भयो। आयात गर्न 'आयात सुरु गर्नुहोस्' थिच्नुहोस्।"
+            "errors": parse_result["errors"],
+            "warnings": parse_result["warnings"],
+            "rows": parse_result["rows"][:100],
+            "message": "फाइल प्रमाणीकरण सम्पन्न भयो।" if parse_result["valid"] else "फाइलमा केही त्रुटिहरू फेला परेका छन्।"
         }
-        
-    # Execute import
-    if parse_result["errors"]:
+
+    # Execute Import (commit=True)
+    if not parse_result["valid"] and parse_result["error_count"] > 0:
         raise HTTPException(
             status_code=400,
             detail=f"त्रुटिहरू रहेका कारण आयात गर्न सकिँदैन: {parse_result['errors'][0]}"
         )
-        
+
     conn = get_db()
     cursor = conn.cursor()
     if not academic_year_id:
         cursor.execute("SELECT active_academic_year_id FROM school_settings WHERE id = 1")
         row = cursor.fetchone()
         academic_year_id = row[0] if row else 1
-        
-    imported_count = 0
-    for r in parse_result["rows"]:
-        # Find section id
-        sec_name = r.get("Section", "A")
-        cursor.execute("SELECT id FROM sections WHERE class_id = ? AND name = ?", (r["class_id"], sec_name))
-        s_row = cursor.fetchone()
-        sec_id = s_row[0] if s_row else None
-        
-        cursor.execute("""
-            INSERT INTO students (
-                student_id, admission_no, registration_no, emis_code, name_nepali, name_english,
-                gender, date_of_birth, class_id, section_id, roll_no, address,
-                district, municipality, ward, tole, father_name, mother_name,
-                guardian_name, guardian_relation, guardian_phone, emergency_contact,
-                residential_status, academic_year_id, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            r["Student ID"], r["Admission No"], r.get("Registration No"), r.get("EMIS Code") or f"0119{r['class_id']:02d}{r['roll_no_clean']:03d}",
-            r["Name Nepali"], r["Name English"], r.get("Gender", "अन्य"),
-            r["Date of Birth"], r["class_id"], sec_id, r["roll_no_clean"],
-            r.get("Address", "सुनसरी"), r.get("District", "सुनसरी"),
-            r.get("Municipality", "इटहरी"), r.get("Ward", "१९"), r.get("Tole"),
-            r.get("Father Name"), r.get("Mother Name"), r["Guardian Name"],
-            r.get("Guardian Relation", "अभिभावक"), r["Guardian Contact"],
-            r.get("Emergency Contact"), r.get("Residential Status", "दिवा"),
-            academic_year_id, r.get("Status", "सक्रिय")
-        ))
-        stu_db_id = cursor.lastrowid
-        cursor.execute("""
-            INSERT INTO student_class_history (student_id, academic_year_id, class_id, section_id, roll_no, promotion_status)
-            VALUES (?, ?, ?, ?, ?, 'IMPORTED')
-        """, (stu_db_id, academic_year_id, r["class_id"], sec_id, r["roll_no_clean"]))
-        imported_count += 1
-        
-    conn.commit()
+
+    imported_new_count = 0
+    updated_count = 0
+
+    conn.execute("BEGIN TRANSACTION")
+    try:
+        for r in parse_result["rows"]:
+            if r.get("errors"):
+                continue
+
+            class_id = r["class_id"]
+            roll_no = r["roll_no"]
+            full_name = r["full_name"]
+            guardian_name = r.get("guardian_name") or "अभिभावक"
+            guardian_phone = r.get("guardian_phone") or ""
+            address = r.get("address") or "इटहरी-१९, सुनसरी"
+            gender = r.get("gender") or "अन्य"
+            stu_id = r.get("student_id") or f"STU-{class_id:02d}-{roll_no:03d}"
+            adm_no = r.get("admission_no") or f"ADM-2083-{class_id:02d}-{roll_no:03d}"
+
+            # Check if student exists by class and roll or student_id
+            cursor.execute("""
+                SELECT id FROM students WHERE (class_id = ? AND roll_no = ?) OR student_id = ?
+            """, (class_id, roll_no, stu_id))
+            existing = cursor.fetchone()
+
+            if existing:
+                # Update student details without losing attendance history
+                cursor.execute("""
+                    UPDATE students SET
+                        name_nepali = ?, name_english = ?, guardian_name = ?,
+                        guardian_phone = ?, address = ?, gender = ?, status = 'सक्रिय',
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                """, (full_name, full_name, guardian_name, guardian_phone, address, gender, existing["id"]))
+                updated_count += 1
+            else:
+                # Insert new student
+                cursor.execute("""
+                    INSERT INTO students (
+                        student_id, admission_no, registration_no, emis_code, name_nepali, name_english,
+                        gender, date_of_birth, class_id, section_id, roll_no, address,
+                        district, municipality, ward, guardian_name, guardian_relation,
+                        guardian_phone, residential_status, academic_year_id, status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, '२०६६-०१-०१', ?, NULL, ?, ?, 'सुनसरी', 'इटहरी', '१९', ?, 'अभिभावक', ?, 'दिवा', ?, 'सक्रिय')
+                """, (
+                    stu_id, adm_no, f"REG-{class_id}-{roll_no}", f"0119{class_id:02d}{roll_no:03d}",
+                    full_name, full_name, gender, class_id, roll_no, address,
+                    guardian_name, guardian_phone, academic_year_id
+                ))
+                new_stu_db_id = cursor.lastrowid
+                cursor.execute("""
+                    INSERT INTO student_class_history (student_id, academic_year_id, class_id, roll_no, promotion_status)
+                    VALUES (?, ?, ?, ?, 'IMPORTED')
+                """, (new_stu_db_id, academic_year_id, class_id, roll_no))
+                imported_new_count += 1
+
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        raise HTTPException(status_code=500, detail=f"डेटाबेस सुरक्षित गर्दा त्रुटि भयो: {str(e)}")
+
     conn.close()
-    
-    log_audit("EXCEL_IMPORT", "STUDENTS", new_value={"count": imported_count}, user=user, request=request)
+
+    log_audit("EXCEL_IMPORT", "STUDENTS", new_value={"new_count": imported_new_count, "updated_count": updated_count}, user=user, request=request)
     return {
         "success": True,
-        "message": f"विद्यार्थी विवरण सफलतापूर्वक आयात भयो। (जम्मा: {imported_count} जना)",
-        "count": imported_count
+        "message": f"विद्यार्थी विवरण सफलतापूर्वक आयात भयो। (नयाँ थपिएका: {imported_new_count} जना, अद्यावधिक: {updated_count} जना)",
+        "new_count": imported_new_count,
+        "updated_count": updated_count,
+        "total_processed": imported_new_count + updated_count
     }
 
 @router.get("/{id}")

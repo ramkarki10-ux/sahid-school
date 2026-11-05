@@ -1,3 +1,4 @@
+from typing import Optional, List, Dict
 from fastapi import APIRouter, Request, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from datetime import date
@@ -134,4 +135,101 @@ def teacher_absent(request: Request):
         "absent_students": absent_students,
         "today_date": today,
         "active_page": "teacher_absent"
+    })
+
+@router.get("/daily-report", response_class=HTMLResponse)
+def teacher_daily_report(request: Request, report_date: Optional[str] = Query(None)):
+    user = check_teacher_auth(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    att_date = report_date or date.today().isoformat()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM school_settings WHERE id = 1")
+    settings = dict(cursor.fetchone() or {})
+
+    assigned_classes = get_teacher_classes(user)
+    class_ids = [c["class_id"] for c in assigned_classes]
+
+    class_reports = []
+    total_stu = 0
+    total_pres = 0
+    total_abs = 0
+    total_leave = 0
+
+    if class_ids:
+        placeholders = ",".join(["?"] * len(class_ids))
+        cursor.execute(f"""
+            SELECT c.id as class_id, c.class_name_ne, c.class_numeric,
+                   COUNT(DISTINCT s.id) as total_students,
+                   SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_count,
+                   SUM(CASE WHEN a.status = 'ABSENT' THEN 1 ELSE 0 END) as absent_count,
+                   SUM(CASE WHEN a.status = 'LEAVE' THEN 1 ELSE 0 END) as leave_count,
+                   MAX(a.created_at) as submitted_at,
+                   COALESCE(u.full_name_ne, u.username) as recorded_by_name
+            FROM classes c
+            JOIN students s ON c.id = s.class_id AND s.status = 'सक्रिय'
+            LEFT JOIN attendance a ON s.id = a.student_id AND a.attendance_date = ?
+            LEFT JOIN users u ON a.recorded_by = u.id
+            WHERE c.id IN ({placeholders})
+            GROUP BY c.id
+            ORDER BY c.class_numeric ASC
+        """, [att_date] + class_ids)
+        class_reports = [dict(r) for r in cursor.fetchall()]
+
+        total_stu = sum(c["total_students"] for c in class_reports)
+        total_pres = sum(c["present_count"] or 0 for c in class_reports)
+        total_abs = sum(c["absent_count"] or 0 for c in class_reports)
+        total_leave = sum(c["leave_count"] or 0 for c in class_reports)
+
+    conn.close()
+
+    pct = round((total_pres / total_stu * 100), 1) if total_stu > 0 else 0
+
+    return templates.TemplateResponse(request, "teacher/daily_report.html", {
+        "user": user,
+        "settings": settings,
+        "assigned_classes": assigned_classes,
+        "class_reports": class_reports,
+        "report_date": att_date,
+        "today_date": date.today().isoformat(),
+        "total_students": total_stu,
+        "total_present": total_pres,
+        "total_absent": total_abs,
+        "total_leave": total_leave,
+        "percentage": pct,
+        "active_page": "daily_report"
+    })
+
+@router.get("/profile", response_class=HTMLResponse)
+def teacher_profile(request: Request):
+    user = check_teacher_auth(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM school_settings WHERE id = 1")
+    settings = dict(cursor.fetchone() or {})
+
+    # Fetch teacher profile details
+    teacher_info = None
+    teacher_id = user.get("teacher_id")
+    if teacher_id:
+        cursor.execute("SELECT * FROM teachers WHERE id = ?", (teacher_id,))
+        teacher_info = cursor.fetchone()
+    if not teacher_info:
+        cursor.execute("SELECT * FROM teachers WHERE email = ? OR phone = ? LIMIT 1", (user["username"], user["username"]))
+        teacher_info = cursor.fetchone()
+
+    assigned_classes = get_teacher_classes(user)
+    conn.close()
+
+    return templates.TemplateResponse(request, "teacher/profile.html", {
+        "user": user,
+        "settings": settings,
+        "teacher_info": dict(teacher_info) if teacher_info else {},
+        "assigned_classes": assigned_classes,
+        "active_page": "profile"
     })

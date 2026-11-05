@@ -1,3 +1,4 @@
+import urllib.parse
 from fastapi import APIRouter, Request, HTTPException, status, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -6,9 +7,21 @@ from datetime import date
 from app.database import get_db
 from app.auth import require_auth, require_role, get_current_user
 from app.utils.audit import log_audit
-from app.utils.excel_handler import export_attendance_to_excel
+from app.utils.excel_handler import (
+    export_attendance_to_excel,
+    export_daily_attendance_excel,
+    export_monthly_attendance_excel,
+    export_quarterly_attendance_excel,
+    export_annual_attendance_excel
+)
 
 router = APIRouter(prefix="/api/attendance", tags=["attendance"])
+
+class AttendanceCorrectionRequest(BaseModel):
+    student_id: int
+    attendance_date: str
+    new_status: str  # PRESENT, ABSENT, LEAVE
+    reason: str
 
 class AttendanceItem(BaseModel):
     student_id: int
@@ -35,6 +48,10 @@ def get_class_attendance_sheet(
     academic_year_id: Optional[int] = Query(None)
 ):
     user = require_auth(request)
+    if hasattr(section_id, 'default'):
+        section_id = None
+    if hasattr(academic_year_id, 'default'):
+        academic_year_id = None
     conn = get_db()
     cursor = conn.cursor()
     
@@ -133,6 +150,10 @@ def export_attendance_route(
 @router.post("/bulk")
 def save_attendance(data: BulkAttendanceSaveRequest, request: Request):
     user = require_auth(request)
+    if hasattr(section_id, 'default'):
+        section_id = None
+    if hasattr(academic_year_id, 'default'):
+        academic_year_id = None
     conn = get_db()
     cursor = conn.cursor()
     
@@ -366,3 +387,442 @@ def get_student_attendance_history(id: int, request: Request):
     history = [dict(r) for r in cursor.fetchall()]
     conn.close()
     return {"student_id": id, "history": history}
+
+@router.get("/check-class-status")
+def check_class_attendance_status(
+    class_id: int = Query(...),
+    attendance_date: str = Query(...)
+):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT a.id, a.status, a.recorded_by, a.created_at, a.updated_at,
+               u.username, u.full_name_ne as full_name
+        FROM attendance a
+        LEFT JOIN users u ON a.recorded_by = u.id
+        WHERE a.class_id = ? AND a.attendance_date = ?
+    """, (class_id, attendance_date))
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    
+    if not rows:
+        return {"submitted": False, "count": 0}
+        
+    present = sum(1 for r in rows if r["status"] == "PRESENT")
+    absent = sum(1 for r in rows if r["status"] == "ABSENT")
+    leave = sum(1 for r in rows if r["status"] == "LEAVE")
+    recorder = rows[0].get("full_name") or rows[0].get("username") or "शिक्षक"
+    submitted_at = rows[0].get("created_at") or rows[0].get("updated_at") or ""
+    
+    return {
+        "submitted": True,
+        "count": len(rows),
+        "present": present,
+        "absent": absent,
+        "leave": leave,
+        "recorder": recorder,
+        "submitted_at": submitted_at
+    }
+
+@router.post("/correct")
+def correct_student_attendance(data: AttendanceCorrectionRequest, request: Request):
+    user = require_auth(request)
+    if user["role"] not in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"]:
+        raise HTTPException(status_code=403, detail="हाजिरी सच्याउने अधिकार केवल Admin लाई मात्र छ।")
+    
+    if not data.reason or not data.reason.strip():
+        raise HTTPException(status_code=400, detail="हाजिरी सच्याउनुको कारण (Reason) अनिवार्य छ।")
+
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Check existing attendance record
+    cursor.execute("""
+        SELECT id, status, class_id FROM attendance
+        WHERE student_id = ? AND attendance_date = ?
+    """, (data.student_id, data.attendance_date))
+    att_row = cursor.fetchone()
+    
+    previous_status = "UNMARKED"
+    attendance_id = None
+    
+    if att_row:
+        attendance_id = att_row["id"]
+        previous_status = att_row["status"]
+        cursor.execute("""
+            UPDATE attendance
+            SET status = ?, remark = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        """, (data.new_status, f"सच्याइएको ({data.reason})", attendance_id))
+    else:
+        # Get student class and academic year
+        cursor.execute("SELECT class_id, academic_year_id FROM students WHERE id = ?", (data.student_id,))
+        stu_row = cursor.fetchone()
+        class_id = stu_row["class_id"] if stu_row else 1
+        academic_year_id = stu_row["academic_year_id"] if stu_row and stu_row["academic_year_id"] else 1
+        cursor.execute("""
+            INSERT INTO attendance (student_id, academic_year_id, attendance_date, class_id, status, remark, recorded_by, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        """, (data.student_id, academic_year_id, data.attendance_date, class_id, data.new_status, f"सच्याइएको ({data.reason})", user["user_id"]))
+        attendance_id = cursor.lastrowid
+
+    # Log into attendance_audit_logs
+    mod_user_id = user.get("user_id") or user.get("id") or 1
+    cursor.execute("""
+        INSERT INTO attendance_audit_logs (
+            attendance_id, student_id, attendance_date, previous_status, new_status, modified_by, modified_at, reason
+        ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+    """, (attendance_id, data.student_id, data.attendance_date, previous_status, data.new_status, mod_user_id, data.reason))
+    
+    conn.commit()
+    conn.close()
+    
+    log_audit("ATTENDANCE_CORRECTION", "ATTENDANCE", record_id=str(attendance_id), new_value={
+        "student_id": data.student_id,
+        "date": data.attendance_date,
+        "previous_status": previous_status,
+        "new_status": data.new_status,
+        "reason": data.reason
+    }, user=user, request=request)
+    
+    return {
+        "success": True,
+        "message": f"हाजिरी सफलतापूर्वक सच्याइयो ({previous_status} -> {data.new_status})।"
+    }
+
+@router.get("/audit-logs")
+def get_attendance_audit_logs(request: Request, limit: int = 50):
+    require_auth(request)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT l.*, s.name_nepali as student_name, s.roll_no, c.class_name_ne,
+               COALESCE(u.full_name_ne, u.username, 'प्रशासक') as modifier_name
+        FROM attendance_audit_logs l
+        LEFT JOIN students s ON l.student_id = s.id
+        LEFT JOIN classes c ON s.class_id = c.id
+        LEFT JOIN users u ON l.modified_by = u.id
+        ORDER BY l.id DESC LIMIT ?
+    """, (limit,))
+    logs = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    return {"logs": logs}
+
+@router.get("/export-daily")
+def export_daily_attendance_route(
+    request: Request,
+    attendance_date: Optional[str] = Query(None),
+    class_id: Optional[int] = Query(None)
+):
+    require_auth(request)
+    date_val = attendance_date or date.today().isoformat()
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    query = """
+        SELECT s.roll_no, s.name_nepali as first_name, '' as last_name,
+               c.class_name_ne as class_name, a.status,
+               COALESCE(u.full_name_ne, u.username) as teacher_name, a.updated_at as submit_time, a.remark
+        FROM students s
+        JOIN classes c ON s.class_id = c.id
+        LEFT JOIN attendance a ON s.id = a.student_id AND a.attendance_date = ?
+        LEFT JOIN users u ON a.recorded_by = u.id
+        WHERE s.status = 'सक्रिय'
+    """
+    params = [date_val]
+    class_name = "सबै कक्षा"
+    if class_id:
+        query += " AND s.class_id = ?"
+        params.append(class_id)
+        cursor.execute("SELECT class_name_ne FROM classes WHERE id = ?", (class_id,))
+        c_row = cursor.fetchone()
+        if c_row:
+            class_name = c_row["class_name_ne"]
+            
+    query += " ORDER BY c.class_numeric ASC, s.roll_no ASC"
+    cursor.execute(query, params)
+    raw_rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    
+    # Process rows for exporter
+    processed_rows = []
+    for r in raw_rows:
+        full_name = r["first_name"] or ""
+        parts = full_name.strip().split()
+        fn = parts[0] if parts else ""
+        ln = " ".join(parts[1:]) if len(parts) > 1 else ""
+        processed_rows.append({
+            "roll_no": r["roll_no"],
+            "first_name": fn,
+            "last_name": ln,
+            "class_name": r["class_name"],
+            "status": r["status"] or "UNMARKED",
+            "teacher_name": r["teacher_name"] or "विद्यालय प्रशासन",
+            "submit_time": r["submit_time"] or "-",
+            "remark": r["remark"] or ""
+        })
+        
+    stream = export_daily_attendance_excel(processed_rows, date_val, class_name)
+    filename = f"Attendance_Daily_{date_val}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=\"{urllib.parse.quote(filename)}\"; filename*=UTF-8''{urllib.parse.quote(filename)}"}
+    )
+
+@router.get("/export-monthly")
+def export_monthly_attendance_route(
+    request: Request,
+    year_month: Optional[str] = Query(None),
+    class_id: Optional[int] = Query(None)
+):
+    require_auth(request)
+    ym = year_month or date.today().strftime("%Y-%m")
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    class_name = "सबै कक्षा"
+    query = """
+        SELECT s.id, s.roll_no, s.name_nepali as first_name, '' as last_name,
+               c.class_name_ne as class_name
+        FROM students s
+        JOIN classes c ON s.class_id = c.id
+        WHERE s.status = 'सक्रिय'
+    """
+    params = []
+    if class_id:
+        query += " AND s.class_id = ?"
+        params.append(class_id)
+        cursor.execute("SELECT class_name_ne FROM classes WHERE id = ?", (class_id,))
+        c_row = cursor.fetchone()
+        if c_row:
+            class_name = c_row["class_name_ne"]
+            
+    query += " ORDER BY c.class_numeric ASC, s.roll_no ASC"
+    cursor.execute(query, params)
+    student_rows = [dict(r) for r in cursor.fetchall()]
+    
+    # Fetch all attendance for this month prefix
+    cursor.execute("""
+        SELECT student_id, attendance_date, status
+        FROM attendance
+        WHERE attendance_date LIKE ?
+    """, (f"{ym}%",))
+    att_records = cursor.fetchall()
+    conn.close()
+    
+    # Map attendance by student_id and day
+    # day -> '2026-11-05' -> int 5
+    stu_att = {}
+    for r in att_records:
+        sid = r["student_id"]
+        dt = r["attendance_date"]
+        try:
+            day_num = int(dt.split("-")[-1])
+        except Exception:
+            day_num = 1
+        if sid not in stu_att:
+            stu_att[sid] = {}
+        stu_att[sid][day_num] = r["status"]
+        
+    students_matrix = []
+    for s in student_rows:
+        sid = s["id"]
+        full_name = s["first_name"] or ""
+        parts = full_name.strip().split()
+        fn = parts[0] if parts else ""
+        ln = " ".join(parts[1:]) if len(parts) > 1 else ""
+        
+        day_map = stu_att.get(sid, {})
+        pres = sum(1 for st in day_map.values() if st == "PRESENT")
+        ab = sum(1 for st in day_map.values() if st == "ABSENT")
+        lv = sum(1 for st in day_map.values() if st == "LEAVE")
+        tot_days = pres + ab + lv
+        pct = round((pres / tot_days * 100), 1) if tot_days > 0 else 0.0
+        
+        students_matrix.append({
+            "roll_no": s["roll_no"],
+            "first_name": fn,
+            "last_name": ln,
+            "class_name": s["class_name"],
+            "days": day_map,
+            "present_days": pres,
+            "absent_days": ab,
+            "leave_days": lv,
+            "attendance_pct": pct
+        })
+        
+    parts = ym.split("-")
+    year_str = parts[0] if parts else "२०८३"
+    month_name = parts[1] if len(parts) > 1 else "मंसिर"
+    stream = export_monthly_attendance_excel(students_matrix, month_name, year_str, class_name, days_count=31)
+    filename = f"Attendance_Monthly_{ym}_Class_{class_id or 'all'}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=\"{urllib.parse.quote(filename)}\"; filename*=UTF-8''{urllib.parse.quote(filename)}"}
+    )
+
+@router.get("/export-quarterly")
+def export_quarterly_attendance_route(
+    request: Request,
+    quarter: int = Query(1),
+    year_label: str = Query("२०८३"),
+    class_id: Optional[int] = Query(None)
+):
+    require_auth(request)
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    class_name = "सबै कक्षा"
+    query = """
+        SELECT s.id, s.roll_no, s.name_nepali as first_name, '' as last_name,
+               c.class_name_ne as class_name
+        FROM students s
+        JOIN classes c ON s.class_id = c.id
+        WHERE s.status = 'सक्रिय'
+    """
+    params = []
+    if class_id:
+        query += " AND s.class_id = ?"
+        params.append(class_id)
+        cursor.execute("SELECT class_name_ne FROM classes WHERE id = ?", (class_id,))
+        c_row = cursor.fetchone()
+        if c_row:
+            class_name = c_row["class_name_ne"]
+            
+    query += " ORDER BY c.class_numeric ASC, s.roll_no ASC"
+    cursor.execute(query, params)
+    student_rows = [dict(r) for r in cursor.fetchall()]
+    
+    # Calculate attendance per student
+    cursor.execute("""
+        SELECT student_id,
+               SUM(CASE WHEN status = 'PRESENT' THEN 1 ELSE 0 END) as pres,
+               SUM(CASE WHEN status = 'ABSENT' THEN 1 ELSE 0 END) as abs,
+               SUM(CASE WHEN status = 'LEAVE' THEN 1 ELSE 0 END) as lev
+        FROM attendance
+        GROUP BY student_id
+    """)
+    att_map = {r["student_id"]: r for r in cursor.fetchall()}
+    conn.close()
+    
+    q_names = {1: "प्रथम त्रैमासिक (First Quarter)", 2: "दोस्रो त्रैमासिक (Second Quarter)", 3: "तेस्रो त्रैमासिक (Third Quarter)", 4: "चौथो त्रैमासिक (Fourth Quarter)"}
+    q_name = q_names.get(quarter, f"त्रैमासिक {quarter}")
+    
+    students_data = []
+    for s in student_rows:
+        sid = s["id"]
+        full_name = s["first_name"] or ""
+        parts = full_name.strip().split()
+        fn = parts[0] if parts else ""
+        ln = " ".join(parts[1:]) if len(parts) > 1 else ""
+        
+        stat = att_map.get(sid, {"pres": 0, "abs": 0, "lev": 0})
+        pres = stat["pres"] or 0
+        ab = stat["abs"] or 0
+        lv = stat["lev"] or 0
+        working = pres + ab + lv
+        if working == 0:
+            working = 60
+        pct = round((pres / working * 100), 1) if working > 0 else 0.0
+        
+        students_data.append({
+            "roll_no": s["roll_no"],
+            "first_name": fn,
+            "last_name": ln,
+            "class_name": s["class_name"],
+            "working_days": working,
+            "present_days": pres,
+            "absent_days": ab,
+            "leave_days": lv,
+            "attendance_pct": pct
+        })
+        
+    stream = export_quarterly_attendance_excel(students_data, q_name, year_label, class_name)
+    filename = f"Attendance_Quarter_{quarter}_Class_{class_id or 'all'}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=\"{urllib.parse.quote(filename)}\"; filename*=UTF-8''{urllib.parse.quote(filename)}"}
+    )
+
+@router.get("/export-annual")
+def export_annual_attendance_route(
+    request: Request,
+    year_label: str = Query("२०८३"),
+    class_id: Optional[int] = Query(None)
+):
+    require_auth(request)
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    class_name = "सबै कक्षा"
+    query = """
+        SELECT s.id, s.roll_no, s.name_nepali as first_name, '' as last_name,
+               c.class_name_ne as class_name
+        FROM students s
+        JOIN classes c ON s.class_id = c.id
+        WHERE s.status = 'सक्रिय'
+    """
+    params = []
+    if class_id:
+        query += " AND s.class_id = ?"
+        params.append(class_id)
+        cursor.execute("SELECT class_name_ne FROM classes WHERE id = ?", (class_id,))
+        c_row = cursor.fetchone()
+        if c_row:
+            class_name = c_row["class_name_ne"]
+            
+    query += " ORDER BY c.class_numeric ASC, s.roll_no ASC"
+    cursor.execute(query, params)
+    student_rows = [dict(r) for r in cursor.fetchall()]
+    
+    # Calculate attendance
+    cursor.execute("""
+        SELECT student_id,
+               SUM(CASE WHEN status = 'PRESENT' THEN 1 ELSE 0 END) as pres,
+               SUM(CASE WHEN status = 'ABSENT' THEN 1 ELSE 0 END) as abs,
+               SUM(CASE WHEN status = 'LEAVE' THEN 1 ELSE 0 END) as lev
+        FROM attendance
+        GROUP BY student_id
+    """)
+    att_map = {r["student_id"]: r for r in cursor.fetchall()}
+    conn.close()
+    
+    students_data = []
+    for s in student_rows:
+        sid = s["id"]
+        full_name = s["first_name"] or ""
+        parts = full_name.strip().split()
+        fn = parts[0] if parts else ""
+        ln = " ".join(parts[1:]) if len(parts) > 1 else ""
+        
+        stat = att_map.get(sid, {"pres": 0, "abs": 0, "lev": 0})
+        pres = stat["pres"] or 0
+        ab = stat["abs"] or 0
+        lv = stat["lev"] or 0
+        working = pres + ab + lv
+        if working == 0:
+            working = 220
+        pct = round((pres / working * 100), 1) if working > 0 else 0.0
+        
+        students_data.append({
+            "roll_no": s["roll_no"],
+            "first_name": fn,
+            "last_name": ln,
+            "class_name": s["class_name"],
+            "working_days": working,
+            "present_days": pres,
+            "absent_days": ab,
+            "leave_days": lv,
+            "attendance_pct": pct
+        })
+        
+    stream = export_annual_attendance_excel(students_data, year_label, class_name)
+    filename = f"Attendance_Annual_Class_{class_id or 'all'}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=\"{urllib.parse.quote(filename)}\"; filename*=UTF-8''{urllib.parse.quote(filename)}"}
+    )

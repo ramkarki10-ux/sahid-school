@@ -1,0 +1,211 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}हाजिरी Export सेन्टर | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <h1 class="text-xl font-black text-instBlue flex items-center gap-2">
+            <i data-lucide="file-spreadsheet" class="w-6 h-6 text-emerald-600"></i>
+            <span>हाजिरी Excel Export सेन्टर (Attendance Excel Reports Hub)</span>
+        </h1>
+        <p class="text-xs text-slate-500 mt-1">दैनिक, मासिक, त्रैमासिक र वार्षिक हाजिरी रिपोर्टहरू एकमुष्ट Excel फाइलमा डाउनलोड गर्नुहोस्</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- 1. Daily Excel Export Card -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="space-y-2">
+                <div class="flex items-center gap-2 text-instBlue font-bold text-sm">
+                    <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">१</span>
+                    <h3>दैनिक हाजिरी Excel (Daily Attendance)</h3>
+                </div>
+                <p class="text-xs text-slate-500">
+                    तोकिएको मितिको सबै वा कुनै एक कक्षाको विद्यार्थी हाजिरी स्थिति, शिक्षक र समय विवरणसहितको Excel।
+                </p>
+                <div class="space-y-2 pt-2 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">मिति छनोट गर्नुहोस्:</label>
+                        <input type="date" id="daily_exp_date" value="{{ today_date }}" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono font-bold">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">कक्षा:</label>
+                        <select id="daily_exp_class" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                            <option value="">सबै कक्षा (All Classes)</option>
+                            {% for c in classes %}
+                            <option value="{{ c.id }}">{{ c.class_name_ne }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" onclick="downloadDailyExcel()" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center gap-2">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>दैनिक Excel डाउनलोड गर्नुहोस्</span>
+            </button>
+        </div>
+
+        <!-- 2. Monthly Excel Export Card -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="space-y-2">
+                <div class="flex items-center gap-2 text-instBlue font-bold text-sm">
+                    <span class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs">२</span>
+                    <h3>मासिक हाजिरी म्याट्रिक्स Excel (Monthly Grid Matrix)</h3>
+                </div>
+                <p class="text-xs text-slate-500">
+                    महिनाभरिको दिन १ देखि ३१ सम्मको P/A/L म्याट्रिक्स र विद्यार्थीको कुल हाजिरी प्रतिशतसहितको विस्तृत Excel।
+                </p>
+                <div class="space-y-2 pt-2 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">वर्ष र महिना:</label>
+                        <input type="month" id="monthly_exp_ym" value="{{ year_month }}" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono font-bold">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">कक्षा:</label>
+                        <select id="monthly_exp_class" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                            <option value="">सबै कक्षा (All Classes)</option>
+                            {% for c in classes %}
+                            <option value="{{ c.id }}">{{ c.class_name_ne }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" onclick="downloadMonthlyExcel()" class="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center gap-2">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>मासिक Excel डाउनलोड गर्नुहोस्</span>
+            </button>
+        </div>
+
+        <!-- 3. Quarterly Excel Export Card -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="space-y-2">
+                <div class="flex items-center gap-2 text-instBlue font-bold text-sm">
+                    <span class="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">३</span>
+                    <h3>त्रैमासिक हाजिरी Excel (Quarterly Report)</h3>
+                </div>
+                <p class="text-xs text-slate-500">
+                    प्रथम, दोस्रो, तेस्रो वा चौथो त्रैमासिक अवधिको कुल खुलेका दिन र विद्यार्थीको उपस्थिति प्रतिशत।
+                </p>
+                <div class="space-y-2 pt-2 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">त्रैमासिक छनोट:</label>
+                        <select id="quarterly_exp_q" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold">
+                            <option value="1">प्रथम त्रैमासिक (First Quarter)</option>
+                            <option value="2">दोस्रो त्रैमासिक (Second Quarter)</option>
+                            <option value="3">तेस्रो त्रैमासिक (Third Quarter)</option>
+                            <option value="4">चौथो त्रैमासिक (Fourth Quarter)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">कक्षा:</label>
+                        <select id="quarterly_exp_class" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                            <option value="">सबै कक्षा (All Classes)</option>
+                            {% for c in classes %}
+                            <option value="{{ c.id }}">{{ c.class_name_ne }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" onclick="downloadQuarterlyExcel()" class="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center gap-2">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>त्रैमासिक Excel डाउनलोड गर्नुहोस्</span>
+            </button>
+        </div>
+
+        <!-- 4. Annual Excel Export Card -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="space-y-2">
+                <div class="flex items-center gap-2 text-instBlue font-bold text-sm">
+                    <span class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs">४</span>
+                    <h3>वार्षिक हाजिरी Excel (Annual Report)</h3>
+                </div>
+                <p class="text-xs text-slate-500">
+                    सम्पूर्ण शैक्षिक वर्षको कुल दिन, विद्यार्थी उपस्थित, अनुपस्थित, बिदा र वार्षिक हाजिरी प्रतिशत।
+                </p>
+                <div class="space-y-2 pt-2 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">शैक्षिक वर्ष:</label>
+                        <select id="annual_exp_year" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold">
+                            <option value="२०८३">शैक्षिक सत्र २०८३</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">कक्षा:</label>
+                        <select id="annual_exp_class" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                            <option value="">सबै कक्षा (All Classes)</option>
+                            {% for c in classes %}
+                            <option value="{{ c.id }}">{{ c.class_name_ne }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" onclick="downloadAnnualExcel()" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow transition flex items-center justify-center gap-2">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>वार्षिक Excel डाउनलोड गर्नुहोस्</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Official Template Banner -->
+    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="space-y-1">
+            <h4 class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i data-lucide="file-spreadsheet" class="w-5 h-5 text-green-600"></i>
+                <span>विद्यार्थी विवरण अपलोड गर्ने Excel Template</span>
+            </h4>
+            <p class="text-xs text-slate-500">
+                नयाँ विद्यार्थीहरू एकमुष्ट प्रणालीमा आयात गर्न आधिकारिक Excel ढाँचा (.xlsx) डाउनलोड गर्नुहोस्।
+            </p>
+        </div>
+        <a href="/api/students/template" class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl text-xs shadow transition inline-flex items-center gap-2 shrink-0">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Template डाउनलोड</span>
+        </a>
+    </div>
+
+</div>
+
+<script>
+    function downloadDailyExcel() {
+        const date = document.getElementById('daily_exp_date').value;
+        const cls = document.getElementById('daily_exp_class').value;
+        let url = `/api/attendance/export-daily?attendance_date=${date}`;
+        if (cls) url += `&class_id=${cls}`;
+        window.location.href = url;
+    }
+
+    function downloadMonthlyExcel() {
+        const ym = document.getElementById('monthly_exp_ym').value;
+        const cls = document.getElementById('monthly_exp_class').value;
+        let url = `/api/attendance/export-monthly?year_month=${ym}`;
+        if (cls) url += `&class_id=${cls}`;
+        window.location.href = url;
+    }
+
+    function downloadQuarterlyExcel() {
+        const q = document.getElementById('quarterly_exp_q').value;
+        const cls = document.getElementById('quarterly_exp_class').value;
+        let url = `/api/attendance/export-quarterly?quarter=${q}`;
+        if (cls) url += `&class_id=${cls}`;
+        window.location.href = url;
+    }
+
+    function downloadAnnualExcel() {
+        const cls = document.getElementById('annual_exp_class').value;
+        let url = `/api/attendance/export-annual`;
+        if (cls) url += `?class_id=${cls}`;
+        window.location.href = url;
+    }
+</script>
+{% endblock %}

@@ -214,23 +214,405 @@ def admin_promotions(request: Request):
     return templates.TemplateResponse(request, "admin/student_promotion.html", ctx)
 
 @router.get("/attendance/daily", response_class=HTMLResponse)
-def admin_attendance_daily(request: Request, class_id: int = Query(None)):
+def admin_attendance_daily(request: Request, att_date: Optional[str] = Query(None)):
     user, ctx = get_admin_context(request, "attendance_daily")
     if not user:
         return RedirectResponse(url="/login", status_code=303)
     
+    target_date = att_date or date.today().isoformat()
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT 
+            c.id as class_id, c.class_name_ne, c.class_numeric,
+            COUNT(DISTINCT s.id) as total_students,
+            SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_count,
+            SUM(CASE WHEN a.status = 'ABSENT' THEN 1 ELSE 0 END) as absent_count,
+            SUM(CASE WHEN a.status = 'LEAVE' THEN 1 ELSE 0 END) as leave_count,
+            COUNT(a.id) as recorded_attendance_count,
+            MAX(a.created_at) as submitted_at,
+            COALESCE(u.full_name_ne, u.username) as teacher_name
+        FROM classes c
+        JOIN students s ON c.id = s.class_id AND s.status = 'सक्रिय'
+        LEFT JOIN attendance a ON s.id = a.student_id AND a.attendance_date = ?
+        LEFT JOIN users u ON a.recorded_by = u.id
+        GROUP BY c.id
+        ORDER BY c.class_numeric ASC
+    """, (target_date,))
+    classes_summary = [dict(r) for r in cursor.fetchall()]
+    
+    total_students = sum(c["total_students"] for c in classes_summary)
+    total_present = sum(c["present_count"] or 0 for c in classes_summary)
+    total_absent = sum(c["absent_count"] or 0 for c in classes_summary)
+    total_leave = sum(c["leave_count"] or 0 for c in classes_summary)
+    attendance_pct = round((total_present / total_students * 100), 1) if total_students > 0 else 0
+    
+    pending_classes = [c for c in classes_summary if (c["recorded_attendance_count"] or 0) == 0]
+    submitted_classes = [c for c in classes_summary if (c["recorded_attendance_count"] or 0) > 0]
+    
+    cursor.execute("""
+        SELECT attendance_date,
+               SUM(CASE WHEN status = 'PRESENT' THEN 1 ELSE 0 END) as pres,
+               SUM(CASE WHEN status = 'ABSENT' THEN 1 ELSE 0 END) as abs
+        FROM attendance
+        GROUP BY attendance_date
+        ORDER BY attendance_date DESC LIMIT 7
+    """)
+    trend_rows = [dict(r) for r in cursor.fetchall()]
+    trend_rows.reverse()
+    conn.close()
+    
+    ctx.update({
+        "classes_summary": classes_summary,
+        "pending_classes": pending_classes,
+        "submitted_classes": submitted_classes,
+        "total_students": total_students,
+        "total_present": total_present,
+        "total_absent": total_absent,
+        "total_leave": total_leave,
+        "attendance_pct": attendance_pct,
+        "target_date": target_date,
+        "today_date": date.today().isoformat(),
+        "trend_rows": trend_rows
+    })
+    return templates.TemplateResponse(request, "admin/attendance_daily.html", ctx)
+
+@router.get("/attendance/class-wise", response_class=HTMLResponse)
+def admin_attendance_class_wise(
+    request: Request,
+    class_id: Optional[int] = Query(None),
+    att_date: Optional[str] = Query(None)
+):
+    user, ctx = get_admin_context(request, "attendance_class_wise")
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+        
+    target_date = att_date or date.today().isoformat()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM classes ORDER BY class_numeric ASC")
+    classes = [dict(r) for r in cursor.fetchall()]
+    
+    selected_class_id = class_id or (classes[0]["id"] if classes else 1)
+    
+    cursor.execute("""
+        SELECT s.id, s.roll_no, s.name_nepali, s.name_english, s.guardian_name, s.guardian_phone,
+               a.status, a.remark, COALESCE(u.full_name_ne, u.username) as recorder_name, a.updated_at
+        FROM students s
+        LEFT JOIN attendance a ON s.id = a.student_id AND a.attendance_date = ?
+        LEFT JOIN users u ON a.recorded_by = u.id
+        WHERE s.class_id = ? AND s.status = 'सक्रिय'
+        ORDER BY s.roll_no ASC
+    """, (target_date, selected_class_id))
+    students = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    
+    pres = sum(1 for s in students if s["status"] == "PRESENT")
+    absent = sum(1 for s in students if s["status"] == "ABSENT")
+    leave = sum(1 for s in students if s["status"] == "LEAVE")
+    total = len(students)
+    pct = round((pres / total * 100), 1) if total > 0 else 0
+    
+    ctx.update({
+        "classes": classes,
+        "selected_class_id": selected_class_id,
+        "target_date": target_date,
+        "students": students,
+        "pres": pres,
+        "absent": absent,
+        "leave": leave,
+        "total": total,
+        "pct": pct
+    })
+    return templates.TemplateResponse(request, "admin/attendance_class_wise.html", ctx)
+
+@router.get("/attendance/monthly", response_class=HTMLResponse)
+def admin_attendance_monthly(
+    request: Request,
+    year_month: Optional[str] = Query(None),
+    class_id: Optional[int] = Query(None)
+):
+    user, ctx = get_admin_context(request, "attendance_monthly")
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+        
+    ym = year_month or date.today().strftime("%Y-%m")
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM classes ORDER BY class_numeric ASC")
+    classes = [dict(r) for r in cursor.fetchall()]
+    
+    query = """
+        SELECT s.id, s.roll_no, s.name_nepali, c.class_name_ne
+        FROM students s
+        JOIN classes c ON s.class_id = c.id
+        WHERE s.status = 'सक्रिय'
+    """
+    params = []
+    if class_id:
+        query += " AND s.class_id = ?"
+        params.append(class_id)
+    query += " ORDER BY c.class_numeric ASC, s.roll_no ASC"
+    cursor.execute(query, params)
+    student_rows = [dict(r) for r in cursor.fetchall()]
+    
+    cursor.execute("""
+        SELECT student_id, attendance_date, status
+        FROM attendance
+        WHERE attendance_date LIKE ?
+    """, (f"{ym}%",))
+    att_records = cursor.fetchall()
+    conn.close()
+    
+    stu_att = {}
+    for r in att_records:
+        sid = r["student_id"]
+        dt = r["attendance_date"]
+        try:
+            day_num = int(dt.split("-")[-1])
+        except Exception:
+            day_num = 1
+        if sid not in stu_att:
+            stu_att[sid] = {}
+        stu_att[sid][day_num] = r["status"]
+        
+    monthly_data = []
+    for s in student_rows:
+        sid = s["id"]
+        day_map = stu_att.get(sid, {})
+        pres = sum(1 for st in day_map.values() if st == "PRESENT")
+        ab = sum(1 for st in day_map.values() if st == "ABSENT")
+        lv = sum(1 for st in day_map.values() if st == "LEAVE")
+        tot = pres + ab + lv
+        pct = round((pres / tot * 100), 1) if tot > 0 else 0
+        monthly_data.append({
+            "id": sid,
+            "roll_no": s["roll_no"],
+            "name": s["name_nepali"],
+            "class_name": s["class_name_ne"],
+            "days": day_map,
+            "pres": pres,
+            "abs": ab,
+            "leave": lv,
+            "pct": pct
+        })
+        
+    ctx.update({
+        "classes": classes,
+        "selected_class_id": class_id,
+        "year_month": ym,
+        "monthly_data": monthly_data,
+        "num_days": 31
+    })
+    return templates.TemplateResponse(request, "admin/attendance_monthly.html", ctx)
+
+@router.get("/attendance/quarterly", response_class=HTMLResponse)
+def admin_attendance_quarterly(
+    request: Request,
+    quarter: int = Query(1),
+    class_id: Optional[int] = Query(None)
+):
+    user, ctx = get_admin_context(request, "attendance_quarterly")
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+        
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM classes ORDER BY class_numeric ASC")
+    classes = [dict(r) for r in cursor.fetchall()]
+    
+    query = """
+        SELECT s.id, s.roll_no, s.name_nepali, c.class_name_ne
+        FROM students s
+        JOIN classes c ON s.class_id = c.id
+        WHERE s.status = 'सक्रिय'
+    """
+    params = []
+    if class_id:
+        query += " AND s.class_id = ?"
+        params.append(class_id)
+    query += " ORDER BY c.class_numeric ASC, s.roll_no ASC"
+    cursor.execute(query, params)
+    student_rows = [dict(r) for r in cursor.fetchall()]
+    
+    cursor.execute("""
+        SELECT student_id,
+               SUM(CASE WHEN status = 'PRESENT' THEN 1 ELSE 0 END) as pres,
+               SUM(CASE WHEN status = 'ABSENT' THEN 1 ELSE 0 END) as abs,
+               SUM(CASE WHEN status = 'LEAVE' THEN 1 ELSE 0 END) as lev
+        FROM attendance
+        GROUP BY student_id
+    """)
+    att_map = {r["student_id"]: r for r in cursor.fetchall()}
+    conn.close()
+    
+    quarterly_data = []
+    for s in student_rows:
+        sid = s["id"]
+        stat = att_map.get(sid, {"pres": 0, "abs": 0, "lev": 0})
+        pres = stat["pres"] or 0
+        ab = stat["abs"] or 0
+        lv = stat["lev"] or 0
+        working = pres + ab + lv
+        if working == 0:
+            working = 60
+        pct = round((pres / working * 100), 1) if working > 0 else 0
+        quarterly_data.append({
+            "roll_no": s["roll_no"],
+            "name": s["name_nepali"],
+            "class_name": s["class_name_ne"],
+            "working_days": working,
+            "pres": pres,
+            "abs": ab,
+            "leave": lv,
+            "pct": pct
+        })
+        
+    ctx.update({
+        "classes": classes,
+        "selected_class_id": class_id,
+        "quarter": quarter,
+        "quarterly_data": quarterly_data
+    })
+    return templates.TemplateResponse(request, "admin/attendance_quarterly.html", ctx)
+
+@router.get("/attendance/annual", response_class=HTMLResponse)
+def admin_attendance_annual(
+    request: Request,
+    class_id: Optional[int] = Query(None)
+):
+    user, ctx = get_admin_context(request, "attendance_annual")
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+        
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM classes ORDER BY class_numeric ASC")
+    classes = [dict(r) for r in cursor.fetchall()]
+    
+    query = """
+        SELECT s.id, s.roll_no, s.name_nepali, c.class_name_ne
+        FROM students s
+        JOIN classes c ON s.class_id = c.id
+        WHERE s.status = 'सक्रिय'
+    """
+    params = []
+    if class_id:
+        query += " AND s.class_id = ?"
+        params.append(class_id)
+    query += " ORDER BY c.class_numeric ASC, s.roll_no ASC"
+    cursor.execute(query, params)
+    student_rows = [dict(r) for r in cursor.fetchall()]
+    
+    cursor.execute("""
+        SELECT student_id,
+               SUM(CASE WHEN status = 'PRESENT' THEN 1 ELSE 0 END) as pres,
+               SUM(CASE WHEN status = 'ABSENT' THEN 1 ELSE 0 END) as abs,
+               SUM(CASE WHEN status = 'LEAVE' THEN 1 ELSE 0 END) as lev
+        FROM attendance
+        GROUP BY student_id
+    """)
+    att_map = {r["student_id"]: r for r in cursor.fetchall()}
+    conn.close()
+    
+    annual_data = []
+    for s in student_rows:
+        sid = s["id"]
+        stat = att_map.get(sid, {"pres": 0, "abs": 0, "lev": 0})
+        pres = stat["pres"] or 0
+        ab = stat["abs"] or 0
+        lv = stat["lev"] or 0
+        working = pres + ab + lv
+        if working == 0:
+            working = 220
+        pct = round((pres / working * 100), 1) if working > 0 else 0
+        annual_data.append({
+            "roll_no": s["roll_no"],
+            "name": s["name_nepali"],
+            "class_name": s["class_name_ne"],
+            "working_days": working,
+            "pres": pres,
+            "abs": ab,
+            "leave": lv,
+            "pct": pct
+        })
+        
+    ctx.update({
+        "classes": classes,
+        "selected_class_id": class_id,
+        "annual_data": annual_data
+    })
+    return templates.TemplateResponse(request, "admin/attendance_annual.html", ctx)
+
+@router.get("/attendance/correction", response_class=HTMLResponse)
+def admin_attendance_correction(
+    request: Request,
+    class_id: Optional[int] = Query(None),
+    att_date: Optional[str] = Query(None)
+):
+    user, ctx = get_admin_context(request, "attendance_correction")
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+        
+    target_date = att_date or date.today().isoformat()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM classes ORDER BY class_numeric ASC")
+    classes = [dict(r) for r in cursor.fetchall()]
+    
+    selected_class_id = class_id or (classes[0]["id"] if classes else 1)
+    
+    cursor.execute("""
+        SELECT s.id, s.roll_no, s.name_nepali, c.class_name_ne,
+               a.status, a.remark, a.updated_at
+        FROM students s
+        JOIN classes c ON s.class_id = c.id
+        LEFT JOIN attendance a ON s.id = a.student_id AND a.attendance_date = ?
+        WHERE s.class_id = ? AND s.status = 'सक्रिय'
+        ORDER BY s.roll_no ASC
+    """, (target_date, selected_class_id))
+    students = [dict(r) for r in cursor.fetchall()]
+    
+    cursor.execute("""
+        SELECT l.*, s.name_nepali as student_name, s.roll_no, c.class_name_ne,
+               COALESCE(u.full_name_ne, u.username, 'प्रशासक') as modifier_name
+        FROM attendance_audit_logs l
+        LEFT JOIN students s ON l.student_id = s.id
+        LEFT JOIN classes c ON s.class_id = c.id
+        LEFT JOIN users u ON l.modified_by = u.id
+        ORDER BY l.id DESC LIMIT 20
+    """)
+    audit_logs = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    
+    ctx.update({
+        "classes": classes,
+        "selected_class_id": selected_class_id,
+        "target_date": target_date,
+        "students": students,
+        "audit_logs": audit_logs
+    })
+    return templates.TemplateResponse(request, "admin/attendance_correction.html", ctx)
+
+@router.get("/attendance/export", response_class=HTMLResponse)
+def admin_attendance_export_hub(request: Request):
+    user, ctx = get_admin_context(request, "attendance_export")
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+        
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM classes ORDER BY class_numeric ASC")
     classes = [dict(r) for r in cursor.fetchall()]
     conn.close()
-
+    
     ctx.update({
         "classes": classes,
-        "selected_class_id": class_id,
-        "today_date": date.today().isoformat()
+        "today_date": date.today().isoformat(),
+        "year_month": date.today().strftime("%Y-%m")
     })
-    return templates.TemplateResponse(request, "admin/attendance_daily.html", ctx)
+    return templates.TemplateResponse(request, "admin/attendance_export.html", ctx)
 
 @router.get("/attendance/reports", response_class=HTMLResponse)
 def admin_attendance_reports(request: Request):

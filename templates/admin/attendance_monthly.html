@@ -1,0 +1,125 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}मासिक हाजिरी रिपोर्ट | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+
+    <!-- Header & Filter (Section 7) -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-xl font-black text-instBlue flex items-center gap-2">
+                <i data-lucide="calendar" class="w-6 h-6 text-amber-500"></i>
+                <span>मासिक हाजिरी रिपोर्ट (Monthly Attendance Report & Matrix)</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">महिना र कक्षाअनुसार सम्पूर्ण विद्यार्थीहरूको दैनिक हाजिरी क्यालेन्डर तथा प्रतिशत विश्लेषण</p>
+        </div>
+
+        <form method="get" action="/admin/attendance/monthly" class="flex flex-wrap items-center gap-2">
+            <div>
+                <label class="text-[11px] font-bold text-slate-600 block mb-0.5">वर्ष र महिना:</label>
+                <input type="month" name="year_month" value="{{ year_month }}" onchange="this.form.submit()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-bold font-mono focus:ring-2 focus:ring-instBlue focus:outline-none">
+            </div>
+
+            <div>
+                <label class="text-[11px] font-bold text-slate-600 block mb-0.5">कक्षा छनोट:</label>
+                <select name="class_id" onchange="this.form.submit()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-bold focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <option value="">सबै कक्षा (All Classes)</option>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {% if selected_class_id == c.id %}selected{% endif %}>
+                        {{ c.class_name_ne }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="self-end flex items-center gap-2">
+                <button type="submit" class="px-3 py-1.5 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-bold transition">खोज्नुहोस्</button>
+                <a href="/api/attendance/export-monthly?year_month={{ year_month }}{% if selected_class_id %}&class_id={{ selected_class_id }}{% endif %}" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition inline-flex items-center gap-1.5">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>Excel डाउनलोड</span>
+                </a>
+                <button onclick="window.print()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5">
+                    <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                    <span>प्रिन्ट</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Monthly Grid Matrix Table (Section 7) -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <h2 class="font-bold text-xs text-slate-800 flex items-center gap-2">
+                <i data-lucide="grid" class="w-4 h-4 text-instBlue"></i>
+                <span>दैनिक उपस्थिति म्याट्रिक्स (महिना: {{ year_month }})</span>
+            </h2>
+            <div class="flex items-center gap-3 text-[11px] font-bold">
+                <span class="flex items-center gap-1 text-emerald-700"><span class="w-2.5 h-2.5 rounded bg-emerald-500"></span> P = उपस्थित</span>
+                <span class="flex items-center gap-1 text-rose-700"><span class="w-2.5 h-2.5 rounded bg-rose-500"></span> A = अनुपस्थित</span>
+                <span class="flex items-center gap-1 text-amber-700"><span class="w-2.5 h-2.5 rounded bg-amber-500"></span> L = बिदा</span>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto max-h-[600px] custom-scrollbar">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-instBlue text-white font-semibold text-[11px] sticky top-0 z-10">
+                    <tr>
+                        <th class="py-2.5 px-2 text-center w-10">रोल</th>
+                        <th class="py-2.5 px-3 min-w-[150px]">विद्यार्थीको नाम</th>
+                        <th class="py-2.5 px-2 text-center">कक्षा</th>
+                        <!-- Days 1 to 31 -->
+                        {% for day in range(1, num_days + 1) %}
+                        <th class="py-2 px-1 text-center font-mono w-7 text-[10px]">{{ day }}</th>
+                        {% endfor %}
+                        <th class="py-2.5 px-2 text-center bg-emerald-800 text-white font-bold">P</th>
+                        <th class="py-2.5 px-2 text-center bg-rose-800 text-white font-bold">A</th>
+                        <th class="py-2.5 px-2 text-center bg-amber-800 text-white font-bold">L</th>
+                        <th class="py-2.5 px-2 text-center bg-indigo-900 text-white font-bold">हाजिरी %</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    {% if monthly_data %}
+                        {% for m in monthly_data %}
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-2 px-2 text-center font-bold text-slate-600 font-mono text-[11px]">{{ m.roll_no }}</td>
+                            <td class="py-2 px-3 font-bold text-slate-800 truncate max-w-[160px]">{{ m.name }}</td>
+                            <td class="py-2 px-2 text-center text-slate-600 text-[11px] whitespace-nowrap">{{ m.class_name }}</td>
+                            
+                            <!-- Day cells 1 to 31 -->
+                            {% for day in range(1, num_days + 1) %}
+                            {% set st = m.days.get(day) %}
+                            <td class="py-2 px-1 text-center font-mono text-[10px] font-bold">
+                                {% if st == 'PRESENT' %}
+                                    <span class="inline-block w-5 h-5 leading-5 rounded bg-emerald-100 text-emerald-800">P</span>
+                                {% elif st == 'ABSENT' %}
+                                    <span class="inline-block w-5 h-5 leading-5 rounded bg-rose-100 text-rose-800">A</span>
+                                {% elif st == 'LEAVE' %}
+                                    <span class="inline-block w-5 h-5 leading-5 rounded bg-amber-100 text-amber-800">L</span>
+                                {% else %}
+                                    <span class="text-slate-300">-</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+
+                            <!-- Summary totals -->
+                            <td class="py-2 px-2 text-center font-bold text-emerald-700 bg-emerald-50/50">{{ m.pres }}</td>
+                            <td class="py-2 px-2 text-center font-bold text-rose-700 bg-rose-50/50">{{ m.abs }}</td>
+                            <td class="py-2 px-2 text-center font-bold text-amber-700 bg-amber-50/50">{{ m.leave }}</td>
+                            <td class="py-2 px-2 text-center font-black text-indigo-700 bg-indigo-50/50">{{ m.pct }}%</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="{{ num_days + 7 }}" class="py-12 text-center text-slate-400">
+                                यस महिनाको कुनै हाजिरी विवरण फेला परेन।
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

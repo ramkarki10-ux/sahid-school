@@ -424,6 +424,24 @@ def init_db():
     );
     """)
 
+    # 8.1 Attendance Audit Logs
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS attendance_audit_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        attendance_id INTEGER,
+        student_id INTEGER NOT NULL,
+        attendance_date TEXT NOT NULL,
+        previous_status TEXT,
+        new_status TEXT NOT NULL,
+        modified_by INTEGER NOT NULL,
+        modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        reason TEXT,
+        FOREIGN KEY (attendance_id) REFERENCES attendance(id) ON DELETE SET NULL,
+        FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+        FOREIGN KEY (modified_by) REFERENCES users(id)
+    );
+    """)
+
     # 9. Committees & Leadership
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS school_management_committee (

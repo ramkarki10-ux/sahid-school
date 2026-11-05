@@ -1,279 +1,297 @@
 {% extends "admin/base_admin.html" %}
 
-{% block title %}दैनिक विद्यार्थी हाजिरी | {{ settings.name_ne }}{% endblock %}
+{% block title %}दैनिक विद्यार्थी हाजिरी ड्यासबोर्ड | {{ settings.name_ne }}{% endblock %}
 
 {% block admin_content %}
 <div class="space-y-6">
-    
-    <!-- Top Filter Header (Section 30 & 51) -->
-    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-            <div>
-                <h1 class="text-xl font-bold text-instBlue flex items-center gap-2">
-                    <i data-lucide="check-square" class="w-5 h-5 text-green-600"></i>
-                    <span>दैनिक विद्यार्थी हाजिरी (Daily Attendance)</span>
-                </h1>
-                <p class="text-xs text-slate-500 mt-0.5">कक्षा छनोट गरी दैनिक हाजिरी लिनुहोस्।</p>
-            </div>
-            <div class="text-xs text-slate-500">
-                शिक्षक / रेकर्डर: <strong class="text-slate-800">{{ current_user.full_name_ne }}</strong>
-            </div>
+
+    <!-- Top Header & Filter (Section 4 & 5.1) -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-xl font-black text-instBlue flex items-center gap-2">
+                <i data-lucide="check-square" class="w-6 h-6 text-emerald-600"></i>
+                <span>दैनिक विद्यार्थी हाजिरी ड्यासबोर्ड (Daily Attendance Dashboard)</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">
+                विद्यालयका सबै कक्षाहरूको दैनिक हाजिरी स्थिति, शिक्षक रेकर्ड र रियल-टाइम तथ्याङ्क
+            </p>
         </div>
 
-        <form id="attendanceFilterForm" class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
-            <div>
-                <label class="block font-semibold mb-1 text-slate-700">शैक्षिक वर्ष *</label>
-                <select id="att_academic_year" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
-                    <option value="1">२०८३ (हालको सत्र)</option>
-                </select>
-            </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <form method="get" action="/admin/attendance/daily" class="flex items-center gap-2">
+                <label class="text-xs font-bold text-slate-600">मिति:</label>
+                <input type="date" name="att_date" value="{{ target_date }}" max="{{ today_date }}" onchange="this.form.submit()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-bold font-mono focus:ring-2 focus:ring-instBlue focus:outline-none">
+                <button type="submit" class="px-3 py-1.5 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-bold transition">खोल्नुहोस्</button>
+            </form>
 
-            <div>
-                <label class="block font-semibold mb-1 text-slate-700">हाजिरी मिति *</label>
-                <input type="date" id="att_date" value="{{ today_date }}" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
-            </div>
-
-            <div>
-                <label class="block font-semibold mb-1 text-slate-700">कक्षा छनोट गर्नुहोस् *</label>
-                <select id="att_class" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
-                    {% for c in classes %}
-                    <option value="{{ c.id }}" {% if c.class_numeric == 8 %}selected{% endif %}>{{ c.class_name_ne }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div>
-                <label class="block font-semibold mb-1 text-slate-700">Section</label>
-                <select id="att_section" class="w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
-                    <option value="">Section A</option>
-                    <option value="2">Section B</option>
-                </select>
-            </div>
-        </form>
+            <a href="/api/attendance/export-daily?attendance_date={{ target_date }}" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition inline-flex items-center gap-1.5">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>दैनिक Excel</span>
+            </a>
+            <button onclick="window.print()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5">
+                <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                <span>प्रिन्ट</span>
+            </button>
+        </div>
     </div>
 
-    <!-- Attendance Sheet Container (Section 30 Exact layout) -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        
-        <!-- Header Info & Quick Bulk Action Buttons -->
-        <div class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <!-- 6 Overall Summary Cards (Section 5.1) -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        <!-- Total -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs text-center">
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">कुल विद्यार्थी</span>
+            <div class="text-2xl font-black text-slate-900 mt-1">{{ total_students }}</div>
+            <span class="text-[10px] text-slate-400">सबै कक्षा (१-१२)</span>
+        </div>
+        <!-- Present -->
+        <div class="bg-emerald-50/70 p-4 rounded-xl border border-emerald-200 shadow-xs text-center">
+            <span class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">उपस्थित (Present)</span>
+            <div class="text-2xl font-black text-emerald-600 mt-1">{{ total_present }}</div>
+            <span class="text-[10px] text-emerald-700 font-bold">{{ attendance_pct }}% उपस्थिति</span>
+        </div>
+        <!-- Absent -->
+        <div class="bg-rose-50/70 p-4 rounded-xl border border-rose-200 shadow-xs text-center">
+            <span class="text-[11px] font-bold text-rose-800 uppercase tracking-wider">अनुपस्थित (Absent)</span>
+            <div class="text-2xl font-black text-rose-600 mt-1">{{ total_absent }}</div>
+            <a href="/admin/attendance/absent" class="text-[10px] text-rose-700 font-bold hover:underline">सूची हेर्नुहोस् &rarr;</a>
+        </div>
+        <!-- Leave -->
+        <div class="bg-amber-50/70 p-4 rounded-xl border border-amber-200 shadow-xs text-center">
+            <span class="text-[11px] font-bold text-amber-800 uppercase tracking-wider">बिदा (Leave)</span>
+            <div class="text-2xl font-black text-amber-600 mt-1">{{ total_leave }}</div>
+            <span class="text-[10px] text-amber-700">स्वीकृत बिदा</span>
+        </div>
+        <!-- Attendance % -->
+        <div class="bg-indigo-50/70 p-4 rounded-xl border border-indigo-200 shadow-xs text-center">
+            <span class="text-[11px] font-bold text-indigo-800 uppercase tracking-wider">हाजिरी प्रतिशत</span>
+            <div class="text-2xl font-black text-indigo-600 mt-1">{{ attendance_pct }}%</div>
+            <span class="text-[10px] text-indigo-700 font-semibold">दैनिक औसत</span>
+        </div>
+        <!-- Pending Classes -->
+        <div class="bg-red-50/70 p-4 rounded-xl border border-red-300 shadow-xs text-center">
+            <span class="text-[11px] font-bold text-red-800 uppercase tracking-wider">हाजिरी बाँकी कक्षा</span>
+            <div class="text-2xl font-black text-red-600 mt-1">{{ pending_classes | length }}</div>
+            <span class="text-[10px] text-red-700 font-bold">आज दर्ता हुन बाँकी</span>
+        </div>
+    </div>
+
+    <!-- Pending Attendance List Banner (Section 4) -->
+    {% if pending_classes %}
+    <div class="bg-rose-50 border border-rose-300 rounded-2xl p-4 sm:p-5 text-xs text-rose-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-rose-200 flex items-center justify-center shrink-0">
+                <i data-lucide="alert-circle" class="w-5 h-5 text-rose-700"></i>
+            </div>
             <div>
-                <h2 id="sheetHeaderTitle" class="text-base font-bold text-instBlue flex items-center gap-2">
-                    <span>कक्षा ८ — Section A</span>
-                </h2>
-                <div class="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
-                    <span>मिति: <strong id="sheetHeaderDate" class="text-slate-800">{{ today_date }}</strong></span>
-                    <span>•</span>
-                    <span>शिक्षक: <strong class="text-slate-800">{{ current_user.full_name_ne }}</strong></span>
+                <h4 class="font-black text-sm text-rose-900">हाजिरी भर्न बाँकी कक्षाहरू (Pending Attendance):</h4>
+                <div class="flex flex-wrap items-center gap-2 mt-1">
+                    {% for pc in pending_classes %}
+                    <span class="px-2.5 py-0.5 rounded-md bg-rose-200/80 text-rose-900 font-bold border border-rose-300">
+                        {{ pc.class_name_ne }} (विद्यार्थी: {{ pc.total_students }})
+                    </span>
+                    {% endfor %}
                 </div>
             </div>
+        </div>
+        <div class="text-right shrink-0">
+            <span class="text-[11px] text-rose-700 font-bold block">मिति: {{ target_date }}</span>
+        </div>
+    </div>
+    {% endif %}
 
-            <!-- Top Bulk Action Buttons: [सबै उपस्थित], [सबै अनुपस्थित], [सबै बिदा] -->
-            <div class="flex items-center gap-2 text-xs font-semibold">
-                <span class="text-slate-500 text-[11px] mr-1 hidden sm:inline">एकमुष्ट छनोट:</span>
-                <button type="button" onclick="bulkSetStatus('PRESENT')" class="px-3 py-1.5 bg-green-100 hover:bg-green-200 text-green-800 rounded border border-green-300 transition flex items-center gap-1 shadow-sm">
-                    <span class="w-2.5 h-2.5 rounded-full bg-green-600 inline-block"></span>
-                    <span>सबै उपस्थित</span>
-                </button>
-                <button type="button" onclick="bulkSetStatus('ABSENT')" class="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-800 rounded border border-red-300 transition flex items-center gap-1 shadow-sm">
-                    <span class="w-2.5 h-2.5 rounded-full bg-red-600 inline-block"></span>
-                    <span>सबै अनुपस्थित</span>
-                </button>
-                <button type="button" onclick="bulkSetStatus('LEAVE')" class="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded border border-amber-300 transition flex items-center gap-1 shadow-sm">
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block"></span>
-                    <span>सबै बिदा</span>
-                </button>
+    <!-- Charts Row (Section 5.3) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Donut Chart -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <h3 class="font-bold text-xs text-slate-800 flex items-center gap-1.5 mb-2">
+                <i data-lucide="pie-chart" class="w-4 h-4 text-instBlue"></i>
+                <span>उपस्थित, अनुपस्थित र बिदा अनुपात</span>
+            </h3>
+            <div class="relative h-56 flex items-center justify-center">
+                <canvas id="attDonutChart"></canvas>
+            </div>
+            <div class="flex items-center justify-center gap-4 text-[11px] font-semibold text-slate-600 mt-2 border-t pt-2">
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> उपस्थित: {{ total_present }}</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> अनुपस्थित: {{ total_absent }}</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> बिदा: {{ total_leave }}</span>
             </div>
         </div>
 
-        <!-- Attendance Table -->
+        <!-- Class-wise Bar Chart -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="font-bold text-xs text-slate-800 flex items-center gap-1.5">
+                    <i data-lucide="bar-chart" class="w-4 h-4 text-instBlue"></i>
+                    <span>कक्षागत उपस्थिति प्रतिशत (Class-wise Attendance %)</span>
+                </h3>
+                <span class="text-[11px] text-slate-400">कक्षा १ देखि १२</span>
+            </div>
+            <div class="relative h-56">
+                <canvas id="attClassBarChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Class-wise Attendance Table (Section 5.2) -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+                <h2 class="font-black text-sm text-instBlue flex items-center gap-2">
+                    <i data-lucide="table" class="w-4 h-4 text-instBlue"></i>
+                    <span>कक्षागत हाजिरी विवरण (Class-wise Status - मिति: {{ target_date }})</span>
+                </h2>
+                <p class="text-[11px] text-slate-500 mt-0.5">कक्षा १ देखि १२ सम्मका प्रत्येक कक्षाको हाजिरी अवस्था, दर्ता समय र शिक्षक विवरण</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <a href="/admin/attendance/correction?att_date={{ target_date }}" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold shadow-xs transition inline-flex items-center gap-1">
+                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                    <span>हाजिरी सच्याउनुहोस्</span>
+                </a>
+            </div>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
                     <tr>
-                        <th class="py-3 px-3 text-center">रोल नं.</th>
-                        <th class="py-3 px-4">विद्यार्थीको नाम</th>
-                        <th class="py-3 px-4">ठेगाना</th>
-                        <th class="py-3 px-4">अभिभावक</th>
-                        <th class="py-3 px-4">सम्पर्क (फोन)</th>
-                        <th class="py-3 px-4 text-center">उपस्थित (Present)</th>
-                        <th class="py-3 px-4 text-center">अनुपस्थित (Absent)</th>
-                        <th class="py-3 px-4 text-center">बिदा (Leave)</th>
+                        <th class="py-3 px-4">कक्षा</th>
+                        <th class="py-3 px-4 text-center">कुल विद्यार्थी</th>
+                        <th class="py-3 px-4 text-center">उपस्थित</th>
+                        <th class="py-3 px-4 text-center">अनुपस्थित</th>
+                        <th class="py-3 px-4 text-center">बिदा</th>
+                        <th class="py-3 px-4 text-center">हाजिरी %</th>
+                        <th class="py-3 px-4">दर्ता स्थिति</th>
+                        <th class="py-3 px-4">रेकर्ड गर्ने शिक्षक</th>
+                        <th class="py-3 px-4">Submit समय</th>
+                        <th class="py-3 px-4 text-center">कार्य</th>
                     </tr>
                 </thead>
-                <tbody id="attendanceSheetBody" class="divide-y divide-slate-200">
-                    <!-- Populated dynamically via JS -->
+                <tbody class="divide-y divide-slate-200">
+                    {% for c in classes_summary %}
+                    {% set is_sub = (c.recorded_attendance_count or 0) > 0 %}
+                    {% set tot = c.total_students or 0 %}
+                    {% set pres = c.present_count or 0 %}
+                    {% set rate = ((pres / tot) * 100) | round(1) if tot > 0 else 0 %}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 font-bold text-slate-800">{{ c.class_name_ne }}</td>
+                        <td class="py-3 px-4 text-center font-bold text-slate-700">{{ tot }}</td>
+                        <td class="py-3 px-4 text-center font-bold text-emerald-600">{{ pres if is_sub else '-' }}</td>
+                        <td class="py-3 px-4 text-center font-bold text-rose-600">{{ c.absent_count if is_sub else '-' }}</td>
+                        <td class="py-3 px-4 text-center font-bold text-amber-600">{{ c.leave_count if is_sub else '-' }}</td>
+                        <td class="py-3 px-4 text-center font-bold">
+                            {% if is_sub %}
+                            <span class="px-2 py-0.5 rounded text-[11px] {% if rate >= 80 %}bg-emerald-100 text-emerald-800{% elif rate >= 60 %}bg-amber-100 text-amber-800{% else %}bg-rose-100 text-rose-800{% endif %}">
+                                {{ rate }}%
+                            </span>
+                            {% else %}
+                            <span class="text-slate-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if is_sub %}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                <i data-lucide="check-circle" class="w-3 h-3 text-emerald-600"></i>
+                                <span>दर्ता भएको</span>
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                                <i data-lucide="clock" class="w-3 h-3 text-rose-600"></i>
+                                <span>बाँकी (Pending)</span>
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 font-medium text-slate-700">
+                            {{ c.teacher_name or ('विद्यालय प्रशासन' if is_sub else '-') }}
+                        </td>
+                        <td class="py-3 px-4 font-mono text-[11px] text-slate-500">
+                            {{ c.submitted_at[:16] if c.submitted_at else '-' }}
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <div class="inline-flex items-center gap-1">
+                                <a href="/admin/attendance/class-wise?class_id={{ c.class_id }}&att_date={{ target_date }}" class="px-2.5 py-1 bg-instBlue hover:bg-instBlue-dark text-white rounded text-[11px] font-bold transition shadow-2xs">
+                                    विस्तृत
+                                </a>
+                                <a href="/admin/attendance/correction?class_id={{ c.class_id }}&att_date={{ target_date }}" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded text-[11px] font-bold transition" title="हाजिरी सच्याउनुहोस्">
+                                    <i data-lucide="edit-2" class="w-3 h-3"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
-
-        <!-- Bottom Save Button (Section 30) -->
-        <div class="p-5 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div id="attendanceStatsSummary" class="text-xs text-slate-600">
-                कुल: <strong id="sumTotal">0</strong> | 
-                उपस्थित: <strong id="sumPresent" class="text-green-600">0</strong> | 
-                अनुपस्थित: <strong id="sumAbsent" class="text-red-600">0</strong> | 
-                बिदा: <strong id="sumLeave" class="text-amber-600">0</strong>
-            </div>
-
-            <button type="button" id="saveAttendanceBtn" onclick="saveAttendance()" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-8 py-2.5 rounded-lg shadow-md transition flex items-center justify-center gap-2">
-                <i data-lucide="save" class="w-4 h-4"></i>
-                <span>हाजिरी सुरक्षित गर्नुहोस्</span>
-            </button>
-        </div>
-
-    </div>
-
-    <!-- Alert Message Box -->
-    <div id="saveSuccessAlert" class="hidden p-4 bg-green-50 border-2 border-green-500 rounded-xl text-green-900 font-bold text-sm text-center shadow">
-        हाजिरी सफलतापूर्वक सुरक्षित भयो।
     </div>
 
 </div>
 
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    let currentStudents = [];
-
-    async function loadAttendanceSheet() {
-        const classId = document.getElementById('att_class').value;
-        const sectionId = document.getElementById('att_section').value;
-        const dateVal = document.getElementById('att_date').value;
-
-        document.getElementById('sheetHeaderDate').innerText = dateVal;
-        const classSelect = document.getElementById('att_class');
-        const className = classSelect.options[classSelect.selectedIndex].text;
-        document.getElementById('sheetHeaderTitle').innerHTML = `<span>${className} — Section ${sectionId ? 'B' : 'A'}</span>`;
-
-        try {
-            const url = `/api/attendance?class_id=${classId}&attendance_date=${dateVal}${sectionId ? '&section_id=' + sectionId : ''}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            currentStudents = data.students || [];
-            renderAttendanceTable();
-        } catch (e) {
-            alert('हाजिरी सिट लोड गर्न सकिएन।');
-        }
-    }
-
-    function renderAttendanceTable() {
-        const tbody = document.getElementById('attendanceSheetBody');
-        tbody.innerHTML = '';
-
-        currentStudents.forEach((s, idx) => {
-            const tr = document.createElement('tr');
-            tr.className = 'hover:bg-slate-50 transition';
-            const status = s.attendance_status || 'PRESENT';
-
-            tr.innerHTML = `
-                <td class="py-3 px-3 text-center font-bold text-slate-800">${s.roll_no}</td>
-                <td class="py-3 px-4 font-bold text-slate-900">${s.name_nepali}</td>
-                <td class="py-3 px-4 text-slate-600">${s.address}</td>
-                <td class="py-3 px-4 text-slate-700">${s.guardian_name}</td>
-                <td class="py-3 px-4 font-mono text-slate-500">${s.guardian_phone}</td>
-                
-                <!-- Status Buttons with Touch Target Size -->
-                <td class="py-2.5 px-3 text-center">
-                    <button type="button" onclick="setStudentStatus(${idx}, 'PRESENT')" 
-                            class="touch-btn w-full py-2 px-3 rounded-lg font-bold text-xs transition border flex items-center justify-center gap-1.5 ${status === 'PRESENT' ? 'bg-green-600 text-white border-green-600 shadow' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-green-50'}">
-                        <span>🟢</span>
-                        <span>उपस्थित</span>
-                    </button>
-                </td>
-                <td class="py-2.5 px-3 text-center">
-                    <button type="button" onclick="setStudentStatus(${idx}, 'ABSENT')" 
-                            class="touch-btn w-full py-2 px-3 rounded-lg font-bold text-xs transition border flex items-center justify-center gap-1.5 ${status === 'ABSENT' ? 'bg-red-600 text-white border-red-600 shadow' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-red-50'}">
-                        <span>🔴</span>
-                        <span>अनुपस्थित</span>
-                    </button>
-                </td>
-                <td class="py-2.5 px-3 text-center">
-                    <button type="button" onclick="setStudentStatus(${idx}, 'LEAVE')" 
-                            class="touch-btn w-full py-2 px-3 rounded-lg font-bold text-xs transition border flex items-center justify-center gap-1.5 ${status === 'LEAVE' ? 'bg-amber-500 text-white border-amber-500 shadow' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-amber-50'}">
-                        <span>🟡</span>
-                        <span>बिदा</span>
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-        updateSummaryNumbers();
-    }
-
-    function setStudentStatus(index, newStatus) {
-        if (currentStudents[index]) {
-            currentStudents[index].attendance_status = newStatus;
-            renderAttendanceTable();
-        }
-    }
-
-    function bulkSetStatus(status) {
-        currentStudents.forEach(s => s.attendance_status = status);
-        renderAttendanceTable();
-    }
-
-    function updateSummaryNumbers() {
-        const total = currentStudents.length;
-        const present = currentStudents.filter(s => s.attendance_status === 'PRESENT').length;
-        const absent = currentStudents.filter(s => s.attendance_status === 'ABSENT').length;
-        const leave = currentStudents.filter(s => s.attendance_status === 'LEAVE').length;
-
-        document.getElementById('sumTotal').innerText = total;
-        document.getElementById('sumPresent').innerText = present;
-        document.getElementById('sumAbsent').innerText = absent;
-        document.getElementById('sumLeave').innerText = leave;
-    }
-
-    async function saveAttendance() {
-        const btn = document.getElementById('saveAttendanceBtn');
-        btn.disabled = true;
-        btn.innerHTML = 'सुरक्षित गरिँदैछ...';
-
-        const classId = parseInt(document.getElementById('att_class').value);
-        const sectionId = document.getElementById('att_section').value ? parseInt(document.getElementById('att_section').value) : null;
-        const dateVal = document.getElementById('att_date').value;
-
-        const payload = {
-            academic_year_id: 1,
-            class_id: classId,
-            section_id: sectionId,
-            attendance_date: dateVal,
-            records: currentStudents.map(s => ({
-                student_id: s.student_id,
-                status: s.attendance_status || 'PRESENT',
-                remark: null
-            }))
-        };
-
-        try {
-            const res = await fetch('/api/attendance', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            if (res.ok && data.success) {
-                const alertEl = document.getElementById('saveSuccessAlert');
-                alertEl.innerText = data.message || 'हाजिरी सफलतापूर्वक सुरक्षित भयो।';
-                alertEl.classList.remove('hidden');
-                setTimeout(() => alertEl.classList.add('hidden'), 5000);
-            } else {
-                alert(data.detail || 'हाजिरी सुरक्षित गर्न सकिएन।');
+    // Donut Chart
+    const donutCtx = document.getElementById('attDonutChart');
+    if (donutCtx) {
+        new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['उपस्थित (Present)', 'अनुपस्थित (Absent)', 'बिदा (Leave)'],
+                datasets: [{
+                    data: [{{ total_present }}, {{ total_absent }}, {{ total_leave }}],
+                    backgroundColor: ['#10b981', '#f43f5e', '#f59e0b'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                cutout: '70%'
             }
-        } catch (e) {
-            alert('सुरक्षित गर्दा त्रुटि भयो।');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i><span>हाजिरी सुरक्षित गर्नुहोस्</span>';
-            lucide.createIcons();
-        }
+        });
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        loadAttendanceSheet();
-        document.getElementById('att_class').addEventListener('change', loadAttendanceSheet);
-        document.getElementById('att_section').addEventListener('change', loadAttendanceSheet);
-        document.getElementById('att_date').addEventListener('change', loadAttendanceSheet);
-    });
+    // Bar Chart
+    const barCtx = document.getElementById('attClassBarChart');
+    if (barCtx) {
+        const labels = [{% for c in classes_summary %}'{{ c.class_name_ne }}',{% endfor %}];
+        const rates = [{% for c in classes_summary %}
+            {% set tot = c.total_students or 0 %}
+            {% set pres = c.present_count or 0 %}
+            {{ ((pres / tot) * 100) | round(1) if tot > 0 else 0 }},
+        {% endfor %}];
+
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'उपस्थिति प्रतिशत (%)',
+                    data: rates,
+                    backgroundColor: '#15305b',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(v) { return v + '%'; }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
 </script>
 {% endblock %}
