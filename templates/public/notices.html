@@ -49,14 +49,21 @@
                     {{ n.description_ne }}
                 </p>
 
-                {% if n.attachment %}
-                <div class="mt-4 pt-3 border-t border-slate-200">
+                <div class="mt-4 pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                    {% if n.attachment %}
                     <a href="{{ n.attachment }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-semibold text-instBlue hover:underline">
                         <i data-lucide="paperclip" class="w-3.5 h-3.5"></i>
                         <span>संलग्न कागजात डाउनलोड गर्नुहोस्</span>
                     </a>
+                    {% else %}
+                    <span></span>
+                    {% endif %}
+
+                    <button type="button" onclick="shareNoticeToFeed({{ n.id }})" class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg transition shadow-sm active:scale-95">
+                        <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+                        <span>न्युज फिडमा सेयर</span>
+                    </button>
                 </div>
-                {% endif %}
             </div>
             {% else %}
             <div class="text-center py-12 text-slate-500 text-xs">
@@ -67,4 +74,22 @@
 
     </div>
 </div>
+
+<script>
+async function shareNoticeToFeed(noticeId) {
+    if (!confirm('के तपाईं यो सूचनालाई विद्यालयको न्युज फिडमा सेयर गर्न चाहनुहुन्छ?')) return;
+    try {
+        const res = await fetch(`/api/feed/share-notice/${noticeId}`, { method: 'POST' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert(data.message);
+            window.location.href = `/feed#post-card-${data.post_id}`;
+        } else {
+            alert(data.detail || 'सेयर गर्न सकिएन।');
+        }
+    } catch(e) {
+        alert('सर्भर त्रुटि भयो।');
+    }
+}
+</script>
 {% endblock %}

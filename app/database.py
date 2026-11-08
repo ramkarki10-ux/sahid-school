@@ -706,6 +706,60 @@ def init_db():
     );
     """)
 
+    # 14. Facebook-Style Dynamic News Feed Posts
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS feed_posts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        author_id INTEGER,
+        author_name TEXT NOT NULL,
+        author_role TEXT NOT NULL DEFAULT 'USER',
+        author_avatar TEXT,
+        content TEXT NOT NULL,
+        image_url TEXT,
+        notice_id INTEGER,
+        post_type TEXT NOT NULL DEFAULT 'post',
+        likes_count INTEGER NOT NULL DEFAULT 0,
+        comments_count INTEGER NOT NULL DEFAULT 0,
+        shares_count INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'ACTIVE',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (notice_id) REFERENCES notices(id) ON DELETE SET NULL,
+        FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
+    );
+    """)
+
+    # 15. Post Likes
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS post_likes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        post_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        user_name TEXT,
+        user_role TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(post_id, user_id),
+        FOREIGN KEY (post_id) REFERENCES feed_posts(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    """)
+
+    # 16. Post Comments
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS post_comments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        post_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        user_name TEXT NOT NULL,
+        user_role TEXT NOT NULL,
+        user_avatar TEXT,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (post_id) REFERENCES feed_posts(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    """)
+
     conn.commit()
     conn.close()
 

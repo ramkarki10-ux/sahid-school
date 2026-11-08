@@ -10,6 +10,11 @@
                     <span>गृहपृष्ठ</span>
                 </a>
 
+                <a href="/feed" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 {% if active_menu == 'feed' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
+                    <i data-lucide="newspaper" class="w-3.5 h-3.5 text-instGold"></i>
+                    <span>न्युज फिड</span>
+                </a>
+
                 <a href="/about" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 {% if active_menu == 'about' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
                     <i data-lucide="info" class="w-3.5 h-3.5"></i>
                     <span>हाम्रो विद्यालय</span>
@@ -180,6 +185,10 @@
             <a href="/" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == 'home' %}bg-instBlue text-amber-300 font-bold{% endif %}">
                 <i data-lucide="home" class="w-4 h-4 text-amber-400"></i>
                 <span>गृहपृष्ठ (Home)</span>
+            </a>
+            <a href="/feed" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == 'feed' %}bg-instBlue text-amber-300 font-bold{% endif %}">
+                <i data-lucide="newspaper" class="w-4 h-4 text-amber-400"></i>
+                <span>न्युज फिड (News Feed)</span>
             </a>
             <a href="/about" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == 'about' %}bg-instBlue text-amber-300 font-bold{% endif %}">
                 <i data-lucide="info" class="w-4 h-4 text-amber-400"></i>

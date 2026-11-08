@@ -1,0 +1,812 @@
+{% extends "base.html" %}
+
+{% block title %}डाइनामिक न्युज फिड (News Feed) | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<!-- Page Header Banner -->
+<div class="bg-gradient-to-r from-instBlue-dark via-instBlue to-instBlue-light text-white py-6 border-b border-instGold/30 shadow-inner">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2 text-xs text-amber-300 font-medium mb-1">
+                    <a href="/" class="hover:underline">गृहपृष्ठ</a>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    <span class="text-white font-semibold">न्युज फिड (Dynamic Feed)</span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold flex items-center gap-2.5">
+                    <i data-lucide="newspaper" class="w-7 h-7 text-instGold"></i>
+                    <span>विद्यालय न्युज फिड तथा सामाजिक संवाद</span>
+                </h1>
+                <p class="text-xs sm:text-sm text-slate-200 mt-1 max-w-2xl">
+                    फेसबुक जस्तै प्रत्यक्ष सूचना सेयरिङ, शैक्षिक गतिविधि, विद्यार्थी उपलब्धि तथा शिक्षक-अभिभावक अन्तरक्रिया पोर्टल
+                </p>
+            </div>
+            
+            <!-- Quick Action Stats -->
+            <div class="flex items-center gap-2 text-xs">
+                <span class="px-3 py-1.5 bg-white/10 backdrop-blur rounded-lg border border-white/20 font-semibold flex items-center gap-1.5">
+                    <i data-lucide="message-square" class="w-4 h-4 text-instGold"></i>
+                    <span>{{ total_posts }} वटा पोस्टहरू</span>
+                </span>
+                <a href="#createPostCard" class="px-3 py-1.5 bg-instGold hover:bg-instGold-dark text-slate-900 font-bold rounded-lg transition shadow flex items-center gap-1.5">
+                    <i data-lucide="plus-circle" class="w-4 h-4 text-slate-950"></i>
+                    <span>नयाँ पोस्ट सिर्जना</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main 3-Column Feed Container -->
+<div class="bg-slate-100 min-h-screen py-8">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- ================= LEFT SIDEBAR (Col 3) ================= -->
+            <div class="hidden lg:block lg:col-span-3 space-y-5 sticky top-20">
+                
+                <!-- Profile / User Card -->
+                <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm text-center relative overflow-hidden">
+                    <div class="h-16 bg-gradient-to-r from-instBlue to-sky-700 absolute top-0 left-0 right-0"></div>
+                    <div class="relative pt-6">
+                        <div class="w-18 h-18 mx-auto rounded-full border-4 border-white bg-slate-200 overflow-hidden shadow">
+                            <img src="{{ current_user.avatar if current_user and current_user.avatar else '/static/images/default-avatar.png' }}" 
+                                 onerror="this.src='https://ui-avatars.com/api/?name={{ current_user.username if current_user else 'School+Guest' }}&background=0284c7&color=fff'"
+                                 alt="Avatar" class="w-full h-full object-cover">
+                        </div>
+                        <h3 class="font-bold text-slate-900 text-sm mt-2">
+                            {{ current_user.full_name_ne if current_user and current_user.full_name_ne else (current_user.username if current_user else 'अतिथि प्रयोगकर्ता') }}
+                        </h3>
+                        <div class="mt-1">
+                            {% if current_user %}
+                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase
+                                {% if current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL'] %}bg-rose-100 text-rose-700 border border-rose-200
+                                {% elif current_user.role == 'TEACHER' %}bg-emerald-100 text-emerald-700 border border-emerald-200
+                                {% elif current_user.role == 'STUDENT' %}bg-indigo-100 text-indigo-700 border border-indigo-200
+                                {% else %}bg-purple-100 text-purple-700 border border-purple-200{% endif %}">
+                                {{ current_user.role }}
+                            </span>
+                            {% else %}
+                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                भिजिटर / अभिभावक
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        {% if not current_user %}
+                        <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-center gap-2">
+                            <a href="/login?redirect=/feed" class="px-3 py-1.5 bg-instBlue hover:bg-instBlue-dark text-white text-xs font-bold rounded-lg transition shadow-sm">
+                                लगइन गर्नुहोस्
+                            </a>
+                            <a href="/signup" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition">
+                                नयाँ दर्ता
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Navigation Card -->
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-1 text-xs">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 block mb-2">द्रुत पहुँच मेन्यु</span>
+                    <a href="/feed" class="flex items-center gap-3 px-3 py-2 rounded-xl bg-blue-50 text-instBlue font-bold transition">
+                        <i data-lucide="newspaper" class="w-4 h-4 text-instBlue"></i>
+                        <span>न्युज फिड (गृहपृष्ठ)</span>
+                    </a>
+                    <a href="/notices" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold transition">
+                        <i data-lucide="bell" class="w-4 h-4 text-amber-500"></i>
+                        <span>सूचना पाटी (Notices)</span>
+                    </a>
+                    <a href="/parent/login" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold transition">
+                        <i data-lucide="calendar-check" class="w-4 h-4 text-emerald-600"></i>
+                        <span>स्मार्ट हाजिरी पोर्टल</span>
+                    </a>
+                    <a href="/academics" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold transition">
+                        <i data-lucide="calendar" class="w-4 h-4 text-purple-600"></i>
+                        <span>शैक्षिक क्यालेन्डर</span>
+                    </a>
+                    <a href="/gallery" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold transition">
+                        <i data-lucide="images" class="w-4 h-4 text-rose-500"></i>
+                        <span>फोटो ग्यालरी</span>
+                    </a>
+                    <a href="/leave-application" class="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold transition">
+                        <i data-lucide="clipboard-pen" class="w-4 h-4 text-indigo-600"></i>
+                        <span>विद्यार्थी अनलाइन बिदा</span>
+                    </a>
+                </div>
+
+                <!-- Cross-Platform Mobile App Badge -->
+                <div class="bg-gradient-to-br from-slate-900 to-instBlue text-white rounded-2xl p-4 shadow-sm border border-slate-800">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i data-lucide="smartphone" class="w-5 h-5 text-instGold"></i>
+                        <span class="font-bold text-xs">मोबाइल एप (Cross-Platform)</span>
+                    </div>
+                    <p class="text-[11px] text-slate-300 leading-relaxed mb-3">
+                        यो विद्यालय प्रणाली अब React Native / Flutter क्रस-प्लेटफर्म मोबाइल एपमा समेत पूर्ण रूपमा चल्छ।
+                    </p>
+                    <div class="bg-white/10 rounded-lg p-2 text-center text-[11px] font-mono font-semibold text-instGold-light">
+                        📱 iOS & Android Compatible
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ================= CENTER FEED COLUMN (Col 6) ================= -->
+            <div class="col-span-1 lg:col-span-6 space-y-6">
+
+                <!-- 1. CREATE POST CARD (Facebook-style) -->
+                <div id="createPostCard" class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm transition-all focus-within:ring-2 focus-within:ring-instBlue/20">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border border-slate-300">
+                            <img src="{{ current_user.avatar if current_user and current_user.avatar else '/static/images/default-avatar.png' }}" 
+                                 onerror="this.src='https://ui-avatars.com/api/?name={{ current_user.username if current_user else 'User' }}&background=0284c7&color=fff'"
+                                 alt="User" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-grow">
+                            <textarea id="postContentInput" rows="3" 
+                                      placeholder="विद्यालय परिवारसँग केही सेयर गर्न चाहनुहुन्छ? (तपाईंको मनमा के छ?)"
+                                      class="w-full p-3 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-instBlue transition resize-none"></textarea>
+                            
+                            <!-- Attached Image Preview Container -->
+                            <div id="imagePreviewContainer" class="hidden relative mt-2 rounded-xl overflow-hidden border border-slate-200 max-h-60 bg-slate-100">
+                                <img id="imagePreviewEl" src="" alt="Preview" class="w-full h-auto max-h-60 object-contain">
+                                <button type="button" onclick="removeAttachedImage()" class="absolute top-2 right-2 p-1 bg-black/60 hover:bg-black/80 text-white rounded-full transition shadow">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Post Controls & Actions -->
+                    <div class="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div class="flex items-center gap-1 sm:gap-2">
+                            <!-- Image Upload Trigger -->
+                            <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 font-semibold transition">
+                                <i data-lucide="image" class="w-4 h-4 text-emerald-600"></i>
+                                <span class="hidden sm:inline">तस्बिर थप्नुहोस्</span>
+                                <input type="file" id="postImageFileInput" accept="image/*" class="hidden" onchange="handleImageSelection(event)">
+                            </label>
+
+                            <!-- Post Type Dropdown -->
+                            <select id="postTypeSelect" class="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg border-0 focus:ring-1 focus:ring-instBlue">
+                                <option value="post">📝 सामान्य पोस्ट</option>
+                                <option value="announcement">📢 महत्वपूर्ण घोषणा</option>
+                                <option value="achievement">🏆 शैक्षिक उपलब्धि</option>
+                            </select>
+
+                            <!-- Notice Share Modal Trigger -->
+                            <button type="button" onclick="openShareNoticeModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold transition" title="कुनै सूचनालाई फिडमा सेयर गर्नुहोस्">
+                                <i data-lucide="share-2" class="w-3.5 h-3.5 text-amber-600"></i>
+                                <span class="hidden sm:inline">सूचना सेयर</span>
+                            </button>
+                        </div>
+
+                        <!-- Submit Post Button -->
+                        <button type="button" id="submitPostBtn" onclick="submitFeedPost()" 
+                                class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded-xl transition shadow flex items-center gap-1.5 active:scale-95">
+                            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                            <span>पोस्ट गर्नुहोस्</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. FEED FILTER BAR -->
+                <div class="bg-white rounded-xl p-2 border border-slate-200 shadow-sm flex items-center justify-between gap-2 overflow-x-auto text-xs font-semibold">
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="filterPosts('all')" class="feed-filter-btn px-3 py-1.5 rounded-lg bg-instBlue text-white font-bold transition" data-filter="all">
+                            सबै पोस्टहरू
+                        </button>
+                        <button type="button" onclick="filterPosts('notice_share')" class="feed-filter-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition" data-filter="notice_share">
+                            📢 सूचनाहरू
+                        </button>
+                        <button type="button" onclick="filterPosts('achievement')" class="feed-filter-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition" data-filter="achievement">
+                            🏆 उपलब्धिहरू
+                        </button>
+                        <button type="button" onclick="filterPosts('announcement')" class="feed-filter-btn px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition" data-filter="announcement">
+                            🔔 घोषणाहरू
+                        </button>
+                    </div>
+                    <button type="button" onclick="location.reload()" class="p-1.5 text-slate-400 hover:text-instBlue hover:bg-slate-100 rounded-lg transition" title="रिफ्रेस गर्नुहोस्">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <!-- 3. FEED POSTS STREAM -->
+                <div id="postsStream" class="space-y-5">
+                    {% for p in posts %}
+                    <div id="post-card-{{ p.id }}" class="feed-post-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition hover:shadow-md" data-type="{{ p.post_type }}">
+                        
+                        <!-- Post Header -->
+                        <div class="p-4 sm:p-5 pb-3 flex items-start justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border-2 {% if p.author_role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL'] %}border-rose-400{% elif p.author_role == 'TEACHER' %}border-emerald-400{% else %}border-indigo-400{% endif %}">
+                                    <img src="{{ p.author_avatar or '/static/images/default-avatar.png' }}" 
+                                         onerror="this.src='https://ui-avatars.com/api/?name={{ p.author_name }}&background=0284c7&color=fff'"
+                                         alt="{{ p.author_name }}" class="w-full h-full object-cover">
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h4 class="font-bold text-slate-900 text-xs sm:text-sm hover:underline cursor-pointer">{{ p.author_name }}</h4>
+                                        <span class="px-2 py-0.2 rounded-full text-[9px] font-extrabold uppercase
+                                            {% if p.author_role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL'] %}bg-rose-100 text-rose-700
+                                            {% elif p.author_role == 'TEACHER' %}bg-emerald-100 text-emerald-700
+                                            {% elif p.author_role == 'STUDENT' %}bg-indigo-100 text-indigo-700
+                                            {% else %}bg-purple-100 text-purple-700{% endif %}">
+                                            {{ p.author_role }}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 text-[10px] text-slate-400 mt-0.5">
+                                        <span>{{ p.relative_time }}</span>
+                                        <span>•</span>
+                                        <span class="inline-flex items-center gap-0.5 text-slate-500">
+                                            <i data-lucide="globe" class="w-3 h-3"></i>
+                                            <span>सार्वजनिक</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Post Type Badge & Options -->
+                            <div class="flex items-center gap-1">
+                                {% if p.post_type == 'achievement' %}
+                                <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <i data-lucide="award" class="w-3 h-3 text-amber-600"></i> उपलब्धि
+                                </span>
+                                {% elif p.post_type == 'notice_share' %}
+                                <span class="bg-sky-100 text-sky-800 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <i data-lucide="bell" class="w-3 h-3 text-sky-600"></i> सूचना
+                                </span>
+                                {% elif p.post_type == 'announcement' %}
+                                <span class="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <i data-lucide="megaphone" class="w-3 h-3 text-rose-600"></i> घोषणा
+                                </span>
+                                {% endif %}
+
+                                {% if current_user and (current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL'] or current_user.user_id == p.author_id) %}
+                                <button type="button" onclick="deletePost({{ p.id }})" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition" title="पोस्ट मेटाउनुहोस्">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Post Body Text -->
+                        <div class="px-4 sm:px-5 pb-3 text-xs sm:text-sm text-slate-800 leading-relaxed whitespace-pre-line">
+                            {{ p.content }}
+                        </div>
+
+                        <!-- Attached Photo / Lightbox -->
+                        {% if p.image_url %}
+                        <div class="bg-slate-900 border-y border-slate-200 cursor-pointer overflow-hidden group" onclick="openLightbox('{{ p.image_url }}')">
+                            <img src="{{ p.image_url }}" alt="Post Media" class="w-full max-h-96 object-cover object-center group-hover:scale-102 transition duration-300">
+                        </div>
+                        {% endif %}
+
+                        <!-- Notice Share Embedded Card -->
+                        {% if p.notice_id and p.notice_title %}
+                        <div class="mx-4 sm:mx-5 mb-3 p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-xl flex items-center justify-between gap-3 shadow-sm">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center flex-shrink-0 font-bold shadow-sm">
+                                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] bg-amber-200 text-amber-900 font-bold px-1.5 py-0.2 rounded">{{ p.notice_category or 'सूचना' }}</span>
+                                    <h5 class="text-xs font-bold text-slate-900 mt-0.5 line-clamp-1">{{ p.notice_title }}</h5>
+                                    <span class="text-[10px] text-slate-500">प्रकाशन मिति: {{ p.notice_date or '' }}</span>
+                                </div>
+                            </div>
+                            <a href="/notices" class="flex-shrink-0 px-3 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg transition shadow-sm">
+                                सूचना हेर्नुहोस्
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        <!-- Likes & Comments Counter Row -->
+                        <div class="px-4 sm:px-5 py-2 flex items-center justify-between text-xs text-slate-500 border-b border-slate-100">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] shadow-sm">
+                                    <i data-lucide="thumbs-up" class="w-3 h-3"></i>
+                                </span>
+                                <span class="font-bold text-slate-700" id="likes-count-text-{{ p.id }}">{{ p.likes_count }}</span>
+                                <span>जनाले मन पराउनुभयो</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span id="comments-count-text-{{ p.id }}">{{ p.comments_count }} कमेन्टहरू</span>
+                                <span>{{ p.shares_count }} सेयर</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Bar Buttons (Like, Comment, Share) -->
+                        <div class="px-2 sm:px-4 py-1.5 flex items-center justify-between gap-1 text-xs font-bold text-slate-600 border-b border-slate-100">
+                            <!-- LIKE BUTTON -->
+                            <button type="button" onclick="toggleLike({{ p.id }})" 
+                                    id="like-btn-{{ p.id }}" 
+                                    class="flex-1 py-2 rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 {% if p.has_liked %}text-blue-600 bg-blue-50 font-extrabold{% else %}hover:bg-slate-100 text-slate-600{% endif %}">
+                                <i data-lucide="thumbs-up" class="w-4 h-4 {% if p.has_liked %}fill-blue-600 text-blue-600{% endif %}"></i>
+                                <span>लाइक (मनपर्‍यो)</span>
+                            </button>
+
+                            <!-- COMMENT BUTTON -->
+                            <button type="button" onclick="focusCommentInput({{ p.id }})" 
+                                    class="flex-1 py-2 rounded-xl hover:bg-slate-100 text-slate-600 flex items-center justify-center gap-1.5 transition">
+                                <i data-lucide="message-square" class="w-4 h-4"></i>
+                                <span>कमेन्ट</span>
+                            </button>
+
+                            <!-- SHARE BUTTON -->
+                            <button type="button" onclick="sharePost({{ p.id }}, '{{ p.author_name }}')" 
+                                    class="flex-1 py-2 rounded-xl hover:bg-slate-100 text-slate-600 flex items-center justify-center gap-1.5 transition">
+                                <i data-lucide="share-2" class="w-4 h-4"></i>
+                                <span>सेयर</span>
+                            </button>
+                        </div>
+
+                        <!-- Comments Section Container -->
+                        <div class="p-4 sm:p-5 bg-slate-50/60 space-y-3">
+                            
+                            <!-- Comment Input Box -->
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+                                    <img src="{{ current_user.avatar if current_user and current_user.avatar else '/static/images/default-avatar.png' }}" 
+                                         onerror="this.src='https://ui-avatars.com/api/?name={{ current_user.username if current_user else 'U' }}&background=0284c7&color=fff'"
+                                         alt="Avatar" class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex-grow relative">
+                                    <input type="text" id="comment-input-{{ p.id }}" 
+                                           placeholder="कमेन्ट लेख्नुहोस्..." 
+                                           onkeydown="if(event.key==='Enter') submitComment({{ p.id }})"
+                                           class="w-full py-2 pl-3 pr-10 bg-white border border-slate-200 rounded-full text-xs focus:outline-none focus:border-instBlue focus:ring-1 focus:ring-instBlue transition shadow-sm">
+                                    <button type="button" onclick="submitComment({{ p.id }})" 
+                                            class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 text-instBlue hover:text-instBlue-dark transition rounded-full hover:bg-blue-50">
+                                        <i data-lucide="send-horizonal" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Comments List -->
+                            <div id="comments-list-{{ p.id }}" class="space-y-2.5 pt-1">
+                                {% for c in p.comments %}
+                                <div id="comment-item-{{ c.id }}" class="flex items-start gap-2.5 text-xs group">
+                                    <div class="w-7 h-7 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 mt-0.5">
+                                        <img src="{{ c.user_avatar or '/static/images/default-avatar.png' }}" 
+                                             onerror="this.src='https://ui-avatars.com/api/?name={{ c.user_name }}&background=64748b&color=fff'"
+                                             alt="{{ c.user_name }}" class="w-full h-full object-cover">
+                                    </div>
+                                    <div class="flex-grow bg-white p-2.5 rounded-2xl border border-slate-200 shadow-2xs">
+                                        <div class="flex items-center justify-between gap-1">
+                                            <span class="font-bold text-slate-900 text-[11px]">{{ c.user_name }}</span>
+                                            <span class="text-[9px] text-slate-400">{{ c.relative_time }}</span>
+                                        </div>
+                                        <p class="text-slate-700 text-xs mt-0.5 leading-relaxed">{{ c.content }}</p>
+                                    </div>
+                                    {% if current_user and (current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL'] or current_user.user_id == c.user_id) %}
+                                    <button type="button" onclick="deleteComment({{ c.id }}, {{ p.id }})" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-600 transition p-1" title="कमेन्ट मेटाउनुहोस्">
+                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                        </div>
+
+                    </div>
+                    {% else %}
+                    <div class="bg-white rounded-2xl p-12 text-center border border-slate-200 text-slate-500">
+                        <i data-lucide="newspaper" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+                        <h4 class="font-bold text-base text-slate-800">अहिले कुनै पोस्टहरू छैनन्</h4>
+                        <p class="text-xs text-slate-400 mt-1">पहिलो पोस्ट तपाईं नै सिर्जना गरेर संवाद सुरु गर्नुहोस्!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+
+            <!-- ================= RIGHT SIDEBAR (Col 3) ================= -->
+            <div class="hidden lg:block lg:col-span-3 space-y-5 sticky top-20">
+                
+                <!-- 1. Latest Official Notices with "Share to Feed" -->
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h4 class="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                            <i data-lucide="bell" class="w-4 h-4 text-amber-500"></i>
+                            <span>ताजा विद्यालय सूचनाहरू</span>
+                        </h4>
+                        <a href="/notices" class="text-[11px] text-instBlue hover:underline font-semibold">सबै हेर्नुहोस्</a>
+                    </div>
+                    
+                    <div class="space-y-2.5">
+                        {% for n in trending_notices %}
+                        <div class="p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50/70 border border-slate-200/80 transition group">
+                            <span class="text-[9px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.2 rounded">{{ n.category or 'सूचना' }}</span>
+                            <h5 class="font-bold text-slate-900 text-xs mt-1 line-clamp-2 leading-snug group-hover:text-instBlue">
+                                {{ n.title_ne }}
+                            </h5>
+                            <div class="flex items-center justify-between text-[10px] text-slate-400 mt-2">
+                                <span>{{ n.publish_date }}</span>
+                                <button type="button" onclick="directShareNotice({{ n.id }})" class="text-instBlue hover:text-instBlue-dark font-bold inline-flex items-center gap-1">
+                                    <i data-lucide="share-2" class="w-3 h-3"></i>
+                                    <span>फिडमा सेयर</span>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- 2. Upcoming Calendar Events -->
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h4 class="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                            <i data-lucide="calendar" class="w-4 h-4 text-purple-600"></i>
+                            <span>आगामी कार्यक्रमहरू</span>
+                        </h4>
+                        <a href="/academics" class="text-[11px] text-instBlue hover:underline font-semibold">क्यालेन्डर</a>
+                    </div>
+
+                    <div class="space-y-2">
+                        {% for ev in upcoming_events %}
+                        <div class="flex items-center gap-2.5 text-xs">
+                            <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 font-bold flex flex-col items-center justify-center flex-shrink-0 border border-purple-200">
+                                <span class="text-[9px] uppercase leading-none">{{ ev.start_date[5:7] if ev.start_date else '०१' }} महिना</span>
+                                <span class="text-sm font-extrabold leading-tight">{{ ev.start_date[8:10] if ev.start_date else '०१' }}</span>
+                            </div>
+                            <div class="overflow-hidden">
+                                <h6 class="font-bold text-slate-800 text-xs truncate">{{ ev.title or ev.title_ne or 'कार्यक्रम' }}</h6>
+                                <span class="text-[10px] text-slate-400">{{ ev.event_type or 'कार्यक्रम' }}</span>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="text-xs text-slate-400 text-center py-2">कुनै पनि तत्कालिन कार्यक्रम छैन।</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- 3. School Stats Pill -->
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-xs">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">विद्यालय तथ्याङ्क</span>
+                    <div class="grid grid-cols-2 gap-2 text-center">
+                        <div class="p-2.5 rounded-xl bg-blue-50 border border-blue-100">
+                            <p class="text-lg font-extrabold text-instBlue">{{ total_students }}</p>
+                            <span class="text-[10px] text-slate-500 font-medium">विद्यार्थी संख्या</span>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-100">
+                            <p class="text-lg font-extrabold text-emerald-600">{{ total_teachers }}</p>
+                            <span class="text-[10px] text-slate-500 font-medium">शिक्षक संख्या</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ================= SHARE NOTICE MODAL ================= -->
+<div id="shareNoticeModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <i data-lucide="share-2" class="w-4 h-4 text-amber-500"></i>
+                <span>कुनै सूचनालाई फिडमा सेयर गर्नुहोस्</span>
+            </h3>
+            <button type="button" onclick="closeShareNoticeModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        
+        <div class="mt-4 space-y-2.5 max-h-80 overflow-y-auto custom-scrollbar">
+            {% for n in trending_notices %}
+            <div class="p-3 bg-slate-50 hover:bg-amber-50/70 border border-slate-200 rounded-xl cursor-pointer transition flex items-center justify-between gap-2"
+                 onclick="directShareNotice({{ n.id }})">
+                <div class="overflow-hidden">
+                    <span class="text-[9px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.2 rounded">{{ n.category or 'सूचना' }}</span>
+                    <h5 class="text-xs font-bold text-slate-900 mt-0.5 truncate">{{ n.title_ne }}</h5>
+                    <span class="text-[10px] text-slate-400">{{ n.publish_date }}</span>
+                </div>
+                <button type="button" class="px-3 py-1 bg-amber-500 text-slate-950 font-bold text-xs rounded-lg flex-shrink-0 shadow-sm">
+                    सेयर
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- ================= LIGHTBOX IMAGE MODAL ================= -->
+<div id="lightboxModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm hidden items-center justify-center p-4" onclick="closeLightbox()">
+    <button type="button" onclick="closeLightbox()" class="absolute top-4 right-4 p-2 text-white/80 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition">
+        <i data-lucide="x" class="w-6 h-6"></i>
+    </button>
+    <img id="lightboxImage" src="" alt="Zoomed Post Media" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl">
+</div>
+
+<!-- ================= JAVASCRIPT LOGIC ================= -->
+<script>
+let currentUploadedImageUrl = null;
+
+// 1. Image selection & universal upload
+async function handleImageSelection(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Show preview immediately via FileReader
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        document.getElementById('imagePreviewEl').src = evt.target.result;
+        document.getElementById('imagePreviewContainer').classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+
+    // Upload to server
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const res = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+            currentUploadedImageUrl = data.url;
+        } else {
+            // fallback data url if upload endpoint requires auth
+            currentUploadedImageUrl = document.getElementById('imagePreviewEl').src;
+        }
+    } catch(err) {
+        currentUploadedImageUrl = document.getElementById('imagePreviewEl').src;
+    }
+}
+
+function removeAttachedImage() {
+    currentUploadedImageUrl = null;
+    document.getElementById('postImageFileInput').value = '';
+    document.getElementById('imagePreviewContainer').classList.add('hidden');
+    document.getElementById('imagePreviewEl').src = '';
+}
+
+// 2. Submit New Post
+async function submitFeedPost() {
+    const content = document.getElementById('postContentInput').value.trim();
+    const postType = document.getElementById('postTypeSelect').value;
+    const btn = document.getElementById('submitPostBtn');
+
+    if (!content && !currentUploadedImageUrl) {
+        alert('कृपया पोस्टको विवरण वा तस्बिर राख्नुहोस्।');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> पोस्ट हुँदैछ...';
+
+    try {
+        const res = await fetch('/api/feed/posts', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                content: content,
+                image_url: currentUploadedImageUrl,
+                post_type: postType
+            })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            document.getElementById('postContentInput').value = '';
+            removeAttachedImage();
+            location.reload();
+        } else {
+            alert(data.detail || 'पोस्ट प्रकाशित हुन सकेन।');
+        }
+    } catch(err) {
+        alert('सर्भर त्रुटि भयो। कृपया पुनः प्रयास गर्नुहोस्।');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="send" class="w-3.5 h-3.5"></i> <span>पोस्ट गर्नुहोस्</span>';
+    }
+}
+
+// 3. Toggle Like on Post
+async function toggleLike(postId) {
+    const btn = document.getElementById(`like-btn-${postId}`);
+    const textEl = document.getElementById(`likes-count-text-${postId}`);
+
+    try {
+        const res = await fetch(`/api/feed/posts/${postId}/like`, {
+            method: 'POST'
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            textEl.innerText = data.likes_count;
+            if (data.liked) {
+                btn.classList.add('text-blue-600', 'bg-blue-50', 'font-extrabold');
+                btn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+                const icon = btn.querySelector('svg');
+                if (icon) icon.classList.add('fill-blue-600', 'text-blue-600');
+            } else {
+                btn.classList.remove('text-blue-600', 'bg-blue-50', 'font-extrabold');
+                btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+                const icon = btn.querySelector('svg');
+                if (icon) icon.classList.remove('fill-blue-600', 'text-blue-600');
+            }
+        }
+    } catch(err) {
+        console.error('Like error:', err);
+    }
+}
+
+// 4. Focus Comment
+function focusCommentInput(postId) {
+    const inp = document.getElementById(`comment-input-${postId}`);
+    if (inp) {
+        inp.focus();
+        inp.scrollIntoView({behavior: 'smooth', block: 'center'});
+    }
+}
+
+// 5. Submit Comment
+async function submitComment(postId) {
+    const inp = document.getElementById(`comment-input-${postId}`);
+    const text = inp.value.trim();
+    if (!text) return;
+
+    inp.disabled = true;
+
+    try {
+        const res = await fetch(`/api/feed/posts/${postId}/comment`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ content: text })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            inp.value = '';
+            document.getElementById(`comments-count-text-${postId}`).innerText = `${data.comments_count} कमेन्टहरू`;
+            
+            // Append comment to list
+            const cList = document.getElementById(`comments-list-${postId}`);
+            const c = data.comment;
+            const newHtml = `
+                <div id="comment-item-${c.id}" class="flex items-start gap-2.5 text-xs group animate-in fade-in duration-200">
+                    <div class="w-7 h-7 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 mt-0.5">
+                        <img src="${c.user_avatar || '/static/images/default-avatar.png'}" 
+                             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(c.user_name)}&background=64748b&color=fff'"
+                             alt="${c.user_name}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-grow bg-white p-2.5 rounded-2xl border border-slate-200 shadow-2xs">
+                        <div class="flex items-center justify-between gap-1">
+                            <span class="font-bold text-slate-900 text-[11px]">${c.user_name}</span>
+                            <span class="text-[9px] text-slate-400">${c.relative_time}</span>
+                        </div>
+                        <p class="text-slate-700 text-xs mt-0.5 leading-relaxed">${c.content}</p>
+                    </div>
+                </div>
+            `;
+            cList.insertAdjacentHTML('beforeend', newHtml);
+            if (window.lucide) lucide.createIcons();
+        } else {
+            alert(data.detail || 'कमेन्ट थप्न सकिएन।');
+        }
+    } catch(err) {
+        alert('सर्भर त्रुटि भयो।');
+    } finally {
+        inp.disabled = false;
+        inp.focus();
+    }
+}
+
+// 6. Delete Post
+async function deletePost(postId) {
+    if (!confirm('के तपाईं यो पोस्ट मेटाउन निश्चित हुनुहुन्छ?')) return;
+    try {
+        const res = await fetch(`/api/feed/posts/${postId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            const card = document.getElementById(`post-card-${postId}`);
+            if (card) {
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.95)';
+                setTimeout(() => card.remove(), 300);
+            }
+        } else {
+            alert(data.detail || 'मेटाउन सकिएन।');
+        }
+    } catch(err) {
+        alert('सर्भर त्रुटि भयो।');
+    }
+}
+
+// 7. Delete Comment
+async function deleteComment(commentId, postId) {
+    if (!confirm('के तपाईं यो कमेन्ट मेटाउन निश्चित हुनुहुन्छ?')) return;
+    try {
+        const res = await fetch(`/api/feed/comments/${commentId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            const cEl = document.getElementById(`comment-item-${commentId}`);
+            if (cEl) cEl.remove();
+        } else {
+            alert(data.detail || 'मेटाउन सकिएन।');
+        }
+    } catch(err) {
+        alert('सर्भर त्रुटि भयो।');
+    }
+}
+
+// 8. Share Post URL
+function sharePost(postId, author) {
+    const url = `${window.location.origin}/feed#post-card-${postId}`;
+    if (navigator.share) {
+        navigator.share({
+            title: `${author} को विद्यालय पोस्ट | सहिद स्मृति आवासीय मा.वि.`,
+            url: url
+        }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(url);
+        alert('पोस्टको लिङ्क क्लिपबोर्डमा कपी गरियो!');
+    }
+}
+
+// 9. Direct Share Notice to Feed
+async function directShareNotice(noticeId) {
+    if (!confirm('के तपाईं यो सूचनालाई न्युज फिडमा सेयर गर्न चाहनुहुन्छ?')) return;
+    try {
+        const res = await fetch(`/api/feed/share-notice/${noticeId}`, { method: 'POST' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert(data.message);
+            location.href = `/feed#post-card-${data.post_id}`;
+            location.reload();
+        } else {
+            alert(data.detail || 'सेयर गर्न सकिएन।');
+        }
+    } catch(err) {
+        alert('सर्भर त्रुटि भयो।');
+    }
+}
+
+// 10. Filter Posts
+function filterPosts(filter) {
+    document.querySelectorAll('.feed-filter-btn').forEach(btn => {
+        if (btn.getAttribute('data-filter') === filter) {
+            btn.classList.add('bg-instBlue', 'text-white', 'font-bold');
+            btn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+        } else {
+            btn.classList.remove('bg-instBlue', 'text-white', 'font-bold');
+            btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+        }
+    });
+
+    document.querySelectorAll('.feed-post-card').forEach(card => {
+        if (filter === 'all' || card.getAttribute('data-type') === filter) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// 11. Lightbox Zoom
+function openLightbox(imgUrl) {
+    document.getElementById('lightboxImage').src = imgUrl;
+    document.getElementById('lightboxModal').classList.remove('hidden');
+    document.getElementById('lightboxModal').classList.add('flex');
+}
+function closeLightbox() {
+    document.getElementById('lightboxModal').classList.add('hidden');
+    document.getElementById('lightboxModal').classList.remove('flex');
+}
+
+// 12. Share Notice Modal
+function openShareNoticeModal() {
+    document.getElementById('shareNoticeModal').classList.remove('hidden');
+    document.getElementById('shareNoticeModal').classList.add('flex');
+}
+function closeShareNoticeModal() {
+    document.getElementById('shareNoticeModal').classList.add('hidden');
+    document.getElementById('shareNoticeModal').classList.remove('flex');
+}
+</script>
+{% endblock %}
