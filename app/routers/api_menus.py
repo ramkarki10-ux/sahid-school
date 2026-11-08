@@ -46,10 +46,10 @@ DEFAULT_MENUS_SEED = [
     {"id": 15, "parent_id": None, "title_ne": "सम्पर्क", "title_en": "Contact", "url": "/contact", "icon": "map-pin", "order_index": 15},
 
     # Submenus for विद्यालय प्रशासन (parent_id = 7)
-    {"id": 16, "parent_id": 7, "title_ne": "विद्यालय व्यवस्थापन समिति", "title_en": "School Management Committee", "url": "/management-committee", "icon": "users", "order_index": 1},
+    {"id": 16, "parent_id": 7, "title_ne": "व्यवस्थापन समिति", "title_en": "School Management Committee", "url": "/management-committee", "icon": "users", "order_index": 1},
     {"id": 17, "parent_id": 7, "title_ne": "गुठियार समिति", "title_en": "Trustee Committee", "url": "/trustee-committee", "icon": "landmark", "order_index": 2},
-    {"id": 18, "parent_id": 7, "title_ne": "प्रधानाध्यापक / नेतृत्व", "title_en": "Leadership", "url": "/leadership", "icon": "award", "order_index": 3},
-    {"id": 19, "parent_id": 7, "title_ne": "शिक्षक तथा कर्मचारी", "title_en": "Teachers & Staff", "url": "/teachers", "icon": "briefcase", "order_index": 4},
+    {"id": 18, "parent_id": 7, "title_ne": "शिक्षकहरु", "title_en": "Teachers", "url": "/teachers", "icon": "briefcase", "order_index": 3},
+    {"id": 19, "parent_id": 7, "title_ne": "प्रधानाध्यापक तथा नेतृत्व", "title_en": "Leadership", "url": "/leadership", "icon": "award", "order_index": 4},
     {"id": 20, "parent_id": 7, "title_ne": "समग्र प्रशासनिक संरचना", "title_en": "Administrative Structure", "url": "/administration", "icon": "shield-check", "order_index": 5},
 
     # Submenus for विद्यार्थी (parent_id = 9)
@@ -174,3 +174,4 @@ def update_header_settings(data: HeaderSettingsUpdate, request: Request):
 
     log_audit("UPDATE", "HEADER_SETTINGS", new_value=data.dict(), user=user, request=request)
     return {"success": True, "message": "विद्यालयको लोगो तथा नाम विवरण सफलतापूर्वक अद्यावधिक भयो।"}
+

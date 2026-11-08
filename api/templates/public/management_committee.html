@@ -3,6 +3,7 @@
 {% block title %}विद्यालय व्यवस्थापन समिति | {{ settings.name_ne }}{% endblock %}
 
 {% block content %}
+<!-- Page Header -->
 <div class="bg-slate-100 py-6 border-b border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-8">
         <div class="flex items-center gap-2 text-xs text-slate-500">
@@ -10,22 +11,42 @@
             <i data-lucide="chevron-right" class="w-3 h-3"></i>
             <a href="/administration" class="hover:text-instBlue">विद्यालय प्रशासन</a>
             <i data-lucide="chevron-right" class="w-3 h-3"></i>
-            <span class="text-slate-800 font-semibold">विद्यालय व्यवस्थापन समिति</span>
+            <span class="text-slate-800 font-semibold">व्यवस्थापन समिति</span>
         </div>
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
             <div>
                 <h1 class="text-2xl sm:text-3xl font-bold text-instBlue">विद्यालय व्यवस्थापन समिति (School Management Committee)</h1>
                 <p class="text-xs text-slate-600 mt-1">कार्यकाल: २०८०–२०८३ • सहिद स्मृति आवासीय माध्यमिक विद्यालय, इटहरी–१९</p>
             </div>
-            {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL']) %}
-            <a href="/admin/management-committee" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-bold shadow-sm transition">
-                <i data-lucide="settings" class="w-4 h-4 text-instGold"></i>
-                <span>समिति सम्पादन प्यानल</span>
-            </a>
+            {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="openAddMemberModal()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow transition">
+                    <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-200"></i>
+                    <span>+ नयाँ सदस्य थप्नुहोस्</span>
+                </button>
+                <a href="/admin/management-committee" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-bold shadow transition">
+                    <i data-lucide="settings" class="w-4 h-4 text-instGold"></i>
+                    <span>एडमिन प्यानल</span>
+                </a>
+            </div>
             {% endif %}
         </div>
     </div>
 </div>
+
+<!-- Super Admin Notice Banner (Visible ONLY to Super Admin) -->
+{% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+<div class="bg-gradient-to-r from-instBlue to-slate-900 text-white py-2 px-4 sm:px-8 border-b border-amber-400">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="font-bold text-amber-300">सुपर एडमिन एक्सेस सक्रिय:</span>
+            <span>तपाईंलाई व्यवस्थापन समिति सदस्यहरू थप्न, सच्याउन (Edit), फोटो परिवर्तन गर्न र मेटाउन (Delete) पूर्ण अनुमति छ।</span>
+        </div>
+        <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono">ROLE: {{ current_user.role if current_user else 'SUPER_ADMIN' }}</span>
+    </div>
+</div>
+{% endif %}
 
 <div class="py-12 bg-slate-50/50">
     <div class="max-w-7xl mx-auto px-4 sm:px-8">
@@ -34,7 +55,20 @@
         <!-- Chairperson Card -->
         {% set chair = members[0] %}
         <div class="max-w-lg mx-auto mb-12">
-            <div class="bg-gradient-to-b from-blue-50 to-white border-2 border-instBlue/80 rounded-2xl p-7 text-center shadow-lg hover:shadow-xl transition">
+            <div class="bg-gradient-to-b from-blue-50 to-white border-2 border-instBlue/80 rounded-2xl p-7 text-center shadow-lg hover:shadow-xl transition relative group">
+                
+                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+                <!-- Super Admin Action Buttons for Chairperson -->
+                <div class="absolute top-4 right-4 flex items-center gap-1.5">
+                    <button type="button" onclick='openEditMemberModal({{ chair | tojson | safe }})' class="p-1.5 bg-blue-50 hover:bg-blue-100 text-instBlue border border-blue-200 rounded-md transition" title="अध्यक्षको विवरण सम्पादन गर्नुहोस्">
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button type="button" onclick="deleteMemberRecord({{ chair.id }}, '{{ chair.name }}')" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-md transition" title="मेटाउनुहोस्">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+                {% endif %}
+
                 <div class="w-28 h-28 mx-auto rounded-full bg-instBlue/10 border-4 border-instBlue/30 overflow-hidden shadow-inner flex items-center justify-center text-instBlue mb-4">
                     {% if chair.photo %}
                     <img src="{{ chair.photo }}" alt="{{ chair.name }}" class="w-full h-full object-cover">
@@ -77,13 +111,29 @@
         </div>
 
         <!-- Other Committee Members Grid -->
-        <h3 class="text-base font-bold text-slate-900 mb-6 pb-2 border-b border-slate-200 flex items-center gap-2">
-            <i data-lucide="users" class="w-5 h-5 text-instBlue"></i>
-            <span>समिति पदाधिकारी तथा सदस्यहरू</span>
+        <h3 class="text-base font-bold text-slate-900 mb-6 pb-2 border-b border-slate-200 flex items-center justify-between">
+            <span class="flex items-center gap-2">
+                <i data-lucide="users" class="w-5 h-5 text-instBlue"></i>
+                <span>समिति पदाधिकारी तथा सदस्यहरू</span>
+            </span>
+            <span class="text-xs text-slate-500 font-normal">कुल सदस्य: {{ members|length }} जना</span>
         </h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {% for m in members[1:] %}
-            <div class="bg-white border border-slate-200 rounded-xl p-5 text-center shadow-sm hover:shadow-md hover:border-instBlue/50 transition flex flex-col justify-between">
+            <div class="bg-white border border-slate-200 rounded-xl p-5 text-center shadow-sm hover:shadow-md hover:border-instBlue/50 transition flex flex-col justify-between relative group">
+                
+                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+                <!-- Super Admin Action Buttons for Member -->
+                <div class="absolute top-3 right-3 flex items-center gap-1">
+                    <button type="button" onclick='openEditMemberModal({{ m | tojson | safe }})' class="p-1 bg-blue-50 hover:bg-blue-100 text-instBlue border border-blue-200 rounded transition" title="सम्पादन गर्नुहोस्">
+                        <i data-lucide="edit-3" class="w-3 h-3"></i>
+                    </button>
+                    <button type="button" onclick="deleteMemberRecord({{ m.id }}, '{{ m.name }}')" class="p-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded transition" title="मेटाउनुहोस्">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i>
+                    </button>
+                </div>
+                {% endif %}
+
                 <div>
                     <div class="w-20 h-20 mx-auto rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden shadow-sm flex items-center justify-center mb-3">
                         {% if m.photo %}
@@ -132,4 +182,216 @@
 
     </div>
 </div>
+
+{% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+<!-- SUPER ADMIN INLINE MODAL (ADD / EDIT MEMBER) -->
+<div id="superAdminMemberModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs max-h-[92vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 id="samModalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i data-lucide="user-plus" class="w-4 h-4 text-instGold"></i>
+                <span>व्यवस्थापन समिति सदस्य थप्नुहोस् (Super Admin)</span>
+            </h3>
+            <button onclick="closeMemberModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <form id="samMemberForm" class="space-y-3">
+            <input type="hidden" id="sam_edit_id" value="">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">सदस्यको नाम थर *</label>
+                    <input type="text" id="sam_name" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="श्री ...">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">पद (Position) *</label>
+                    <input type="text" id="sam_position" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="अध्यक्ष / सदस्य / सदस्य-सचिव">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">शैक्षिक योग्यता (Qualification)</label>
+                    <input type="text" id="sam_qualification" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="स्नातक / स्नातकोत्तर">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">फोन नम्बर (सम्पर्क)</label>
+                    <input type="tel" id="sam_phone" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="98XXXXXXXX">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">इमेल (Email)</label>
+                    <input type="email" id="sam_email" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="member@mail.com">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">ठेगाना (Address)</label>
+                    <input type="text" id="sam_address" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="इटहरी-१९, सुनसरी">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">क्रम सङ्ख्या (Order Index)</label>
+                    <input type="number" id="sam_order" value="10" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">कार्यकाल (Term)</label>
+                    <input type="text" id="sam_term" value="२०८०-२०८३" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+            </div>
+
+            <!-- Photo Upload with Live Preview -->
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                <label class="block font-semibold text-slate-700">सदस्यको तस्विर / फोटो अपलोड</label>
+                <div class="flex items-center gap-3">
+                    <div class="w-14 h-14 rounded-full border-2 border-slate-300 overflow-hidden bg-white flex items-center justify-center flex-shrink-0">
+                        <img id="sam_photo_preview" src="" alt="Preview" class="w-full h-full object-cover hidden">
+                        <i id="sam_photo_icon" data-lucide="user" class="w-6 h-6 text-slate-400"></i>
+                    </div>
+                    <div class="flex-1 space-y-1">
+                        <input type="file" id="sam_file_input" accept=".jpg,.jpeg,.png,.webp" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-instBlue file:text-white hover:file:bg-instBlue-dark cursor-pointer" onchange="uploadMemberPhotoInline(this)">
+                        <div id="sam_photo_status" class="text-[11px]"></div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-500 font-medium">वा फोटो URL राख्नुहोस्:</label>
+                    <input type="text" id="sam_photo" oninput="updateMemberPreviewInline(this.value)" placeholder="/static/uploads/sample.jpg" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none font-mono text-[11px]">
+                </div>
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeMemberModal()" class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" id="samSubmitBtn" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded shadow transition">सुरक्षित गर्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function updateMemberPreviewInline(url) {
+        const preview = document.getElementById('sam_photo_preview');
+        const icon = document.getElementById('sam_photo_icon');
+        if (url && url.trim()) {
+            preview.src = url.trim();
+            preview.classList.remove('hidden');
+            if (icon) icon.classList.add('hidden');
+        } else {
+            preview.src = '';
+            preview.classList.add('hidden');
+            if (icon) icon.classList.remove('hidden');
+        }
+    }
+
+    async function uploadMemberPhotoInline(input) {
+        if (!input.files || !input.files[0]) return;
+        const statusEl = document.getElementById('sam_photo_status');
+        statusEl.innerHTML = '<span class="text-amber-600 font-semibold animate-pulse">तस्विर अपलोड हुँदैछ...</span>';
+        
+        const fd = new FormData();
+        fd.append('file', input.files[0]);
+        try {
+            const res = await fetch('/api/upload', {method: 'POST', body: fd});
+            const data = await res.json();
+            if (res.ok && data.url) {
+                document.getElementById('sam_photo').value = data.url;
+                updateMemberPreviewInline(data.url);
+                statusEl.innerHTML = '<span class="text-emerald-600 font-semibold">तस्विर सफलतापूर्वक अपलोड भयो!</span>';
+            } else {
+                statusEl.innerHTML = `<span class="text-rose-600">${data.detail || 'अपलोड विफल भयो।'}</span>`;
+            }
+        } catch(e) {
+            statusEl.innerHTML = '<span class="text-rose-600">अपलोडमा त्रुटि भयो।</span>';
+        }
+    }
+
+    function openAddMemberModal() {
+        document.getElementById('samMemberForm').reset();
+        document.getElementById('sam_edit_id').value = '';
+        document.getElementById('sam_photo_status').innerHTML = '';
+        updateMemberPreviewInline('');
+        document.getElementById('samModalTitle').innerHTML = '<i data-lucide="user-plus" class="w-4 h-4 text-instGold"></i><span>व्यवस्थापन समिति सदस्य थप्नुहोस् (Super Admin)</span>';
+        document.getElementById('samSubmitBtn').innerText = 'सदस्य थप्नुहोस्';
+        document.getElementById('superAdminMemberModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function openEditMemberModal(m) {
+        document.getElementById('sam_edit_id').value = m.id;
+        document.getElementById('sam_name').value = m.name || '';
+        document.getElementById('sam_position').value = m.position || '';
+        document.getElementById('sam_qualification').value = m.qualification || '';
+        document.getElementById('sam_phone').value = m.phone || '';
+        document.getElementById('sam_email').value = m.email || '';
+        document.getElementById('sam_address').value = m.address || '';
+        document.getElementById('sam_order').value = m.order_index || 10;
+        document.getElementById('sam_term').value = m.term || '२०८०-२०८३';
+        document.getElementById('sam_photo').value = m.photo || '';
+        updateMemberPreviewInline(m.photo || '');
+        document.getElementById('sam_photo_status').innerHTML = '';
+        document.getElementById('samModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i><span>सदस्य विवरण सम्पादन (Super Admin)</span>';
+        document.getElementById('samSubmitBtn').innerText = 'अद्यावधिक (Save) गर्नुहोस्';
+        document.getElementById('superAdminMemberModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function closeMemberModal() {
+        document.getElementById('superAdminMemberModal').classList.add('hidden');
+    }
+
+    document.getElementById('samMemberForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const editId = document.getElementById('sam_edit_id').value;
+        const payload = {
+            name: document.getElementById('sam_name').value.trim(),
+            position: document.getElementById('sam_position').value.trim(),
+            qualification: document.getElementById('sam_qualification').value.trim() || null,
+            phone: document.getElementById('sam_phone').value.trim() || null,
+            email: document.getElementById('sam_email').value.trim() || null,
+            address: document.getElementById('sam_address').value.trim() || null,
+            photo: document.getElementById('sam_photo').value.trim() || null,
+            order_index: parseInt(document.getElementById('sam_order').value) || 10,
+            term: document.getElementById('sam_term').value.trim() || '२०८०-२०८३',
+            status: 'सक्रिय'
+        };
+
+        const url = editId ? `/api/committees/management/${editId}` : '/api/committees/management';
+        const method = editId ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'त्रुटि भयो। तपाईंलाई सुपर एडमिन अनुमति आवश्यक छ।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि भयो।');
+        }
+    });
+
+    async function deleteMemberRecord(id, name) {
+        if (!confirm(`के तपाईं निश्चित रूपमा '${name}' लाई व्यवस्थापन समितिबाट मेटाउन चाहनुहुन्छ?`)) return;
+        try {
+            const res = await fetch(`/api/committees/management/${id}`, {method: 'DELETE'});
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'मेटाउन सकिएन। तपाईंलाई सुपर एडमिन अनुमति आवश्यक छ।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि भयो।');
+        }
+    }
+</script>
+{% endif %}
 {% endblock %}

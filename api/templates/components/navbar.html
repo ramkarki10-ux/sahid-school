@@ -1,34 +1,51 @@
 {% set nav_menus = get_navigation_menus() %}
+<style>
+    /* Ensure dropdowns can float freely without being cut off */
+    .nav-dropdown-box.nav-dropdown-open {
+        display: block !important;
+    }
+    @media (min-width: 1024px) {
+        .nav-dropdown-wrapper:hover .nav-dropdown-box {
+            display: block !important;
+        }
+    }
+</style>
+
 <!-- 3.3 MAIN NAVIGATION BAR -->
-<nav class="bg-instBlue text-white sticky top-0 z-40 shadow-md">
+<nav class="bg-instBlue text-white sticky top-0 z-50 shadow-md">
     <div class="max-w-7xl mx-auto px-4 sm:px-8">
-        <!-- Desktop Horizontal Navigation (Height 45-55px) -->
+        <!-- Desktop Horizontal Navigation (Height 48px) -->
         <div class="hidden lg:flex items-center justify-between h-12 text-[13px] font-medium tracking-wide">
-            <div class="flex items-center space-x-0.5 xl:space-x-1 py-1 overflow-x-auto no-scrollbar">
+            <div class="flex items-center space-x-0.5 xl:space-x-1 py-1">
                 
                 {% if nav_menus %}
                     {% for m in nav_menus %}
                         {% if m.children and m.children|length > 0 %}
                         <!-- Dropdown Menu Item -->
-                        <div class="relative group">
-                            <button type="button" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1 whitespace-nowrap {% if active_menu == m.url.strip('/') %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
+                        <div class="relative group nav-dropdown-wrapper" id="nav-dropdown-{{ m.id }}">
+                            <button type="button" 
+                                    onclick="toggleNavDropdown(event, 'dd-menu-{{ m.id }}')"
+                                    class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1 whitespace-nowrap cursor-pointer {% if active_menu == m.url.strip('/') %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
                                 {% if m.icon %}<i data-lucide="{{ m.icon }}" class="w-3.5 h-3.5 text-amber-400"></i>{% endif %}
                                 <span>{{ m.title_ne }}</span>
-                                <i data-lucide="chevron-down" class="w-3 h-3 transition-transform group-hover:rotate-180"></i>
+                                <i data-lucide="chevron-down" class="w-3 h-3 transition-transform duration-200 group-hover:rotate-180"></i>
                             </button>
-                            <!-- Dropdown Content -->
-                            <div class="absolute left-0 top-full hidden group-hover:block w-52 bg-white text-slate-800 rounded-lg shadow-xl border border-slate-200 py-1.5 z-50 animate-in fade-in-50 duration-150">
-                                {% for sm in m.children %}
-                                <a href="{{ sm.url }}" class="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue transition">
-                                    {% if sm.icon %}<i data-lucide="{{ sm.icon }}" class="w-3.5 h-3.5 text-instBlue"></i>{% endif %}
-                                    <span>{{ sm.title_ne }}</span>
-                                </a>
-                                {% endfor %}
+                            <!-- Dropdown Box (Opens on Both Hover and Click) -->
+                            <div id="dd-menu-{{ m.id }}" 
+                                 class="nav-dropdown-box absolute left-0 top-full pt-1.5 hidden z-50 min-w-[210px]">
+                                <div class="bg-white text-slate-800 rounded-xl shadow-2xl border border-slate-200 py-1.5 ring-1 ring-black/10 animate-in fade-in-50 slide-in-from-top-1 duration-150">
+                                    {% for sm in m.children %}
+                                    <a href="{{ sm.url }}" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-instBlue transition group/item">
+                                        {% if sm.icon %}<i data-lucide="{{ sm.icon }}" class="w-3.5 h-3.5 text-instBlue group-hover/item:text-amber-500 transition-colors"></i>{% endif %}
+                                        <span>{{ sm.title_ne }}</span>
+                                    </a>
+                                    {% endfor %}
+                                </div>
                             </div>
                         </div>
                         {% else %}
                         <!-- Direct Link Item -->
-                        <a href="{{ m.url }}" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 whitespace-nowrap {% if active_menu == m.url.strip('/') or (m.url == '/' and active_menu == 'home') %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
+                        <a href="{{ m.url }}" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1.5 whitespace-nowrap {% if active_menu == m.url.strip('/') or (m.url == '/' and active_menu == 'home') %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
                             {% if m.icon %}<i data-lucide="{{ m.icon }}" class="w-3.5 h-3.5"></i>{% endif %}
                             <span>{{ m.title_ne }}</span>
                         </a>
@@ -36,26 +53,39 @@
                     {% endfor %}
                 {% else %}
                     <!-- Static Fallback if DB not ready -->
-                    <a href="/" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="home" class="w-3.5 h-3.5"></i><span>गृहपृष्ठ</span></a>
-                    <a href="/feed" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="newspaper" class="w-3.5 h-3.5 text-instGold"></i><span>न्युज फिड</span></a>
-                    <a href="/about" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5"></i><span>हाम्रो विद्यालय</span></a>
-                    <a href="/achievements" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="award" class="w-3.5 h-3.5"></i><span>उपलब्धि</span></a>
-                    <a href="/notices" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="bell" class="w-3.5 h-3.5"></i><span>सूचना</span></a>
-                    <a href="/publications" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="file-text" class="w-3.5 h-3.5"></i><span>प्रकाशन</span></a>
-                    <a href="/administration" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i><span>विद्यालय प्रशासन</span></a>
-                    <a href="/academics" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i><span>शैक्षिक कार्यक्रम</span></a>
-                    <a href="/students" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="users" class="w-3.5 h-3.5"></i><span>विद्यार्थी</span></a>
-                    <a href="/admission" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="user-plus" class="w-3.5 h-3.5"></i><span>भर्ना</span></a>
-                    <a href="/results" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="award" class="w-3.5 h-3.5"></i><span>नतिजा</span></a>
-                    <a href="/citizen-charter" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="file-badge" class="w-3.5 h-3.5"></i><span>नागरिक वडापत्र</span></a>
-                    <a href="/teachers" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="briefcase" class="w-3.5 h-3.5"></i><span>शिक्षक</span></a>
-                    <a href="/gallery" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5"></i><span>ग्यालेरी</span></a>
-                    <a href="/contact" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i><span>सम्पर्क</span></a>
+                    <a href="/" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="home" class="w-3.5 h-3.5"></i><span>गृहपृष्ठ</span></a>
+                    <a href="/feed" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="newspaper" class="w-3.5 h-3.5 text-instGold"></i><span>न्युज फिड</span></a>
+                    <a href="/about" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5"></i><span>हाम्रो विद्यालय</span></a>
+                    
+                    <!-- विद्यालय प्रशासन Dropdown Fallback -->
+                    <div class="relative group nav-dropdown-wrapper">
+                        <button type="button" onclick="toggleNavDropdown(event, 'dd-menu-fallback-admin')" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1 whitespace-nowrap cursor-pointer">
+                            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-amber-400"></i>
+                            <span>विद्यालय प्रशासन</span>
+                            <i data-lucide="chevron-down" class="w-3 h-3 transition-transform duration-200 group-hover:rotate-180"></i>
+                        </button>
+                        <div id="dd-menu-fallback-admin" class="nav-dropdown-box absolute left-0 top-full pt-1.5 hidden z-50 min-w-[210px]">
+                            <div class="bg-white text-slate-800 rounded-xl shadow-2xl border border-slate-200 py-1.5">
+                                <a href="/management-committee" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue"><i data-lucide="users" class="w-3.5 h-3.5 text-instBlue"></i><span>व्यवस्थापन समिति</span></a>
+                                <a href="/trustee-committee" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue"><i data-lucide="landmark" class="w-3.5 h-3.5 text-instBlue"></i><span>गुठियार समिति</span></a>
+                                <a href="/teachers" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue"><i data-lucide="briefcase" class="w-3.5 h-3.5 text-instBlue"></i><span>शिक्षकहरु</span></a>
+                                <a href="/administration" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue border-t border-slate-100"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-instBlue"></i><span>समग्र प्रशासनिक संरचना</span></a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="/academics" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i><span>शैक्षिक कार्यक्रम</span></a>
+                    <a href="/students" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="users" class="w-3.5 h-3.5"></i><span>विद्यार्थी</span></a>
+                    <a href="/notices" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="bell" class="w-3.5 h-3.5"></i><span>सूचना</span></a>
+                    <a href="/admission" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="user-plus" class="w-3.5 h-3.5"></i><span>भर्ना</span></a>
+                    <a href="/teachers" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="briefcase" class="w-3.5 h-3.5"></i><span>शिक्षक</span></a>
+                    <a href="/gallery" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5"></i><span>ग्यालेरी</span></a>
+                    <a href="/contact" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i><span>सम्पर्क</span></a>
                 {% endif %}
 
             </div>
 
-            <!-- Quick Action / Super Admin link (Renamed from Parent Portal) -->
+            <!-- Quick Action / Super Admin link -->
             <div class="hidden xl:flex items-center gap-2 flex-shrink-0">
                 <a href="{% if current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN'] %}/admin/dashboard{% else %}/admin/login{% endif %}" class="inline-flex items-center gap-1.5 text-[12px] bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold px-3 py-1 rounded shadow transition">
                     <i data-lucide="shield-check" class="w-3.5 h-3.5 text-slate-950"></i>
@@ -73,12 +103,12 @@
                 </button>
                 <a href="/" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'home' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">गृहपृष्ठ</a>
                 <a href="/feed" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'feed' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">न्युज फिड</a>
-                <a href="/administration" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'administration' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">विद्यालय प्रशासन</a>
-                <a href="/teachers" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'teachers' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">शिक्षक</a>
+                <a href="/management-committee" class="px-2.5 py-1 rounded hover:bg-instBlue-dark">व्यवस्थापन समिति</a>
+                <a href="/trustee-committee" class="px-2.5 py-1 rounded hover:bg-instBlue-dark">गुठियार समिति</a>
+                <a href="/teachers" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'teachers' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">शिक्षकहरु</a>
                 <a href="/notices" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'notices' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">सूचना</a>
                 <a href="/admission" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'admission' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">भर्ना</a>
                 <a href="/results" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'results' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">नतिजा</a>
-                <a href="/gallery" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'gallery' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">ग्यालेरी</a>
                 <a href="/contact" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'contact' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">सम्पर्क</a>
             </div>
         </div>
@@ -140,15 +170,15 @@
             {% else %}
                 <a href="/" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="home" class="w-4 h-4 text-amber-400"></i><span>गृहपृष्ठ</span></a>
                 <a href="/feed" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="newspaper" class="w-4 h-4 text-amber-400"></i><span>न्युज फिड</span></a>
-                <a href="/about" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="info" class="w-4 h-4 text-amber-400"></i><span>हाम्रो विद्यालय</span></a>
-                <a href="/administration" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="shield-check" class="w-4 h-4 text-amber-400"></i><span>विद्यालय प्रशासन</span></a>
-                <a href="/teachers" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="briefcase" class="w-4 h-4 text-amber-400"></i><span>शिक्षक</span></a>
+                <a href="/management-committee" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="users" class="w-4 h-4 text-amber-400"></i><span>व्यवस्थापन समिति</span></a>
+                <a href="/trustee-committee" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="landmark" class="w-4 h-4 text-amber-400"></i><span>गुठियार समिति</span></a>
+                <a href="/teachers" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="briefcase" class="w-4 h-4 text-amber-400"></i><span>शिक्षकहरु</span></a>
                 <a href="/notices" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="bell" class="w-4 h-4 text-amber-400"></i><span>सूचना</span></a>
                 <a href="/contact" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="map-pin" class="w-4 h-4 text-amber-400"></i><span>सम्पर्क</span></a>
             {% endif %}
         </div>
 
-        <!-- Drawer Footer with Portals (Renamed to Super Admin) -->
+        <!-- Drawer Footer with Portals -->
         <div class="mt-auto p-4 border-t border-instBlue-light bg-instBlue/80 space-y-2 sticky bottom-0 z-20">
             <a href="/signup" onclick="closeMobileDrawer()" class="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 px-4 rounded-lg text-xs shadow transition active:scale-95">
                 <i data-lucide="user-plus" class="w-4 h-4 text-white"></i>
@@ -174,6 +204,26 @@
 
 <script>
 (function() {
+    // Dropdown toggle on click or hover
+    window.toggleNavDropdown = function(e, id) {
+        e.stopPropagation();
+        const el = document.getElementById(id);
+        if (!el) return;
+        const isOpen = el.classList.contains('nav-dropdown-open');
+        document.querySelectorAll('.nav-dropdown-box').forEach(box => box.classList.remove('nav-dropdown-open'));
+        if (!isOpen) {
+            el.classList.add('nav-dropdown-open');
+        }
+    };
+
+    // Close open dropdowns when clicking anywhere outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.nav-dropdown-wrapper')) {
+            document.querySelectorAll('.nav-dropdown-box').forEach(box => box.classList.remove('nav-dropdown-open'));
+        }
+    });
+
+    // Mobile Drawer open/close
     window.openMobileDrawer = function() {
         var drawer = document.getElementById('mobileDrawer');
         var panel = document.getElementById('drawerPanel');

@@ -17,15 +17,35 @@
                 <h1 class="text-2xl sm:text-3xl font-bold text-instBlue">गुठियार समिति (Trustee Committee)</h1>
                 <p class="text-xs text-slate-600 mt-1">सहिद स्मृति आवासीय विद्यालय सार्वजनिक शैक्षिक गुठी–२०६६ • इटहरी–१९, सुनसरी</p>
             </div>
-            {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL']) %}
-            <a href="/admin/trustee-committee" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-bold shadow-sm transition">
-                <i data-lucide="settings" class="w-4 h-4 text-instGold"></i>
-                <span>गुठियार सम्पादन प्यानल</span>
-            </a>
+            {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="openAddTrusteeModal()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg text-xs font-bold shadow transition">
+                    <i data-lucide="plus-circle" class="w-4 h-4 text-slate-950"></i>
+                    <span>+ नयाँ गुठियार थप्नुहोस्</span>
+                </button>
+                <a href="/admin/trustee-committee" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-bold shadow transition">
+                    <i data-lucide="settings" class="w-4 h-4 text-instGold"></i>
+                    <span>एडमिन प्यानल</span>
+                </a>
+            </div>
             {% endif %}
         </div>
     </div>
 </div>
+
+<!-- Super Admin Notice Banner (Visible ONLY to Super Admin / Admin) -->
+{% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+<div class="bg-gradient-to-r from-amber-950 via-slate-900 to-instBlue text-white py-2 px-4 sm:px-8 border-b border-amber-400">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="font-bold text-amber-300">सुपर एडमिन एक्सेस सक्रिय:</span>
+            <span>तपाईंलाई गुठियार समिति सदस्यहरू थप्न, सच्याउन (Edit), फोटो अपलोड गर्न र मेटाउन (Delete) पूर्ण अनुमति छ।</span>
+        </div>
+        <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono">ROLE: {{ current_user.role if current_user else 'SUPER_ADMIN' }}</span>
+    </div>
+</div>
+{% endif %}
 
 <div class="py-12 bg-slate-50/50">
     <div class="max-w-7xl mx-auto px-4 sm:px-8">
@@ -34,7 +54,20 @@
         <!-- Trustee Chief Card -->
         {% set chief = members[0] %}
         <div class="max-w-lg mx-auto mb-12">
-            <div class="bg-gradient-to-b from-amber-50 to-white border-2 border-instGold/80 rounded-2xl p-7 text-center shadow-lg hover:shadow-xl transition">
+            <div class="bg-gradient-to-b from-amber-50 to-white border-2 border-instGold/80 rounded-2xl p-7 text-center shadow-lg hover:shadow-xl transition relative group">
+                
+                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+                <!-- Super Admin Action Buttons for Chief -->
+                <div class="absolute top-4 right-4 flex items-center gap-1.5">
+                    <button type="button" onclick='openEditTrusteeModal({{ chief | tojson | safe }})' class="p-1.5 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 rounded-md transition" title="प्रमुखको विवरण सम्पादन गर्नुहोस्">
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button type="button" onclick="deleteTrusteeRecord({{ chief.id }}, '{{ chief.name }}')" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-md transition" title="मेटाउनुहोस्">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+                {% endif %}
+
                 <div class="w-28 h-28 mx-auto rounded-full bg-amber-100 border-4 border-instGold/40 overflow-hidden shadow-inner flex items-center justify-center text-amber-900 mb-4">
                     {% if chief.photo %}
                     <img src="{{ chief.photo }}" alt="{{ chief.name }}" class="w-full h-full object-cover">
@@ -77,13 +110,29 @@
         </div>
 
         <!-- Other Trustee Members Grid -->
-        <h3 class="text-base font-bold text-slate-900 mb-6 pb-2 border-b border-slate-200 flex items-center gap-2">
-            <i data-lucide="landmark" class="w-5 h-5 text-instGold"></i>
-            <span>गुठियार सदस्यहरू</span>
+        <h3 class="text-base font-bold text-slate-900 mb-6 pb-2 border-b border-slate-200 flex items-center justify-between">
+            <span class="flex items-center gap-2">
+                <i data-lucide="landmark" class="w-5 h-5 text-instGold"></i>
+                <span>गुठियार सदस्यहरू</span>
+            </span>
+            <span class="text-xs text-slate-500 font-normal">कुल गुठियार: {{ members|length }} जना</span>
         </h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {% for m in members[1:] %}
-            <div class="bg-white border border-slate-200 rounded-xl p-5 text-center shadow-sm hover:shadow-md hover:border-instGold/50 transition flex flex-col justify-between">
+            <div class="bg-white border border-slate-200 rounded-xl p-5 text-center shadow-sm hover:shadow-md hover:border-instGold/50 transition flex flex-col justify-between relative group">
+                
+                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+                <!-- Super Admin Action Buttons for Member -->
+                <div class="absolute top-3 right-3 flex items-center gap-1">
+                    <button type="button" onclick='openEditTrusteeModal({{ m | tojson | safe }})' class="p-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded transition" title="सम्पादन गर्नुहोस्">
+                        <i data-lucide="edit-3" class="w-3 h-3"></i>
+                    </button>
+                    <button type="button" onclick="deleteTrusteeRecord({{ m.id }}, '{{ m.name }}')" class="p-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded transition" title="मेटाउनुहोस्">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i>
+                    </button>
+                </div>
+                {% endif %}
+
                 <div>
                     <div class="w-20 h-20 mx-auto rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden shadow-sm flex items-center justify-center mb-3">
                         {% if m.photo %}
@@ -132,4 +181,218 @@
 
     </div>
 </div>
+
+{% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+<!-- SUPER ADMIN INLINE MODAL (ADD / EDIT TRUSTEE MEMBER) -->
+<div id="superAdminTrusteeModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs max-h-[92vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 id="satModalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i data-lucide="user-plus" class="w-4 h-4 text-instGold"></i>
+                <span>गुठियार सदस्य थप्नुहोस् (Super Admin)</span>
+            </h3>
+            <button onclick="closeTrusteeModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <form id="satMemberForm" class="space-y-3">
+            <input type="hidden" id="sat_edit_id" value="">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">गुठियारको नाम थर *</label>
+                    <input type="text" id="sat_name" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="श्री ...">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">पद (Position) *</label>
+                    <input type="text" id="sat_position" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="प्रमुख / गुठियार सदस्य / सचिव">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">शैक्षिक योग्यता (Qualification)</label>
+                    <input type="text" id="sat_qualification" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="स्नातक / स्नातकोत्तर">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">फोन नम्बर (सम्पर्क)</label>
+                    <input type="tel" id="sat_phone" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="98XXXXXXXX">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">इमेल (Email)</label>
+                    <input type="email" id="sat_email" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="trustee@mail.com">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">ठेगाना (Address)</label>
+                    <input type="text" id="sat_address" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="इटहरी-१९, सुनसरी">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">क्रम सङ्ख्या (Order Index)</label>
+                    <input type="number" id="sat_order" value="10" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">स्थिति (Status)</label>
+                    <select id="sat_status" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="सक्रिय">सक्रिय</option>
+                        <option value="निष्क्रिय">निष्क्रिय</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Photo Upload with Live Preview -->
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                <label class="block font-semibold text-slate-700">गुठियारको तस्विर / फोटो अपलोड</label>
+                <div class="flex items-center gap-3">
+                    <div class="w-14 h-14 rounded-full border-2 border-slate-300 overflow-hidden bg-white flex items-center justify-center flex-shrink-0">
+                        <img id="sat_photo_preview" src="" alt="Preview" class="w-full h-full object-cover hidden">
+                        <i id="sat_photo_icon" data-lucide="user" class="w-6 h-6 text-slate-400"></i>
+                    </div>
+                    <div class="flex-1 space-y-1">
+                        <input type="file" id="sat_file_input" accept=".jpg,.jpeg,.png,.webp" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-instBlue file:text-white hover:file:bg-instBlue-dark cursor-pointer" onchange="uploadTrusteePhotoInline(this)">
+                        <div id="sat_photo_status" class="text-[11px]"></div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-500 font-medium">वा फोटो URL राख्नुहोस्:</label>
+                    <input type="text" id="sat_photo" oninput="updateTrusteePreviewInline(this.value)" placeholder="/static/uploads/sample.jpg" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none font-mono text-[11px]">
+                </div>
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeTrusteeModal()" class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" id="satSubmitBtn" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded shadow transition">सुरक्षित गर्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function updateTrusteePreviewInline(url) {
+        const preview = document.getElementById('sat_photo_preview');
+        const icon = document.getElementById('sat_photo_icon');
+        if (url && url.trim()) {
+            preview.src = url.trim();
+            preview.classList.remove('hidden');
+            if (icon) icon.classList.add('hidden');
+        } else {
+            preview.src = '';
+            preview.classList.add('hidden');
+            if (icon) icon.classList.remove('hidden');
+        }
+    }
+
+    async function uploadTrusteePhotoInline(input) {
+        if (!input.files || !input.files[0]) return;
+        const statusEl = document.getElementById('sat_photo_status');
+        statusEl.innerHTML = '<span class="text-amber-600 font-semibold animate-pulse">तस्विर अपलोड हुँदैछ...</span>';
+        
+        const fd = new FormData();
+        fd.append('file', input.files[0]);
+        try {
+            const res = await fetch('/api/upload', {method: 'POST', body: fd});
+            const data = await res.json();
+            if (res.ok && data.url) {
+                document.getElementById('sat_photo').value = data.url;
+                updateTrusteePreviewInline(data.url);
+                statusEl.innerHTML = '<span class="text-emerald-600 font-semibold">तस्विर सफलतापूर्वक अपलोड भयो!</span>';
+            } else {
+                statusEl.innerHTML = `<span class="text-rose-600">${data.detail || 'अपलोड विफल भयो।'}</span>`;
+            }
+        } catch(e) {
+            statusEl.innerHTML = '<span class="text-rose-600">अपलोडमा त्रुटि भयो।</span>';
+        }
+    }
+
+    function openAddTrusteeModal() {
+        document.getElementById('satMemberForm').reset();
+        document.getElementById('sat_edit_id').value = '';
+        document.getElementById('sat_photo_status').innerHTML = '';
+        updateTrusteePreviewInline('');
+        document.getElementById('satModalTitle').innerHTML = '<i data-lucide="user-plus" class="w-4 h-4 text-instGold"></i><span>गुठियार सदस्य थप्नुहोस् (Super Admin)</span>';
+        document.getElementById('satSubmitBtn').innerText = 'गुठियार थप्नुहोस्';
+        document.getElementById('superAdminTrusteeModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function openEditTrusteeModal(m) {
+        document.getElementById('sat_edit_id').value = m.id;
+        document.getElementById('sat_name').value = m.name || '';
+        document.getElementById('sat_position').value = m.position || '';
+        document.getElementById('sat_qualification').value = m.qualification || '';
+        document.getElementById('sat_phone').value = m.phone || '';
+        document.getElementById('sat_email').value = m.email || '';
+        document.getElementById('sat_address').value = m.address || '';
+        document.getElementById('sat_order').value = m.order_index || 10;
+        document.getElementById('sat_status').value = m.status || 'सक्रिय';
+        document.getElementById('sat_photo').value = m.photo || '';
+        updateTrusteePreviewInline(m.photo || '');
+        document.getElementById('sat_photo_status').innerHTML = '';
+        document.getElementById('satModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i><span>गुठियार विवरण सम्पादन (Super Admin)</span>';
+        document.getElementById('satSubmitBtn').innerText = 'अद्यावधिक (Save) गर्नुहोस्';
+        document.getElementById('superAdminTrusteeModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function closeTrusteeModal() {
+        document.getElementById('superAdminTrusteeModal').classList.add('hidden');
+    }
+
+    document.getElementById('satMemberForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const editId = document.getElementById('sat_edit_id').value;
+        const payload = {
+            name: document.getElementById('sat_name').value.trim(),
+            position: document.getElementById('sat_position').value.trim(),
+            qualification: document.getElementById('sat_qualification').value.trim() || null,
+            phone: document.getElementById('sat_phone').value.trim() || null,
+            email: document.getElementById('sat_email').value.trim() || null,
+            address: document.getElementById('sat_address').value.trim() || null,
+            photo: document.getElementById('sat_photo').value.trim() || null,
+            order_index: parseInt(document.getElementById('sat_order').value) || 10,
+            status: document.getElementById('sat_status').value || 'सक्रिय'
+        };
+
+        const url = editId ? `/api/committees/trustee/${editId}` : '/api/committees/trustee';
+        const method = editId ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'त्रुटि भयो। तपाईंलाई सुपर एडमिन अनुमति आवश्यक छ।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि भयो।');
+        }
+    });
+
+    async function deleteTrusteeRecord(id, name) {
+        if (!confirm(`के तपाईं निश्चित रूपमा '${name}' लाई गुठियार समितिबाट मेटाउन चाहनुहुन्छ?`)) return;
+        try {
+            const res = await fetch(`/api/committees/trustee/${id}`, {method: 'DELETE'});
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'मेटाउन सकिएन। तपाईंलाई सुपर एडमिन अनुमति आवश्यक छ।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि भयो।');
+        }
+    }
+</script>
+{% endif %}
 {% endblock %}

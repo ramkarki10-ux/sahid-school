@@ -45,7 +45,7 @@ def list_management_committee():
 
 @router.post("/management")
 def create_management_member(data: CommitteeMemberCreate, request: Request):
-    user = require_role("SUPER_ADMIN", "PRINCIPAL")(request)
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
@@ -60,7 +60,7 @@ def create_management_member(data: CommitteeMemberCreate, request: Request):
 
 @router.put("/management/{id}")
 def update_management_member(id: int, data: CommitteeMemberCreate, request: Request):
-    user = require_role("SUPER_ADMIN", "PRINCIPAL")(request)
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
@@ -75,7 +75,7 @@ def update_management_member(id: int, data: CommitteeMemberCreate, request: Requ
 
 @router.delete("/management/{id}")
 def delete_management_member(id: int, request: Request):
-    user = require_role("SUPER_ADMIN", "PRINCIPAL")(request)
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM school_management_committee WHERE id = ?", (id,))
@@ -111,7 +111,7 @@ def list_trustee_committee():
 
 @router.post("/trustee")
 def create_trustee_member(data: CommitteeMemberCreate, request: Request):
-    user = require_role("SUPER_ADMIN", "PRINCIPAL")(request)
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
@@ -126,7 +126,7 @@ def create_trustee_member(data: CommitteeMemberCreate, request: Request):
 
 @router.put("/trustee/{id}")
 def update_trustee_member(id: int, data: CommitteeMemberCreate, request: Request):
-    user = require_role("SUPER_ADMIN", "PRINCIPAL")(request)
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
@@ -141,7 +141,7 @@ def update_trustee_member(id: int, data: CommitteeMemberCreate, request: Request
 
 @router.delete("/trustee/{id}")
 def delete_trustee_member(id: int, request: Request):
-    user = require_role("SUPER_ADMIN", "PRINCIPAL")(request)
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM trustee_committee WHERE id = ?", (id,))
