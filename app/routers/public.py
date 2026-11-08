@@ -126,6 +126,8 @@ def page_about(request: Request):
 @router.get("/administration", response_class=HTMLResponse)
 def page_administration(request: Request):
     settings, ticker_notice = get_school_context()
+    user = get_current_user(request)
+    is_admin = bool(user and user.get("role") in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"])
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM school_management_committee WHERE status = 'सक्रिय' OR status = 'active' ORDER BY order_index ASC")
@@ -141,12 +143,16 @@ def page_administration(request: Request):
         "smc": smc,
         "trustee": trustee,
         "leadership": leadership,
+        "current_user": user,
+        "is_admin": is_admin,
         "active_menu": "administration"
     })
 
 @router.get("/management-committee", response_class=HTMLResponse)
 def page_management_committee(request: Request):
     settings, ticker_notice = get_school_context()
+    user = get_current_user(request)
+    is_admin = bool(user and user.get("role") in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"])
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM school_management_committee WHERE status = 'सक्रिय' OR status = 'active' ORDER BY order_index ASC")
@@ -156,12 +162,16 @@ def page_management_committee(request: Request):
         "settings": settings,
         "ticker_notice": ticker_notice,
         "members": members,
+        "current_user": user,
+        "is_admin": is_admin,
         "active_menu": "administration"
     })
 
 @router.get("/trustee-committee", response_class=HTMLResponse)
 def page_trustee_committee(request: Request):
     settings, ticker_notice = get_school_context()
+    user = get_current_user(request)
+    is_admin = bool(user and user.get("role") in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"])
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM trustee_committee WHERE status = 'सक्रिय' OR status = 'active' ORDER BY order_index ASC")
@@ -171,6 +181,8 @@ def page_trustee_committee(request: Request):
         "settings": settings,
         "ticker_notice": ticker_notice,
         "members": members,
+        "current_user": user,
+        "is_admin": is_admin,
         "active_menu": "administration"
     })
 

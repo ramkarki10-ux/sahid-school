@@ -31,10 +31,10 @@
                 {% endif %}
             </div>
 
-            <!-- Parent Portal Link -->
-            <a href="/parent/login" class="flex items-center gap-1 bg-amber-500/90 hover:bg-amber-500 text-slate-900 px-2 py-0.5 rounded transition font-bold text-[11px] shadow-sm">
-                <i data-lucide="users" class="w-3 h-3 text-slate-900"></i>
-                <span>अभिभावक पोर्टल</span>
+            <!-- Super Admin Link -->
+            <a href="{% if current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN'] %}/admin/dashboard{% else %}/admin/login{% endif %}" class="flex items-center gap-1 bg-amber-400 hover:bg-amber-300 text-slate-950 px-2.5 py-0.5 rounded transition font-bold text-[11px] shadow-sm" title="सुपर एडमिन प्यानल">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-slate-950"></i>
+                <span>सुपर एडमिन</span>
             </a>
 
             <!-- Download Button -->

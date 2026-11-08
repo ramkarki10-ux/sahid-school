@@ -131,3 +131,4 @@ const styles = StyleSheet.create({
   fullImage: { width: '100%', height: '80%' },
   emptyText: { textAlign: 'center', padding: 30, color: Colors.textMuted, fontSize: 12 },
 });
+

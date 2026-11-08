@@ -1,0 +1,489 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}हेडर, लोगो तथा मुख्य मेनु व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-8">
+    
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+            <h1 class="text-xl font-bold text-instBlue flex items-center gap-2.5">
+                <i data-lucide="layout-grid" class="w-6 h-6 text-instGold"></i>
+                <span>हेडर, लोगो तथा मुख्य मेनु व्यवस्थापन (Header & Navigation CMS)</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">
+                सुपर एडमिन प्यानल: विद्यालयको लोगो, नाम, मुख्य मेनुहरू (गृहपृष्ठ, न्युज फिड, हाम्रो विद्यालय, उपलब्धि, सूचना, प्रकाशन, विद्यालय प्रशासन, शैक्षिक कार्यक्रम, विद्यार्थी, भर्ना, नतिजा, नागरिक वडापत्र, शिक्षक, ग्यालरी, सम्पर्क) तथा सव-मेनुहरू थप, सम्पादन वा मेटाउने व्यवस्था।
+            </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="openMenuModal()" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue-dark text-white font-semibold text-xs px-4 py-2 rounded-lg shadow-sm transition">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-instGold"></i>
+                <span>+ नयाँ मेनु थप्नुहोस्</span>
+            </button>
+            <button onclick="resetDefaultMenus()" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-lg border border-slate-300 transition" title="पूर्वनिर्धारित मुख्य तथा सव-मेनुहरू पुनःस्थापना गर्नुहोस्">
+                <i data-lucide="rotate-ccw" class="w-4 h-4 text-amber-600"></i>
+                <span>पूर्वनिर्धारित मेनु रिसेट</span>
+            </button>
+            <a href="/" target="_blank" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
+                <i data-lucide="external-link" class="w-4 h-4"></i>
+                <span>वेबसाइट हेर्नुहोस्</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 1. School Header Identity & Logo Settings -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-gradient-to-r from-instBlue to-instBlue-dark p-4 sm:p-5 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <i data-lucide="image" class="w-5 h-5 text-amber-300"></i>
+                <h2 class="font-bold text-sm sm:text-base">विद्यालयको लोगो तथा मुख्य पहिचान (School Logo & Identity)</h2>
+            </div>
+            <span class="text-[11px] bg-white/10 px-2.5 py-0.5 rounded font-mono">SUPER ADMIN ACCESS</span>
+        </div>
+
+        <form id="headerSettingsForm" class="p-5 sm:p-6 space-y-5 text-xs">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <!-- Left: Names & Taglines -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">विद्यालयको नाम (नेपाली) *</label>
+                        <input type="text" id="set_name_ne" value="{{ settings.name_ne }}" required class="w-full px-3.5 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none text-sm font-semibold">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">School Name (English) *</label>
+                        <input type="text" id="set_name_en" value="{{ settings.name_en }}" required class="w-full px-3.5 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">नारा / ट्यागलाइन (नेपाली)</label>
+                            <input type="text" id="set_tagline_ne" value="{{ settings.tagline_ne or '' }}" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">स्थापना वर्ष</label>
+                            <input type="text" id="set_established_ne" value="{{ settings.established_ne or '२०६३' }}" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">ठेगाना</label>
+                            <input type="text" id="set_address_ne" value="{{ settings.address_ne }}" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">सम्पर्क फोन</label>
+                            <input type="text" id="set_phone" value="{{ settings.phone }}" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Logo Upload & Live Preview -->
+                <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 flex flex-col justify-between space-y-4">
+                    <div>
+                        <span class="block font-bold text-slate-800 text-xs mb-1">विद्यालयको आधिकारिक लोगो (Header Logo)</span>
+                        <p class="text-[11px] text-slate-500 mb-3">हेडर र नेभिगेसन बारमा देखिने लोगो तस्विर परिवर्तन गर्नुहोस् (PNG, JPG, WebP)</p>
+                        
+                        <div class="flex items-center gap-4 bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                            <div class="w-20 h-20 rounded-xl border-2 border-dashed border-instBlue/40 bg-slate-50 flex items-center justify-center p-1.5 overflow-hidden flex-shrink-0">
+                                <img id="logo_live_preview" src="{{ settings.logo_url or '/static/images/logo_header.png' }}" alt="Logo" class="max-h-full max-w-full object-contain">
+                            </div>
+                            <div class="flex-1 space-y-2">
+                                <input type="file" id="logo_file_input" accept=".png,.jpg,.jpeg,.webp" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-instBlue file:text-white hover:file:bg-instBlue-dark cursor-pointer" onchange="uploadSchoolLogo(this)">
+                                <div id="logo_upload_status" class="text-[11px]"></div>
+                                <div>
+                                    <label class="block text-[10px] text-slate-400 font-medium">वा सिधै तस्विर URL राख्नुहोस्:</label>
+                                    <input type="text" id="set_logo_url" value="{{ settings.logo_url or '/static/images/logo_header.png' }}" oninput="updateLogoPreview(this.value)" class="w-full px-2.5 py-1 border border-slate-300 rounded font-mono text-[11px] focus:ring-2 focus:ring-instBlue focus:outline-none">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex justify-end">
+                        <button type="submit" id="saveHeaderSettingsBtn" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg shadow transition">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                            <span>लोगो तथा पहिचान सुरक्षित गर्नुहोस्</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- 2. Main Menus & Sub-menus Table -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <h2 class="text-base font-bold text-instBlue flex items-center gap-2">
+                    <i data-lucide="menu" class="w-5 h-5 text-instGold"></i>
+                    <span>नेभिगेसन बार: मुख्य मेनु तथा सव-मेनु संरचना (Navigation Menus)</span>
+                </h2>
+                <p class="text-xs text-slate-500 mt-0.5">वेबसाइटको मुख्य हेडर नेभिगेसनमा देखिने सबै मेनु तथा ड्रपडाउन सव-मेनुहरू</p>
+            </div>
+            <button onclick="openMenuModal()" class="inline-flex items-center gap-1 text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold px-3 py-1.5 rounded-lg transition">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>+ नयाँ मेनु थप्नुहोस्</span>
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-50 text-slate-700 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                    <tr>
+                        <th class="py-3 px-4 text-center w-16">क्रम</th>
+                        <th class="py-3 px-4">आइकन</th>
+                        <th class="py-3 px-4">मेनुको शीर्षक (Title)</th>
+                        <th class="py-3 px-4">लिङ्क (URL)</th>
+                        <th class="py-3 px-4">प्रकार (Type)</th>
+                        <th class="py-3 px-4 text-center">सव-मेनु सङ्ख्या</th>
+                        <th class="py-3 px-4 text-center">स्थिति</th>
+                        <th class="py-3 px-4 text-right">कार्यहरू (Actions)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for m in menus %}
+                    <!-- Top Level Menu Row -->
+                    <tr class="hover:bg-blue-50/40 transition bg-white" id="menu-row-{{ m.id }}">
+                        <td class="py-3 px-4 text-center font-bold text-slate-500">{{ m.order_index }}</td>
+                        <td class="py-3 px-4">
+                            <span class="w-8 h-8 rounded-lg bg-instBlue/10 text-instBlue flex items-center justify-center">
+                                <i data-lucide="{{ m.icon or 'link' }}" class="w-4 h-4"></i>
+                            </span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                                <span>{{ m.title_ne }}</span>
+                                {% if m.title_en %}<span class="text-[11px] text-slate-400 font-normal">({{ m.title_en }})</span>{% endif %}
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 font-mono text-instBlue text-[11px]">
+                            <a href="{{ m.url }}" target="_blank" class="hover:underline">{{ m.url }}</a>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="bg-slate-100 text-slate-800 font-semibold px-2 py-0.5 rounded text-[10px]">मुख्य मेनु (Main)</span>
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            {% if m.children and m.children|length > 0 %}
+                            <span class="bg-blue-100 text-instBlue font-bold px-2 py-0.5 rounded-full text-[10px]">{{ m.children|length }} सव-मेनु</span>
+                            {% else %}
+                            <span class="text-slate-400 text-[11px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            {% if m.is_active %}
+                            <span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[10px]">सक्रिय</span>
+                            {% else %}
+                            <span class="bg-slate-100 text-slate-600 font-semibold px-2 py-0.5 rounded-full text-[10px]">निष्क्रिय</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-right whitespace-nowrap">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button onclick="openAddSubmenuModal({{ m.id }}, '{{ m.title_ne }}')" class="p-1.5 rounded-md text-emerald-700 hover:bg-emerald-50 border border-emerald-200 transition" title="यो मेनुभित्र सव-मेनु थप्नुहोस्">
+                                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick='openEditMenuModal({{ m | tojson | safe }})' class="p-1.5 rounded-md text-amber-600 hover:bg-amber-50 border border-amber-200 transition" title="सम्पादन गर्नुहोस्">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteMenu({{ m.id }}, '{{ m.title_ne }}')" class="p-1.5 rounded-md text-red-600 hover:bg-red-50 border border-red-200 transition" title="मेटाउनुहोस्">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Nested Submenu Rows -->
+                    {% if m.children %}
+                        {% for sm in m.children %}
+                        <tr class="hover:bg-slate-50 transition bg-slate-50/60 text-slate-700" id="menu-row-{{ sm.id }}">
+                            <td class="py-2.5 px-4 text-center font-mono text-[11px] text-slate-400">{{ m.order_index }}.{{ sm.order_index }}</td>
+                            <td class="py-2.5 px-4 pl-8">
+                                <span class="w-6 h-6 rounded bg-slate-200/80 text-slate-600 flex items-center justify-center">
+                                    <i data-lucide="{{ sm.icon or 'corner-down-right' }}" class="w-3.5 h-3.5"></i>
+                                </span>
+                            </td>
+                            <td class="py-2.5 px-4">
+                                <div class="flex items-center gap-1.5 font-medium text-slate-800">
+                                    <span class="text-slate-400 font-mono text-[10px]">↳</span>
+                                    <span>{{ sm.title_ne }}</span>
+                                    {% if sm.title_en %}<span class="text-[10px] text-slate-400">({{ sm.title_en }})</span>{% endif %}
+                                </div>
+                            </td>
+                            <td class="py-2.5 px-4 font-mono text-slate-600 text-[11px]">
+                                <a href="{{ sm.url }}" target="_blank" class="hover:underline">{{ sm.url }}</a>
+                            </td>
+                            <td class="py-2.5 px-4">
+                                <span class="bg-amber-50 text-amber-900 border border-amber-200/60 font-medium px-2 py-0.2 rounded text-[10px]">सव-मेनु (Sub)</span>
+                            </td>
+                            <td class="py-2.5 px-4 text-center text-slate-400 text-[10px]">-</td>
+                            <td class="py-2.5 px-4 text-center">
+                                {% if sm.is_active %}
+                                <span class="bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-full text-[10px]">सक्रिय</span>
+                                {% else %}
+                                <span class="bg-slate-100 text-slate-600 font-semibold px-1.5 py-0.2 rounded-full text-[10px]">निष्क्रिय</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-2.5 px-4 text-right whitespace-nowrap">
+                                <div class="inline-flex items-center gap-1.5">
+                                    <button onclick='openEditMenuModal({{ sm | tojson | safe }})' class="p-1 rounded-md text-amber-600 hover:bg-amber-50 border border-amber-200 transition" title="सम्पादन">
+                                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    <button onclick="deleteMenu({{ sm.id }}, '{{ sm.title_ne }}')" class="p-1 rounded-md text-red-600 hover:bg-red-50 border border-red-200 transition" title="मेटाउनुहोस्">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="py-8 text-center text-slate-500">हाल कुनै मेनु प्रविष्टि गरिएको छैन। "पूर्वनिर्धारित मेनु रिसेट" थिच्नुहोस्।</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- ADD / EDIT MENU MODAL -->
+<div id="menuModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs max-h-[92vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 id="menuModalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-instGold"></i>
+                <span>नयाँ मेनु थप्नुहोस् (Add Menu)</span>
+            </h3>
+            <button onclick="closeMenuModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <form id="menuSaveForm" class="space-y-3.5">
+            <input type="hidden" id="menu_edit_id" value="">
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">मेनुको प्रकार (Parent Menu)</label>
+                <select id="menu_parent_id" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <option value="">-- मुख्य मेनु बनाउनुहोस् (Top Level Main Menu) --</option>
+                    {% for m in menus %}
+                    <option value="{{ m.id }}">{{ m.title_ne }} (यसको सव-मेनु)</option>
+                    {% endfor %}
+                </select>
+                <span class="text-[10px] text-slate-400 mt-0.5 block">खाली छाडेमा मुख्य नेभिगेसन बारमा देखिन्छ।</span>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">मेनुको शीर्षक (नेपाली) *</label>
+                <input type="text" id="menu_title_ne" required placeholder="उदा: पुस्तकालय / अनलाइन परीक्षा" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Menu Title (English)</label>
+                <input type="text" id="menu_title_en" placeholder="Library / Online Exam" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">लिङ्क / URL *</label>
+                <input type="text" id="menu_url" required placeholder="/library वा https://..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">आइकन (Lucide Icon)</label>
+                    <input type="text" id="menu_icon" value="link" placeholder="home, book, users, bell..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">क्रम सङ्ख्या (Order Index)</label>
+                    <input type="number" id="menu_order" value="10" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">स्थिति (Status)</label>
+                <select id="menu_is_active" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <option value="1">सक्रिय (Active - देखिने)</option>
+                    <option value="0">निष्क्रिय (Inactive - लुकाउने)</option>
+                </select>
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeMenuModal()" class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" id="menuSubmitBtn" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded shadow transition">सुरक्षित गर्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Logo live preview update
+    function updateLogoPreview(url) {
+        const preview = document.getElementById('logo_live_preview');
+        if (url && url.trim()) {
+            preview.src = url.trim();
+        }
+    }
+
+    // Logo upload
+    async function uploadSchoolLogo(input) {
+        if (!input.files || !input.files[0]) return;
+        const statusEl = document.getElementById('logo_upload_status');
+        statusEl.innerHTML = '<span class="text-amber-600 font-semibold animate-pulse">लोगो अपलोड हुँदैछ...</span>';
+        
+        const fd = new FormData();
+        fd.append('file', input.files[0]);
+        try {
+            const res = await fetch('/api/upload', {method: 'POST', body: fd});
+            const data = await res.json();
+            if (res.ok && data.url) {
+                document.getElementById('set_logo_url').value = data.url;
+                updateLogoPreview(data.url);
+                statusEl.innerHTML = '<span class="text-emerald-600 font-semibold">नयाँ लोगो सफलतापूर्वक अपलोड भयो!</span>';
+            } else {
+                statusEl.innerHTML = `<span class="text-rose-600">${data.detail || 'अपलोड विफल भयो।'}</span>`;
+            }
+        } catch(e) {
+            statusEl.innerHTML = '<span class="text-rose-600">सर्भर त्रुटि भयो।</span>';
+        }
+    }
+
+    // Header Settings Form Submit
+    document.getElementById('headerSettingsForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const payload = {
+            name_ne: document.getElementById('set_name_ne').value.trim(),
+            name_en: document.getElementById('set_name_en').value.trim(),
+            tagline_ne: document.getElementById('set_tagline_ne').value.trim() || null,
+            established_ne: document.getElementById('set_established_ne').value.trim() || null,
+            address_ne: document.getElementById('set_address_ne').value.trim() || null,
+            logo_url: document.getElementById('set_logo_url').value.trim() || null,
+            phone: document.getElementById('set_phone').value.trim() || null
+        };
+
+        try {
+            const res = await fetch('/api/menus/settings/header', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'त्रुटि भयो।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि भयो।');
+        }
+    });
+
+    // Menu Modal helpers
+    function openMenuModal() {
+        document.getElementById('menuSaveForm').reset();
+        document.getElementById('menu_edit_id').value = '';
+        document.getElementById('menu_parent_id').value = '';
+        document.getElementById('menu_icon').value = 'link';
+        document.getElementById('menu_order').value = '10';
+        document.getElementById('menuModalTitle').innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-instGold"></i><span>नयाँ मेनु थप्नुहोस् (Add Menu)</span>';
+        document.getElementById('menuSubmitBtn').innerText = 'मेनु थप्नुहोस्';
+        document.getElementById('menuModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function openAddSubmenuModal(parentId, parentTitle) {
+        openMenuModal();
+        document.getElementById('menu_parent_id').value = parentId;
+        document.getElementById('menuModalTitle').innerHTML = `<i data-lucide="plus-circle" class="w-4 h-4 text-instGold"></i><span>'${parentTitle}' भित्र सव-मेनु थप्नुहोस्</span>`;
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function openEditMenuModal(m) {
+        document.getElementById('menu_edit_id').value = m.id;
+        document.getElementById('menu_parent_id').value = m.parent_id || '';
+        document.getElementById('menu_title_ne').value = m.title_ne || '';
+        document.getElementById('menu_title_en').value = m.title_en || '';
+        document.getElementById('menu_url').value = m.url || '';
+        document.getElementById('menu_icon').value = m.icon || 'link';
+        document.getElementById('menu_order').value = m.order_index || 10;
+        document.getElementById('menu_is_active').value = (m.is_active === 0) ? '0' : '1';
+        document.getElementById('menuModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i><span>मेनु विवरण सम्पादन (Edit Menu)</span>';
+        document.getElementById('menuSubmitBtn').innerText = 'अद्यावधिक (Save) गर्नुहोस्';
+        document.getElementById('menuModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function closeMenuModal() {
+        document.getElementById('menuModal').classList.add('hidden');
+    }
+
+    // Menu Save Form
+    document.getElementById('menuSaveForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const editId = document.getElementById('menu_edit_id').value;
+        const parentVal = document.getElementById('menu_parent_id').value;
+        const payload = {
+            parent_id: parentVal ? parseInt(parentVal) : null,
+            title_ne: document.getElementById('menu_title_ne').value.trim(),
+            title_en: document.getElementById('menu_title_en').value.trim() || null,
+            url: document.getElementById('menu_url').value.trim(),
+            icon: document.getElementById('menu_icon').value.trim() || 'link',
+            order_index: parseInt(document.getElementById('menu_order').value) || 10,
+            is_active: parseInt(document.getElementById('menu_is_active').value)
+        };
+
+        const url = editId ? `/api/menus/${editId}` : '/api/menus';
+        const method = editId ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'त्रुटि भयो।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि भयो।');
+        }
+    });
+
+    // Delete Menu
+    async function deleteMenu(id, title) {
+        if (!confirm(`के तपाईं निश्चित रूपमा '${title}' मेनु (र यसका सम्पूर्ण सव-मेनुहरू) मेटाउन चाहनुहुन्छ?`)) return;
+        try {
+            const res = await fetch(`/api/menus/${id}`, {method: 'DELETE'});
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'मेटाउन सकिएन।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि भयो।');
+        }
+    }
+
+    // Reset default menus
+    async function resetDefaultMenus() {
+        if (!confirm('के तपाईं निश्चित हुनुहुन्छ? यसले सबै मेनु र सव-मेनुहरूलाई पूर्वनिर्धारित प्रणाली अवस्थामा पुनःस्थापना गर्नेछ।')) return;
+        try {
+            const res = await fetch('/api/menus/reset', {method: 'POST'});
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'रिसेट गर्न सकिएन।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि भयो।');
+        }
+    }
+</script>
+{% endblock %}

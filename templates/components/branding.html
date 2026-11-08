@@ -51,9 +51,9 @@
 
         <!-- Mobile Hamburger Toggle Button (तीन धर्का) -->
         <div class="lg:hidden flex items-center gap-2">
-            <a href="/parent/login" class="bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold px-2.5 py-1.5 rounded text-xs flex items-center gap-1 shadow-sm">
-                <i data-lucide="users" class="w-3.5 h-3.5"></i>
-                <span class="hidden xs:inline">अभिभावक</span>
+            <a href="{% if current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN'] %}/admin/dashboard{% else %}/admin/login{% endif %}" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold px-2.5 py-1.5 rounded text-xs flex items-center gap-1 shadow-sm" title="सुपर एडमिन">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                <span>सुपर एडमिन</span>
             </a>
             <button id="mobileMenuBtn" onclick="openMobileDrawer()" type="button" class="flex items-center gap-1.5 bg-instBlue hover:bg-instBlue-dark text-white font-semibold px-3 py-2 rounded-lg shadow transition focus:outline-none focus:ring-2 focus:ring-amber-400 active:scale-95" aria-label="Toggle Navigation">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

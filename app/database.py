@@ -454,6 +454,9 @@ def init_db():
         position TEXT NOT NULL,
         phone TEXT,
         photo TEXT,
+        qualification TEXT,
+        email TEXT,
+        address TEXT,
         term TEXT DEFAULT '२०८०-२०८३',
         order_index INTEGER DEFAULT 0,
         status TEXT DEFAULT 'सक्रिय',
@@ -468,6 +471,9 @@ def init_db():
         position TEXT NOT NULL,
         phone TEXT,
         photo TEXT,
+        qualification TEXT,
+        email TEXT,
+        address TEXT,
         order_index INTEGER DEFAULT 0,
         status TEXT DEFAULT 'सक्रिय',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -759,6 +765,33 @@ def init_db():
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
     """)
+
+    # 17. Navigation & Header Menus
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS header_menus (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        parent_id INTEGER DEFAULT NULL,
+        title_ne TEXT NOT NULL,
+        title_en TEXT,
+        url TEXT NOT NULL,
+        icon TEXT DEFAULT 'link',
+        order_index INTEGER NOT NULL DEFAULT 10,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (parent_id) REFERENCES header_menus(id) ON DELETE CASCADE
+    );
+    """)
+
+    # Ensure columns exist in committees if table was created previously
+    for tbl in ["school_management_committee", "trustee_committee"]:
+        cursor.execute(f"PRAGMA table_info({tbl})")
+        cols = [r["name"] if isinstance(r, dict) else r[1] for r in cursor.fetchall()]
+        for col in ["qualification", "email", "address"]:
+            if col not in cols:
+                try:
+                    cursor.execute(f"ALTER TABLE {tbl} ADD COLUMN {col} TEXT")
+                except Exception:
+                    pass
 
     conn.commit()
     conn.close()

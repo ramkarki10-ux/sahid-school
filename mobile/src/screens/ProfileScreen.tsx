@@ -215,3 +215,4 @@ const styles = StyleSheet.create({
   },
   logoutBtnText: { color: '#DC2626', fontSize: 13, fontWeight: 'bold' },
 });
+

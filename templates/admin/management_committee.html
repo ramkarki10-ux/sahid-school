@@ -1,6 +1,6 @@
 {% extends "admin/base_admin.html" %}
 
-{% block title %}व्यवस्थापन समिति व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
+{% block title %}विद्यालय व्यवस्थापन समिति व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
 
 {% block admin_content %}
 <div class="space-y-6">
@@ -12,14 +12,18 @@
                 <i data-lucide="shield" class="w-5 h-5 text-instGold"></i>
                 <span>विद्यालय व्यवस्थापन समिति (School Management Committee)</span>
             </h1>
-            <p class="text-xs text-slate-500 mt-0.5">व्यवस्थापन समिति सदस्यहरूको सूची, पद तथा सम्पर्क विवरण</p>
+            <p class="text-xs text-slate-500 mt-0.5">व्यवस्थापन समितिका पदाधिकारीहरूको नामावली, पद, तस्विर, योग्यता तथा सम्पर्क विवरण व्यवस्थापन</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
             <button onclick="openMemberModal()" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue-dark text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
                 <i data-lucide="plus-circle" class="w-4 h-4 text-instGold"></i>
-                <span>+ सदस्य थप्नुहोस्</span>
+                <span>+ नयाँ सदस्य थप्नुहोस्</span>
             </button>
+            <a href="/management-committee" target="_blank" class="inline-flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-instBlue font-semibold text-xs px-3 py-2 rounded-lg border border-blue-200 transition">
+                <i data-lucide="external-link" class="w-4 h-4"></i>
+                <span>पब्लिक पेज हेर्नुहोस्</span>
+            </a>
             <a href="/api/committees/management/export" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition" title="समिति विवरण Excel मा डाउनलोड गर्नुहोस्">
                 <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
                 <span>Excel निर्यात</span>
@@ -33,22 +37,41 @@
             <table class="w-full text-left text-xs border-collapse">
                 <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
                     <tr>
-                        <th class="py-3 px-4 text-center">क्रम</th>
-                        <th class="py-3 px-4">नाम</th>
-                        <th class="py-3 px-4">पद</th>
-                        <th class="py-3 px-4 font-mono">फोन</th>
-                        <th class="py-3 px-4 text-center">स्थिति</th>
+                        <th class="py-3 px-3 text-center">क्रम</th>
+                        <th class="py-3 px-3">तस्विर</th>
+                        <th class="py-3 px-4">नाम थर</th>
+                        <th class="py-3 px-4">पद (Position)</th>
+                        <th class="py-3 px-4">शैक्षिक योग्यता</th>
+                        <th class="py-3 px-4">सम्पर्क विवरण</th>
+                        <th class="py-3 px-3 text-center">स्थिति</th>
                         <th class="py-3 px-4 text-right">कार्य (Actions)</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
                     {% for m in members %}
                     <tr class="hover:bg-slate-50 transition" id="smc-row-{{ m.id }}">
-                        <td class="py-3 px-4 text-center font-bold text-slate-500">{{ m.order_index or loop.index }}</td>
-                        <td class="py-3 px-4 font-bold text-slate-900">{{ m.name }}</td>
+                        <td class="py-3 px-3 text-center font-bold text-slate-500">{{ m.order_index or loop.index }}</td>
+                        <td class="py-3 px-3">
+                            <div class="w-10 h-10 rounded-full border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0">
+                                {% if m.photo %}
+                                <img src="{{ m.photo }}" alt="{{ m.name }}" class="w-full h-full object-cover">
+                                {% else %}
+                                <i data-lucide="user" class="w-5 h-5 text-slate-400"></i>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <strong class="text-slate-900 block text-xs">{{ m.name }}</strong>
+                            {% if m.address %}<span class="text-[10px] text-slate-500">{{ m.address }}</span>{% endif %}
+                        </td>
                         <td class="py-3 px-4 font-semibold text-instBlue">{{ m.position }}</td>
-                        <td class="py-3 px-4 font-mono text-slate-700">{{ m.phone or '-' }}</td>
-                        <td class="py-3 px-4 text-center">
+                        <td class="py-3 px-4 text-slate-700">{{ m.qualification or '-' }}</td>
+                        <td class="py-3 px-4 text-slate-700">
+                            {% if m.phone %}<div class="font-mono">{{ m.phone }}</div>{% endif %}
+                            {% if m.email %}<div class="text-[10px] text-slate-500 font-mono">{{ m.email }}</div>{% endif %}
+                            {% if not m.phone and not m.email %}-{% endif %}
+                        </td>
+                        <td class="py-3 px-3 text-center">
                             <span class="bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full text-[10px]">{{ m.status or 'सक्रिय' }}</span>
                         </td>
                         <td class="py-3 px-4 text-right whitespace-nowrap">
@@ -64,7 +87,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6" class="py-8 text-center text-slate-500">हाल कुनै सदस्य प्रविष्टि गरिएको छैन।</td>
+                        <td colspan="8" class="py-8 text-center text-slate-500">हाल कुनै सदस्य प्रविष्टि गरिएको छैन।</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -76,7 +99,7 @@
 
 <!-- ADD / EDIT MODAL -->
 <div id="memberModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b pb-3">
             <h3 id="memberModalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
                 <i data-lucide="user-plus" class="w-4 h-4 text-instGold"></i>
@@ -88,33 +111,66 @@
         <form id="memberSaveForm" class="space-y-3">
             <input type="hidden" id="mem_edit_id" value="">
 
-            <div>
-                <label class="block font-semibold mb-1 text-slate-700">सदस्यको नाम *</label>
-                <input type="text" id="mem_name" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="श्री ...">
-            </div>
-            <div>
-                <label class="block font-semibold mb-1 text-slate-700">पद (Position) *</label>
-                <input type="text" id="mem_position" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="अध्यक्ष / सदस्य / शिक्षक प्रतिनिधि">
-            </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="block font-semibold mb-1 text-slate-700">फोन नम्बर</label>
-                    <input type="tel" id="mem_phone" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="98XXXXXXXX">
+                    <label class="block font-semibold mb-1 text-slate-700">सदस्यको नाम थर *</label>
+                    <input type="text" id="mem_name" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="श्री राम बहादुर कार्की">
                 </div>
                 <div>
-                    <label class="block font-semibold mb-1 text-slate-700">क्रम सङ्ख्या (Order)</label>
-                    <input type="number" id="mem_order" value="10" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <label class="block font-semibold mb-1 text-slate-700">पद (Position) *</label>
+                    <input type="text" id="mem_position" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="अध्यक्ष / सदस्य / सदस्य-सचिव">
                 </div>
             </div>
 
-            <!-- Photo Upload -->
-            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
-                <label class="block font-semibold text-slate-700">फोटो अपलोड गर्नुहोस् (Upload Photo)</label>
-                <input type="file" id="mem_file_input" accept=".jpg,.jpeg,.png,.webp" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-instBlue file:text-white hover:file:bg-instBlue-dark cursor-pointer" onchange="window.adminUploadFile(this, 'mem_photo', 'mem_photo_status')">
-                <div id="mem_photo_status" class="text-[11px]"></div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-[10px] text-slate-500 font-medium">वा फोटो URL</label>
-                    <input type="text" id="mem_photo" placeholder="/static/images/committee/sample.jpg" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none font-mono text-[11px]">
+                    <label class="block font-semibold mb-1 text-slate-700">शैक्षिक योग्यता (Qualification)</label>
+                    <input type="text" id="mem_qualification" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="स्नातकोत्तर / स्नातक / आदि">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">फोन नम्बर (सम्पर्क)</label>
+                    <input type="tel" id="mem_phone" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="98XXXXXXXX">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">इमेल (Email)</label>
+                    <input type="email" id="mem_email" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="member@mail.com">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">ठेगाना (Address)</label>
+                    <input type="text" id="mem_address" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="इटहरी-१९, सुनसरी">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">क्रम सङ्ख्या (Order Index)</label>
+                    <input type="number" id="mem_order" value="10" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">कार्यकाल (Term)</label>
+                    <input type="text" id="mem_term" value="२०८०-२०८३" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+            </div>
+
+            <!-- Photo Upload with Preview -->
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                <label class="block font-semibold text-slate-700">सदस्यको तस्विर / फोटो अपलोड गर्नुहोस्</label>
+                <div class="flex items-center gap-3">
+                    <div id="mem_photo_thumb_wrap" class="w-14 h-14 rounded-full border-2 border-slate-300 overflow-hidden bg-white flex items-center justify-center flex-shrink-0">
+                        <img id="mem_photo_preview" src="" alt="Preview" class="w-full h-full object-cover hidden">
+                        <i id="mem_photo_icon" data-lucide="user" class="w-6 h-6 text-slate-400"></i>
+                    </div>
+                    <div class="flex-1 space-y-1">
+                        <input type="file" id="mem_file_input" accept=".jpg,.jpeg,.png,.webp" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-instBlue file:text-white hover:file:bg-instBlue-dark cursor-pointer" onchange="uploadMemberPhoto(this)">
+                        <div id="mem_photo_status" class="text-[11px]"></div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-500 font-medium">वा फोटो URL राख्नुहोस्:</label>
+                    <input type="text" id="mem_photo" oninput="updateMemberPreview(this.value)" placeholder="/static/uploads/sample.jpg" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none font-mono text-[11px]">
                 </div>
             </div>
 
@@ -127,10 +183,47 @@
 </div>
 
 <script>
+    function updateMemberPreview(url) {
+        const preview = document.getElementById('mem_photo_preview');
+        const icon = document.getElementById('mem_photo_icon');
+        if (url && url.trim()) {
+            preview.src = url.trim();
+            preview.classList.remove('hidden');
+            if (icon) icon.classList.add('hidden');
+        } else {
+            preview.src = '';
+            preview.classList.add('hidden');
+            if (icon) icon.classList.remove('hidden');
+        }
+    }
+
+    async function uploadMemberPhoto(input) {
+        if (!input.files || !input.files[0]) return;
+        const statusEl = document.getElementById('mem_photo_status');
+        statusEl.innerHTML = '<span class="text-amber-600 font-semibold animate-pulse">तस्विर अपलोड हुँदैछ...</span>';
+        
+        const fd = new FormData();
+        fd.append('file', input.files[0]);
+        try {
+            const res = await fetch('/api/upload', {method: 'POST', body: fd});
+            const data = await res.json();
+            if (res.ok && data.url) {
+                document.getElementById('mem_photo').value = data.url;
+                updateMemberPreview(data.url);
+                statusEl.innerHTML = '<span class="text-emerald-600 font-semibold">तस्विर सफलतापूर्वक अपलोड भयो!</span>';
+            } else {
+                statusEl.innerHTML = `<span class="text-rose-600">${data.detail || 'अपलोड विफल भयो।'}</span>`;
+            }
+        } catch(e) {
+            statusEl.innerHTML = '<span class="text-rose-600">अपलोडमा त्रुटि भयो।</span>';
+        }
+    }
+
     function openMemberModal() {
         document.getElementById('memberSaveForm').reset();
         document.getElementById('mem_edit_id').value = '';
         document.getElementById('mem_photo_status').innerHTML = '';
+        updateMemberPreview('');
         document.getElementById('memberModalTitle').innerHTML = '<i data-lucide="user-plus" class="w-4 h-4 text-instGold"></i><span>व्यवस्थापन समिति सदस्य थप्नुहोस्</span>';
         document.getElementById('memSubmitBtn').innerText = 'सदस्य थप्नुहोस्';
         document.getElementById('memberModal').classList.remove('hidden');
@@ -141,11 +234,16 @@
         document.getElementById('mem_edit_id').value = m.id;
         document.getElementById('mem_name').value = m.name || '';
         document.getElementById('mem_position').value = m.position || '';
+        document.getElementById('mem_qualification').value = m.qualification || '';
         document.getElementById('mem_phone').value = m.phone || '';
+        document.getElementById('mem_email').value = m.email || '';
+        document.getElementById('mem_address').value = m.address || '';
         document.getElementById('mem_order').value = m.order_index || 10;
+        document.getElementById('mem_term').value = m.term || '२०८०-२०८३';
         document.getElementById('mem_photo').value = m.photo || '';
+        updateMemberPreview(m.photo || '');
         document.getElementById('mem_photo_status').innerHTML = m.photo 
-            ? `<span class="text-blue-600 font-semibold">हालको फोटो: <a href="${m.photo}" target="_blank" class="underline font-mono">${m.photo}</a></span>` 
+            ? `<span class="text-blue-600 font-semibold">हालको फोटो चयन गरिएको छ</span>` 
             : '';
         document.getElementById('memberModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i><span>सदस्य विवरण सम्पादन</span>';
         document.getElementById('memSubmitBtn').innerText = 'अद्यावधिक (Save) गर्नुहोस्';
@@ -163,10 +261,13 @@
         const payload = {
             name: document.getElementById('mem_name').value.trim(),
             position: document.getElementById('mem_position').value.trim(),
+            qualification: document.getElementById('mem_qualification').value.trim() || null,
             phone: document.getElementById('mem_phone').value.trim() || null,
+            email: document.getElementById('mem_email').value.trim() || null,
+            address: document.getElementById('mem_address').value.trim() || null,
             photo: document.getElementById('mem_photo').value.trim() || null,
             order_index: parseInt(document.getElementById('mem_order').value) || 10,
-            term: '२०८०-२०८३',
+            term: document.getElementById('mem_term').value.trim() || '२०८०-२०८३',
             status: 'सक्रिय'
         };
 

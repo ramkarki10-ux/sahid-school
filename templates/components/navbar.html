@@ -1,139 +1,65 @@
+{% set nav_menus = get_navigation_menus() %}
 <!-- 3.3 MAIN NAVIGATION BAR -->
 <nav class="bg-instBlue text-white sticky top-0 z-40 shadow-md">
     <div class="max-w-7xl mx-auto px-4 sm:px-8">
         <!-- Desktop Horizontal Navigation (Height 45-55px) -->
         <div class="hidden lg:flex items-center justify-between h-12 text-[13px] font-medium tracking-wide">
-            <div class="flex items-center space-x-0.5 xl:space-x-1 py-1">
+            <div class="flex items-center space-x-0.5 xl:space-x-1 py-1 overflow-x-auto no-scrollbar">
                 
-                <a href="/" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 {% if active_menu == 'home' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
-                    <i data-lucide="home" class="w-3.5 h-3.5"></i>
-                    <span>गृहपृष्ठ</span>
-                </a>
-
-                <a href="/feed" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 {% if active_menu == 'feed' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
-                    <i data-lucide="newspaper" class="w-3.5 h-3.5 text-instGold"></i>
-                    <span>न्युज फिड</span>
-                </a>
-
-                <a href="/about" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 {% if active_menu == 'about' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
-                    <i data-lucide="info" class="w-3.5 h-3.5"></i>
-                    <span>हाम्रो विद्यालय</span>
-                </a>
-
-                <a href="/achievements" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 {% if active_menu == 'achievements' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
-                    <i data-lucide="award" class="w-3.5 h-3.5"></i>
-                    <span>उपलब्धि</span>
-                </a>
-
-                <a href="/notices" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 {% if active_menu == 'notices' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
-                    <i data-lucide="bell" class="w-3.5 h-3.5"></i>
-                    <span>सूचना</span>
-                </a>
-
-                <a href="/publications" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 {% if active_menu == 'publications' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
-                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-                    <span>प्रकाशन</span>
-                </a>
-
-                <a href="/administration" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 {% if active_menu == 'administration' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
-                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-                    <span>विद्यालय प्रशासन</span>
-                </a>
-
-                <a href="/academics" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 {% if active_menu == 'academics' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
-                    <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i>
-                    <span>शैक्षिक कार्यक्रम</span>
-                </a>
-
-                <!-- विद्यार्थी DROPDOWN MENU -->
-                <div class="relative group">
-                    <button type="button" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1 {% if active_menu == 'students' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
-                        <i data-lucide="users" class="w-3.5 h-3.5"></i>
-                        <span>विद्यार्थी</span>
-                        <i data-lucide="chevron-down" class="w-3 h-3 transition-transform group-hover:rotate-180"></i>
-                    </button>
-                    <!-- Dropdown Content -->
-                    <div class="absolute left-0 top-full hidden group-hover:block w-48 bg-white text-slate-800 rounded-lg shadow-xl border border-slate-200 py-1.5 z-50 animate-in fade-in-50 duration-150">
-                        <a href="/students" class="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue transition">
-                            <i data-lucide="table" class="w-3.5 h-3.5 text-instBlue"></i>
-                            <span>विद्यार्थी विवरण</span>
+                {% if nav_menus %}
+                    {% for m in nav_menus %}
+                        {% if m.children and m.children|length > 0 %}
+                        <!-- Dropdown Menu Item -->
+                        <div class="relative group">
+                            <button type="button" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1 whitespace-nowrap {% if active_menu == m.url.strip('/') %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
+                                {% if m.icon %}<i data-lucide="{{ m.icon }}" class="w-3.5 h-3.5 text-amber-400"></i>{% endif %}
+                                <span>{{ m.title_ne }}</span>
+                                <i data-lucide="chevron-down" class="w-3 h-3 transition-transform group-hover:rotate-180"></i>
+                            </button>
+                            <!-- Dropdown Content -->
+                            <div class="absolute left-0 top-full hidden group-hover:block w-52 bg-white text-slate-800 rounded-lg shadow-xl border border-slate-200 py-1.5 z-50 animate-in fade-in-50 duration-150">
+                                {% for sm in m.children %}
+                                <a href="{{ sm.url }}" class="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue transition">
+                                    {% if sm.icon %}<i data-lucide="{{ sm.icon }}" class="w-3.5 h-3.5 text-instBlue"></i>{% endif %}
+                                    <span>{{ sm.title_ne }}</span>
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <!-- Direct Link Item -->
+                        <a href="{{ m.url }}" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 whitespace-nowrap {% if active_menu == m.url.strip('/') or (m.url == '/' and active_menu == 'home') %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
+                            {% if m.icon %}<i data-lucide="{{ m.icon }}" class="w-3.5 h-3.5"></i>{% endif %}
+                            <span>{{ m.title_ne }}</span>
                         </a>
-                        <a href="/parent/login" class="flex items-center gap-2 px-3.5 py-2 text-xs font-medium hover:bg-blue-50 hover:text-instBlue transition">
-                            <i data-lucide="calendar-check" class="w-3.5 h-3.5 text-emerald-600"></i>
-                            <span>हाजिरी (मोबाइल पोर्टल)</span>
-                        </a>
-                        <a href="/parent/login" class="flex items-center gap-2 px-3.5 py-2 text-xs font-medium hover:bg-blue-50 hover:text-instBlue transition">
-                            <i data-lucide="book-open-check" class="w-3.5 h-3.5 text-amber-600"></i>
-                            <span>गृहकार्य (मोबाइल पोर्टल)</span>
-                        </a>
-                        <a href="/results" class="flex items-center gap-2 px-3.5 py-2 text-xs font-medium hover:bg-blue-50 hover:text-instBlue transition">
-                            <i data-lucide="file-check-2" class="w-3.5 h-3.5 text-purple-600"></i>
-                            <span>नतिजा (Results)</span>
-                        </a>
-                        <a href="/class-notices" class="flex items-center gap-2 px-3.5 py-2 text-xs font-medium hover:bg-blue-50 hover:text-instBlue transition">
-                            <i data-lucide="bell-ring" class="w-3.5 h-3.5 text-blue-600"></i>
-                            <span>कक्षा सूचना</span>
-                        </a>
-                        <div class="border-t border-slate-100 my-1"></div>
-                        <a href="/leave-application" class="flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-red-600 hover:bg-red-50 transition">
-                            <i data-lucide="clipboard-pen" class="w-3.5 h-3.5 text-red-600"></i>
-                            <span>बिदा निवेदन</span>
-                        </a>
-                    </div>
-                </div>
-
-                <a href="/admission" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 {% if active_menu == 'admission' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
-                    <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
-                    <span>भर्ना</span>
-                </a>
-
-                <a href="/results" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 {% if active_menu == 'results' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
-                    <i data-lucide="award" class="w-3.5 h-3.5"></i>
-                    <span>नतिजा</span>
-                </a>
-
-                <a href="/citizen-charter" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 {% if active_menu == 'citizen-charter' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
-                    <i data-lucide="file-badge" class="w-3.5 h-3.5"></i>
-                    <span>नागरिक वडापत्र</span>
-                </a>
-
-                <a href="/teachers" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 {% if active_menu == 'teachers' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
-                    <i data-lucide="briefcase" class="w-3.5 h-3.5"></i>
-                    <span>शिक्षक</span>
-                </a>
-
-                <!-- ग्यालेरी DROPDOWN MENU -->
-                <div class="relative group">
-                    <button type="button" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1 {% if active_menu == 'gallery' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
-                        <i data-lucide="image" class="w-3.5 h-3.5"></i>
-                        <span>ग्यालेरी</span>
-                        <i data-lucide="chevron-down" class="w-3 h-3 transition-transform group-hover:rotate-180"></i>
-                    </button>
-                    <!-- Dropdown Content -->
-                    <div class="absolute left-0 top-full hidden group-hover:block w-44 bg-white text-slate-800 rounded-lg shadow-xl border border-slate-200 py-1.5 z-50">
-                        <a href="/gallery" class="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue transition">
-                            <i data-lucide="images" class="w-3.5 h-3.5 text-instBlue"></i>
-                            <span>फोटो ग्यालेरी</span>
-                        </a>
-                        <a href="/videos" class="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue transition">
-                            <i data-lucide="video" class="w-3.5 h-3.5 text-red-600"></i>
-                            <span>भिडियो ग्यालेरी</span>
-                        </a>
-                    </div>
-                </div>
-
-                <a href="/contact" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5 {% if active_menu == 'contact' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}">
-                    <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
-                    <span>सम्पर्क</span>
-                </a>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <!-- Static Fallback if DB not ready -->
+                    <a href="/" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="home" class="w-3.5 h-3.5"></i><span>गृहपृष्ठ</span></a>
+                    <a href="/feed" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="newspaper" class="w-3.5 h-3.5 text-instGold"></i><span>न्युज फिड</span></a>
+                    <a href="/about" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5"></i><span>हाम्रो विद्यालय</span></a>
+                    <a href="/achievements" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="award" class="w-3.5 h-3.5"></i><span>उपलब्धि</span></a>
+                    <a href="/notices" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="bell" class="w-3.5 h-3.5"></i><span>सूचना</span></a>
+                    <a href="/publications" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="file-text" class="w-3.5 h-3.5"></i><span>प्रकाशन</span></a>
+                    <a href="/administration" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i><span>विद्यालय प्रशासन</span></a>
+                    <a href="/academics" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i><span>शैक्षिक कार्यक्रम</span></a>
+                    <a href="/students" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="users" class="w-3.5 h-3.5"></i><span>विद्यार्थी</span></a>
+                    <a href="/admission" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="user-plus" class="w-3.5 h-3.5"></i><span>भर्ना</span></a>
+                    <a href="/results" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="award" class="w-3.5 h-3.5"></i><span>नतिजा</span></a>
+                    <a href="/citizen-charter" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="file-badge" class="w-3.5 h-3.5"></i><span>नागरिक वडापत्र</span></a>
+                    <a href="/teachers" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="briefcase" class="w-3.5 h-3.5"></i><span>शिक्षक</span></a>
+                    <a href="/gallery" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5"></i><span>ग्यालेरी</span></a>
+                    <a href="/contact" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/80 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i><span>सम्पर्क</span></a>
+                {% endif %}
 
             </div>
 
-            <!-- Quick Action / Parent Portal link -->
-            <div class="hidden xl:flex items-center gap-2">
-                <a href="/parent/login" class="inline-flex items-center gap-1 text-[12px] bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold px-3 py-1 rounded shadow transition">
-                    <i data-lucide="users" class="w-3.5 h-3.5 text-slate-900"></i>
-                    <span>अभिभावक पोर्टल</span>
+            <!-- Quick Action / Super Admin link (Renamed from Parent Portal) -->
+            <div class="hidden xl:flex items-center gap-2 flex-shrink-0">
+                <a href="{% if current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN'] %}/admin/dashboard{% else %}/admin/login{% endif %}" class="inline-flex items-center gap-1.5 text-[12px] bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold px-3 py-1 rounded shadow transition">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-slate-950"></i>
+                    <span>सुपर एडमिन</span>
                 </a>
             </div>
         </div>
@@ -146,9 +72,9 @@
                     <span>सम्पूर्ण मेनु</span>
                 </button>
                 <a href="/" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'home' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">गृहपृष्ठ</a>
-                <a href="/about" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'about' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">हाम्रो विद्यालय</a>
+                <a href="/feed" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'feed' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">न्युज फिड</a>
+                <a href="/administration" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'administration' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">विद्यालय प्रशासन</a>
                 <a href="/teachers" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'teachers' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">शिक्षक</a>
-                <a href="/homework" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'homework' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">दैनिक गृहकार्य</a>
                 <a href="/notices" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'notices' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">सूचना</a>
                 <a href="/admission" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'admission' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">भर्ना</a>
                 <a href="/results" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'results' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">नतिजा</a>
@@ -180,142 +106,71 @@
             </button>
         </div>
 
-        <!-- Drawer Links (All 14 Sections) -->
+        <!-- Drawer Links (Dynamic from get_navigation_menus()) -->
         <div class="p-3 space-y-1 text-sm font-medium">
-            <a href="/" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == 'home' %}bg-instBlue text-amber-300 font-bold{% endif %}">
-                <i data-lucide="home" class="w-4 h-4 text-amber-400"></i>
-                <span>गृहपृष्ठ (Home)</span>
-            </a>
-            <a href="/feed" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == 'feed' %}bg-instBlue text-amber-300 font-bold{% endif %}">
-                <i data-lucide="newspaper" class="w-4 h-4 text-amber-400"></i>
-                <span>न्युज फिड (News Feed)</span>
-            </a>
-            <a href="/about" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == 'about' %}bg-instBlue text-amber-300 font-bold{% endif %}">
-                <i data-lucide="info" class="w-4 h-4 text-amber-400"></i>
-                <span>हाम्रो विद्यालय (About Us)</span>
-            </a>
-            <a href="/achievements" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == 'achievements' %}bg-instBlue text-amber-300 font-bold{% endif %}">
-                <i data-lucide="award" class="w-4 h-4 text-amber-400"></i>
-                <span>उपलब्धि (Achievements)</span>
-            </a>
-            <a href="/notices" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == 'notices' %}bg-instBlue text-amber-300 font-bold{% endif %}">
-                <i data-lucide="bell" class="w-4 h-4 text-amber-400"></i>
-                <span>सूचना (Notices)</span>
-            </a>
-            <a href="/publications" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == 'publications' %}bg-instBlue text-amber-300 font-bold{% endif %}">
-                <i data-lucide="file-text" class="w-4 h-4 text-amber-400"></i>
-                <span>प्रकाशन (Publications)</span>
-            </a>
-            <a href="/administration" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == 'administration' %}bg-instBlue text-amber-300 font-bold{% endif %}">
-                <i data-lucide="shield-check" class="w-4 h-4 text-amber-400"></i>
-                <span>विद्यालय प्रशासन (Administration)</span>
-            </a>
-            <a href="/academics" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == 'academics' %}bg-instBlue text-amber-300 font-bold{% endif %}">
-                <i data-lucide="graduation-cap" class="w-4 h-4 text-amber-400"></i>
-                <span>शैक्षिक कार्यक्रम (Academics)</span>
-            </a>
-
-            <!-- विद्यार्थी Collapsible Accordion -->
-            <div class="border border-white/10 rounded-lg overflow-hidden bg-white/5 my-1">
-                <button type="button" onclick="toggleDrawerSubmenu('studentSubmenu')" class="w-full flex items-center justify-between px-3 py-2.5 text-slate-100 hover:bg-instBlue transition font-semibold text-sm">
-                    <span class="flex items-center gap-3">
-                        <i data-lucide="users" class="w-4 h-4 text-amber-400"></i>
-                        <span>विद्यार्थी शाखा (Students)</span>
-                    </span>
-                    <i id="studentSubmenuIcon" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
-                </button>
-                <div id="studentSubmenu" class="hidden pl-8 pr-2 py-1.5 space-y-1 bg-instBlue-dark/95 text-xs border-t border-white/10">
-                    <a href="/students" onclick="closeMobileDrawer()" class="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-instBlue text-slate-200 hover:text-amber-300">
-                        <i data-lucide="table" class="w-3.5 h-3.5 text-amber-400"></i>
-                        <span>विद्यार्थी विवरण सूची</span>
+            {% if nav_menus %}
+                {% for m in nav_menus %}
+                    {% if m.children and m.children|length > 0 %}
+                    <!-- Drawer Collapsible Accordion -->
+                    <div class="border border-white/10 rounded-lg overflow-hidden bg-white/5 my-1">
+                        <button type="button" onclick="toggleDrawerSubmenu('drawer-sub-{{ m.id }}')" class="w-full flex items-center justify-between px-3 py-2.5 text-slate-100 hover:bg-instBlue transition font-semibold text-sm">
+                            <span class="flex items-center gap-3">
+                                <i data-lucide="{{ m.icon or 'folder' }}" class="w-4 h-4 text-amber-400"></i>
+                                <span>{{ m.title_ne }}</span>
+                            </span>
+                            <i id="drawer-sub-{{ m.id }}Icon" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                        </button>
+                        <div id="drawer-sub-{{ m.id }}" class="hidden pl-8 pr-2 py-1.5 space-y-1 bg-instBlue-dark/95 text-xs border-t border-white/10">
+                            {% for sm in m.children %}
+                            <a href="{{ sm.url }}" onclick="closeMobileDrawer()" class="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-instBlue text-slate-200 hover:text-amber-300">
+                                <i data-lucide="{{ sm.icon or 'link' }}" class="w-3.5 h-3.5 text-amber-400"></i>
+                                <span>{{ sm.title_ne }}</span>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Direct Link -->
+                    <a href="{{ m.url }}" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == m.url.strip('/') %}bg-instBlue text-amber-300 font-bold{% endif %}">
+                        <i data-lucide="{{ m.icon or 'link' }}" class="w-4 h-4 text-amber-400"></i>
+                        <span>{{ m.title_ne }}</span>
                     </a>
-                    <a href="/homework" onclick="closeMobileDrawer()" class="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-instBlue text-slate-200 hover:text-amber-300">
-                        <i data-lucide="book-open-check" class="w-3.5 h-3.5 text-amber-400"></i>
-                        <span>दैनिक गृहकार्य (Homework)</span>
-                    </a>
-                    <a href="/parent/login" onclick="closeMobileDrawer()" class="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-instBlue text-slate-200 hover:text-amber-300">
-                        <i data-lucide="calendar-check" class="w-3.5 h-3.5 text-emerald-400"></i>
-                        <span>दैनिक हाजिरी (मोबाइल पोर्टल)</span>
-                    </a>
-                    <a href="/results" onclick="closeMobileDrawer()" class="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-instBlue text-slate-200 hover:text-amber-300">
-                        <i data-lucide="file-check-2" class="w-3.5 h-3.5 text-purple-400"></i>
-                        <span>परीक्षा नतिजा (Results)</span>
-                    </a>
-                    <a href="/leave-application" onclick="closeMobileDrawer()" class="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-red-900/40 text-red-300 hover:text-white">
-                        <i data-lucide="clipboard-pen" class="w-3.5 h-3.5 text-red-400"></i>
-                        <span>अनलाइन बिदा निवेदन</span>
-                    </a>
-                </div>
-            </div>
-
-            <a href="/admission" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == 'admission' %}bg-instBlue text-amber-300 font-bold{% endif %}">
-                <i data-lucide="user-plus" class="w-4 h-4 text-amber-400"></i>
-                <span>भर्ना (Admission)</span>
-            </a>
-            <a href="/results" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == 'results' %}bg-instBlue text-amber-300 font-bold{% endif %}">
-                <i data-lucide="award" class="w-4 h-4 text-amber-400"></i>
-                <span>नतिजा (Results)</span>
-            </a>
-            <a href="/citizen-charter" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == 'citizen-charter' %}bg-instBlue text-amber-300 font-bold{% endif %}">
-                <i data-lucide="file-badge" class="w-4 h-4 text-amber-400"></i>
-                <span>नागरिक वडापत्र (Citizen Charter)</span>
-            </a>
-            <a href="/teachers" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == 'teachers' %}bg-instBlue text-amber-300 font-bold{% endif %}">
-                <i data-lucide="briefcase" class="w-4 h-4 text-amber-400"></i>
-                <span>शिक्षक विवरण (Teachers)</span>
-            </a>
-
-            <!-- ग्यालेरी Collapsible Accordion -->
-            <div class="border border-white/10 rounded-lg overflow-hidden bg-white/5 my-1">
-                <button type="button" onclick="toggleDrawerSubmenu('gallerySubmenu')" class="w-full flex items-center justify-between px-3 py-2.5 text-slate-100 hover:bg-instBlue transition font-semibold text-sm">
-                    <span class="flex items-center gap-3">
-                        <i data-lucide="image" class="w-4 h-4 text-amber-400"></i>
-                        <span>ग्यालेरी (Gallery)</span>
-                    </span>
-                    <i id="gallerySubmenuIcon" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
-                </button>
-                <div id="gallerySubmenu" class="hidden pl-8 pr-2 py-1.5 space-y-1 bg-instBlue-dark/95 text-xs border-t border-white/10">
-                    <a href="/gallery" onclick="closeMobileDrawer()" class="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-instBlue text-slate-200 hover:text-amber-300">
-                        <i data-lucide="images" class="w-3.5 h-3.5 text-amber-400"></i>
-                        <span>फोटो ग्यालेरी</span>
-                    </a>
-                    <a href="/videos" onclick="closeMobileDrawer()" class="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-instBlue text-slate-200 hover:text-amber-300">
-                        <i data-lucide="video" class="w-3.5 h-3.5 text-red-400"></i>
-                        <span>भिडियो ग्यालेरी</span>
-                    </a>
-                </div>
-            </div>
-
-            <a href="/contact" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100 hover:text-amber-300 transition {% if active_menu == 'contact' %}bg-instBlue text-amber-300 font-bold{% endif %}">
-                <i data-lucide="map-pin" class="w-4 h-4 text-amber-400"></i>
-                <span>सम्पर्क (Contact)</span>
-            </a>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <a href="/" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="home" class="w-4 h-4 text-amber-400"></i><span>गृहपृष्ठ</span></a>
+                <a href="/feed" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="newspaper" class="w-4 h-4 text-amber-400"></i><span>न्युज फिड</span></a>
+                <a href="/about" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="info" class="w-4 h-4 text-amber-400"></i><span>हाम्रो विद्यालय</span></a>
+                <a href="/administration" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="shield-check" class="w-4 h-4 text-amber-400"></i><span>विद्यालय प्रशासन</span></a>
+                <a href="/teachers" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="briefcase" class="w-4 h-4 text-amber-400"></i><span>शिक्षक</span></a>
+                <a href="/notices" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="bell" class="w-4 h-4 text-amber-400"></i><span>सूचना</span></a>
+                <a href="/contact" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="map-pin" class="w-4 h-4 text-amber-400"></i><span>सम्पर्क</span></a>
+            {% endif %}
         </div>
 
-        <!-- Drawer Footer with Portals -->
+        <!-- Drawer Footer with Portals (Renamed to Super Admin) -->
         <div class="mt-auto p-4 border-t border-instBlue-light bg-instBlue/80 space-y-2 sticky bottom-0 z-20">
             <a href="/signup" onclick="closeMobileDrawer()" class="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 px-4 rounded-lg text-xs shadow transition active:scale-95">
                 <i data-lucide="user-plus" class="w-4 h-4 text-white"></i>
                 <span>नयाँ दर्ता गर्नुहोस् (Sign Up)</span>
             </a>
-            <a href="/parent/login" class="w-full flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold py-2 px-4 rounded-lg text-xs shadow transition active:scale-95">
-                <i data-lucide="users" class="w-4 h-4 text-slate-950"></i>
-                <span>अभिभावक पोर्टल लगइन</span>
+            <a href="{% if current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN'] %}/admin/dashboard{% else %}/admin/login{% endif %}" onclick="closeMobileDrawer()" class="w-full flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold py-2.5 px-4 rounded-lg text-xs shadow transition active:scale-95">
+                <i data-lucide="shield-check" class="w-4 h-4 text-slate-950"></i>
+                <span>सुपर एडमिन (Super Admin)</span>
             </a>
             <div class="grid grid-cols-2 gap-2">
                 <a href="/login" class="flex items-center justify-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium py-2 px-2 rounded-lg text-[11px] transition">
                     <i data-lucide="lock" class="w-3.5 h-3.5"></i>
                     <span>कर्मचारी लगइन</span>
                 </a>
-                <a href="/admin/login" class="flex items-center justify-center gap-1.5 bg-instBlue-dark hover:bg-instBlue border border-amber-400/40 text-amber-300 font-semibold py-2 px-2 rounded-lg text-[11px] transition shadow">
-                    <i data-lucide="shield" class="w-3.5 h-3.5 text-amber-400"></i>
-                    <span>प्रशासक लगइन</span>
+                <a href="/parent/login" class="flex items-center justify-center gap-1.5 bg-instBlue-dark hover:bg-instBlue border border-amber-400/40 text-amber-300 font-semibold py-2 px-2 rounded-lg text-[11px] transition shadow">
+                    <i data-lucide="users" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>अभिभावक पोर्टल</span>
                 </a>
             </div>
         </div>
     </div>
 </div>
-
 
 <script>
 (function() {

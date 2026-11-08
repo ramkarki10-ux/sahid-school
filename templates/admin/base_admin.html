@@ -271,6 +271,10 @@
             <div class="pt-2 pb-6">
                 <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">सिस्टम र सेटिङ</p>
                 <div class="mt-1 space-y-0.5">
+                    <a href="/admin/navigation" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'navigation' %}bg-instBlue text-white font-bold border-l-2 border-amber-400{% endif %}">
+                        <i data-lucide="layout-grid" class="w-4 h-4 text-instGold"></i>
+                        <span>हेडर, लोगो तथा मुख्य मेनु</span>
+                    </a>
                     <a href="/admin/users" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'users' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i>
                         <span>प्रयोगकर्ता र भूमिका (RBAC)</span>

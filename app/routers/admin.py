@@ -937,6 +937,28 @@ def admin_settings(request: Request):
         return RedirectResponse(url="/login", status_code=303)
     return templates.TemplateResponse(request, "admin/settings.html", ctx)
 
+@router.get("/navigation", response_class=HTMLResponse)
+def admin_navigation(request: Request):
+    user, ctx = get_admin_context(request, "navigation")
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM header_menus ORDER BY order_index ASC, id ASC")
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+
+    top_menus = [m for m in rows if not m.get("parent_id")]
+    for tm in top_menus:
+        tm["children"] = [sm for sm in rows if sm.get("parent_id") == tm["id"]]
+
+    ctx.update({
+        "menus": top_menus,
+        "all_menus": rows
+    })
+    return templates.TemplateResponse(request, "admin/navigation.html", ctx)
+
 @router.get("/documents", response_class=HTMLResponse)
 def admin_documents(request: Request):
     user, ctx = get_admin_context(request, "documents")

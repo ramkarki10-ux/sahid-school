@@ -14,6 +14,9 @@ class CommitteeMemberCreate(BaseModel):
     position: str
     phone: Optional[str] = None
     photo: Optional[str] = None
+    qualification: Optional[str] = None
+    email: Optional[str] = None
+    address: Optional[str] = None
     term: Optional[str] = "२०८०-२०८३"
     order_index: Optional[int] = 0
     status: Optional[str] = "सक्रिय"
@@ -46,9 +49,9 @@ def create_management_member(data: CommitteeMemberCreate, request: Request):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO school_management_committee (name, position, phone, photo, term, order_index, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (data.name, data.position, data.phone, data.photo, data.term, data.order_index, data.status))
+        INSERT INTO school_management_committee (name, position, phone, photo, qualification, email, address, term, order_index, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (data.name, data.position, data.phone, data.photo, data.qualification, data.email, data.address, data.term, data.order_index, data.status))
     new_id = cursor.lastrowid
     conn.commit()
     conn.close()
@@ -62,9 +65,9 @@ def update_management_member(id: int, data: CommitteeMemberCreate, request: Requ
     cursor = conn.cursor()
     cursor.execute("""
         UPDATE school_management_committee SET
-            name = ?, position = ?, phone = ?, photo = ?, term = ?, order_index = ?, status = ?
+            name = ?, position = ?, phone = ?, photo = ?, qualification = ?, email = ?, address = ?, term = ?, order_index = ?, status = ?
         WHERE id = ?
-    """, (data.name, data.position, data.phone, data.photo, data.term, data.order_index, data.status, id))
+    """, (data.name, data.position, data.phone, data.photo, data.qualification, data.email, data.address, data.term, data.order_index, data.status, id))
     conn.commit()
     conn.close()
     log_audit("UPDATE", "MANAGEMENT_COMMITTEE", record_id=str(id), new_value=data.dict(), user=user, request=request)
@@ -112,9 +115,9 @@ def create_trustee_member(data: CommitteeMemberCreate, request: Request):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO trustee_committee (name, position, phone, photo, order_index, status)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (data.name, data.position, data.phone, data.photo, data.order_index, data.status))
+        INSERT INTO trustee_committee (name, position, phone, photo, qualification, email, address, order_index, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (data.name, data.position, data.phone, data.photo, data.qualification, data.email, data.address, data.order_index, data.status))
     new_id = cursor.lastrowid
     conn.commit()
     conn.close()
@@ -128,9 +131,9 @@ def update_trustee_member(id: int, data: CommitteeMemberCreate, request: Request
     cursor = conn.cursor()
     cursor.execute("""
         UPDATE trustee_committee SET
-            name = ?, position = ?, phone = ?, photo = ?, order_index = ?, status = ?
+            name = ?, position = ?, phone = ?, photo = ?, qualification = ?, email = ?, address = ?, order_index = ?, status = ?
         WHERE id = ?
-    """, (data.name, data.position, data.phone, data.photo, data.order_index, data.status, id))
+    """, (data.name, data.position, data.phone, data.photo, data.qualification, data.email, data.address, data.order_index, data.status, id))
     conn.commit()
     conn.close()
     log_audit("UPDATE", "TRUSTEE_COMMITTEE", record_id=str(id), new_value=data.dict(), user=user, request=request)

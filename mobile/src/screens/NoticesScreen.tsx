@@ -257,3 +257,4 @@ const styles = StyleSheet.create({
   shareBtnText: { fontSize: 11, fontWeight: 'bold', color: '#B45309' },
   emptyText: { textAlign: 'center', padding: 30, color: Colors.textMuted, fontSize: 12 },
 });
+

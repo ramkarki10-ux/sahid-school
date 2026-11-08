@@ -82,3 +82,4 @@ npm run build:apk
 यो मोबाइल एप प्रत्यक्ष रूपमा लाइभ ब्याकएन्डसँग जोडिएको छ:
 - **Production Backend URL**: `https://sahid-school.vercel.app`
 - **लोकल विकासका लागि**: `mobile/src/services/api.ts` मा `API_BASE_URL` लाई आफ्नो लोकल कम्प्युटरको IP एड्रेस (उदा: `http://192.168.1.100:8000`) मा परिवर्तन गर्न सकिन्छ।
+
