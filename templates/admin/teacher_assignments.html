@@ -12,17 +12,54 @@
                 <i data-lucide="layers" class="w-5 h-5 text-sky-600"></i>
                 <span>शिक्षक कक्षा बाँडफाँड (Teacher Class Assignments)</span>
             </h1>
-            <p class="text-xs text-slate-500 mt-0.5">शिक्षकहरूलाई कक्षा, Section तथा कक्षा शिक्षक (Class Teacher) जिम्मेवारी तोक्नुहोस्।</p>
+            <p class="text-xs text-slate-500 mt-0.5">शिक्षकहरूलाई कक्षा, Section तथा कक्षा शिक्षक (Class Teacher) जिम्मेवारी तोक्नुहोस् वा संसोधन गर्नुहोस्।</p>
         </div>
 
-        <button onclick="openAssignModal()" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue-dark text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
+        <button onclick="openAddAssignModal()" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue-dark text-white font-semibold text-xs px-4 py-2 rounded-lg shadow-sm transition">
             <i data-lucide="plus-circle" class="w-4 h-4 text-instGold"></i>
             <span>+ नयाँ कक्षा जिम्मेवारी तोक्नुहोस्</span>
         </button>
     </div>
 
+    <!-- Principal Leadership Card (Reita Phuyal as Principal - Not Class Teacher) -->
+    <div class="bg-gradient-to-r from-blue-900 via-instBlue to-slate-900 text-white rounded-xl p-4 sm:p-5 shadow-sm border border-amber-400/40">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center font-bold text-lg shadow-inner flex-shrink-0">
+                    <i data-lucide="award" class="w-6 h-6 text-slate-950"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-base font-bold text-white">{{ principal.name_nepali if principal else 'श्री रीता फुयल' }}</span>
+                        <span class="bg-amber-400 text-slate-950 font-mono font-bold text-[11px] px-2 py-0.5 rounded shadow-sm">
+                            Employee ID: {{ principal.employee_id if principal else 'TCH-83001' }}
+                        </span>
+                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
+                            पद: प्रधानाध्यापक (Principal)
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-200 mt-1">
+                        सहिद स्मृति आवासीय माध्यमिक विद्यालयको समग्र शैक्षिक, प्रशासनिक, नीतिगत तथा संस्थागत नेतृत्व।
+                    </p>
+                </div>
+            </div>
+            <div class="text-xs bg-white/10 border border-white/20 rounded-lg px-3 py-2 flex items-center gap-2 text-amber-200 flex-shrink-0">
+                <i data-lucide="shield-check" class="w-4 h-4 text-amber-300"></i>
+                <span class="font-medium">प्रधानाध्यापक (कक्षा शिक्षकमा समावेश नगरिएको)</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Assignments Table -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i data-lucide="users" class="w-4 h-4 text-instBlue"></i>
+                <span class="font-bold text-xs text-slate-800">तोकिएका शिक्षक तथा कक्षा शिक्षकहरूको सूची</span>
+            </div>
+            <span class="text-[11px] font-semibold text-slate-500 bg-white border px-2 py-0.5 rounded">कुल बाँडफाँड: {{ assignments|length }}</span>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
@@ -37,26 +74,77 @@
                 </thead>
                 <tbody class="divide-y divide-slate-200">
                     {% for a in assignments %}
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="py-3 px-4 font-bold text-slate-900">{{ a.teacher_name }}</td>
-                        <td class="py-3 px-4 font-mono text-instBlue">{{ a.employee_id }}</td>
-                        <td class="py-3 px-4 font-bold text-slate-800">{{ a.class_name_ne }}</td>
-                        <td class="py-3 px-4">{{ a.section_name or 'सबै Section' }}</td>
-                        <td class="py-3 px-4">
-                            {% if a.is_class_teacher %}
-                            <span class="bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded text-[10px]">कक्षा शिक्षक (Yes)</span>
+                    <tr class="hover:bg-blue-50/40 transition">
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-7 h-7 rounded-full bg-instBlue/10 text-instBlue flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                    {{ a.teacher_name[3:4] if a.teacher_name|length > 3 else a.teacher_name[0:1] }}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-slate-900 text-xs">{{ a.teacher_name }}</div>
+                                    {% if a.teacher_position and a.teacher_position != 'शिक्षक' %}
+                                    <span class="text-[10px] text-amber-700 font-semibold bg-amber-50 px-1.5 py-0.2 rounded">{{ a.teacher_position }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="font-mono text-instBlue font-bold bg-blue-50/80 border border-blue-200/60 px-2 py-0.5 rounded text-[11px]">
+                                {{ a.employee_id or '—' }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 font-bold text-slate-800">
+                            {{ a.class_name_ne }}
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-600 font-medium">
+                            {% if a.section_name %}
+                                <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px]">Section {{ a.section_name }}</span>
                             {% else %}
-                            <span class="text-slate-400">नाइँ</span>
+                                <span class="text-slate-500">सबै Section</span>
                             {% endif %}
                         </td>
-                        <td class="py-3 px-4 text-right">
-                            <button onclick="deleteAssignment({{ a.id }})" class="p-1 rounded text-red-600 hover:bg-red-50" title="मेटाउनुहोस्">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
+                        <td class="py-3.5 px-4">
+                            {% if a.teacher_position == 'प्रधानाध्यापक' or 'रीता फुयल' in a.teacher_name %}
+                                <span class="bg-blue-100 text-blue-900 font-bold px-2.5 py-1 rounded-full text-[11px] inline-flex items-center gap-1">
+                                    <i data-lucide="shield" class="w-3 h-3 text-blue-700"></i>
+                                    <span>प्रधानाध्यापक</span>
+                                </span>
+                            {% elif a.is_class_teacher %}
+                                <span class="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full text-[11px] inline-flex items-center gap-1">
+                                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                    <span>कक्षा शिक्षक (Yes)</span>
+                                </span>
+                            {% else %}
+                                <span class="bg-slate-100 text-slate-500 font-medium px-2 py-0.5 rounded text-[11px] inline-flex items-center gap-1">
+                                    <i data-lucide="minus" class="w-3 h-3 text-slate-400"></i>
+                                    <span>होइन (No)</span>
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            <div class="inline-flex items-center gap-1">
+                                <button type="button" 
+                                        onclick='openEditAssignModal({{ a | tojson | safe }})' 
+                                        class="p-1.5 rounded-lg text-instBlue hover:bg-blue-100 border border-blue-200 transition" 
+                                        title="विवरण संसोधन गर्नुहोस्">
+                                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button type="button" 
+                                        onclick="deleteAssignment({{ a.id }}, '{{ a.teacher_name }}')" 
+                                        class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-100 border border-rose-200 transition" 
+                                        title="डिलिट गर्नुहोस्">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="6" class="p-6 text-center text-slate-400">कुनै बाँडफाँड फेला परेन।</td></tr>
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-slate-400">
+                            <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                            <div>कुनै शिक्षक कक्षा बाँडफाँड फेला परेन। माथिको बटनबाट नयाँ थप्नुहोस्।</div>
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -65,98 +153,173 @@
 
 </div>
 
-<!-- ASSIGN MODAL -->
+<!-- ASSIGN MODAL (FOR BOTH ADD NEW & EDIT) -->
 <div id="assignModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b pb-3">
-            <h3 class="font-bold text-sm text-instBlue flex items-center gap-2">
-                <i data-lucide="user-plus" class="w-4 h-4 text-instGold"></i>
-                <span>कक्षा जिम्मेवारी तोक्नुहोस्</span>
+            <h3 id="assignModalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-instGold"></i>
+                <span>नयाँ कक्षा जिम्मेवारी तोक्नुहोस्</span>
             </h3>
-            <button onclick="closeAssignModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <button onclick="closeAssignModal()" class="text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
         </div>
 
-        <form id="assignSaveForm" class="space-y-3">
+        <form id="assignSaveForm" class="space-y-3.5">
+            <input type="hidden" id="as_edit_id" value="">
+
             <div>
-                <label class="block font-semibold mb-1 text-slate-700">शिक्षक छनोट *</label>
-                <select id="as_teacher_id" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                <label class="block font-semibold mb-1 text-slate-700">शिक्षक छनोट गर्नुहोस् *</label>
+                <select id="as_teacher_id" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none bg-white">
+                    <option value="">-- शिक्षक छान्नुहोस् --</option>
                     {% for t in teachers %}
-                    <option value="{{ t.id }}">{{ t.name_nepali }} ({{ t.subject }})</option>
+                    <option value="{{ t.id }}" data-employee="{{ t.employee_id or '' }}" data-position="{{ t.position or '' }}">
+                        {{ t.name_nepali }} {% if t.employee_id %}(ID: {{ t.employee_id }}){% endif %} - {{ t.position }} {% if t.subject %}[{{ t.subject }}]{% endif %}
+                    </option>
                     {% endfor %}
                 </select>
+                <p id="as_teacher_note" class="text-[11px] text-amber-700 mt-1 hidden"></p>
             </div>
 
-            <div>
-                <label class="block font-semibold mb-1 text-slate-700">कक्षा *</label>
-                <select id="as_class_id" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
-                    {% for c in classes %}
-                    <option value="{{ c.id }}">{{ c.class_name_ne }}</option>
-                    {% endfor %}
-                </select>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">कक्षा *</label>
+                    <select id="as_class_id" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none bg-white">
+                        <option value="">-- कक्षा छान्नुहोस् --</option>
+                        {% for c in classes %}
+                        <option value="{{ c.id }}">{{ c.class_name_ne }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">Section</label>
+                    <select id="as_section_id" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none bg-white">
+                        <option value="0">सबै Section (All)</option>
+                        <option value="1">Section A</option>
+                        <option value="2">Section B</option>
+                    </select>
+                </div>
             </div>
 
-            <div>
-                <label class="block font-semibold mb-1 text-slate-700">Section</label>
-                <select id="as_section_id" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
-                    <option value="1">Section A</option>
-                    <option value="2">Section B</option>
-                </select>
-            </div>
-
-            <div class="flex items-center gap-2 pt-2">
-                <input type="checkbox" id="as_is_class_teacher" class="rounded text-instBlue">
-                <label for="as_is_class_teacher" class="font-semibold text-slate-700 cursor-pointer">यस कक्षाको कक्षा शिक्षक (Class Teacher) बनाउनुहोस्</label>
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="as_is_class_teacher" class="w-4 h-4 rounded text-instBlue focus:ring-instBlue cursor-pointer">
+                    <label for="as_is_class_teacher" class="font-bold text-slate-800 cursor-pointer">
+                        यस कक्षाको मुख्य कक्षा शिक्षक (Class Teacher) बनाउनुहोस्
+                    </label>
+                </div>
+                <p class="text-[11px] text-slate-500 pl-6">
+                    कक्षा शिक्षकले विद्यार्थीको दैनिक हाजिरी, नतिजा र अभिभावक संवादको मुख्य जिम्मेवारी वहन गर्नेछन्।
+                </p>
             </div>
 
             <div class="pt-3 flex justify-end gap-2 border-t">
-                <button type="button" onclick="closeAssignModal()" class="px-4 py-2 border rounded font-semibold text-slate-700">रद्द गर्नुहोस्</button>
-                <button type="submit" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded shadow">सुरक्षित गर्नुहोस्</button>
+                <button type="button" onclick="closeAssignModal()" class="px-4 py-2 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50">
+                    रद्द गर्नुहोस्
+                </button>
+                <button type="submit" id="assignSubmitBtn" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded-lg shadow transition">
+                    सुरक्षित गर्नुहोस्
+                </button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-    function openAssignModal() {
+    function openAddAssignModal() {
+        document.getElementById('assignSaveForm').reset();
+        document.getElementById('as_edit_id').value = '';
+        document.getElementById('as_teacher_note').classList.add('hidden');
+        document.getElementById('assignModalTitle').innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-instGold"></i><span>नयाँ कक्षा जिम्मेवारी तोक्नुहोस्</span>';
+        document.getElementById('assignSubmitBtn').innerText = 'जिम्मेवारी सुरक्षित गर्नुहोस्';
         document.getElementById('assignModal').classList.remove('hidden');
-        lucide.createIcons();
+        if (window.lucide) lucide.createIcons();
     }
+
+    function openEditAssignModal(a) {
+        document.getElementById('as_edit_id').value = a.id;
+        document.getElementById('as_teacher_id').value = a.teacher_id;
+        document.getElementById('as_class_id').value = a.class_id;
+        document.getElementById('as_section_id').value = a.section_id || 0;
+        document.getElementById('as_is_class_teacher').checked = (a.is_class_teacher == 1);
+        
+        checkPrincipalSelection();
+
+        document.getElementById('assignModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i><span>कक्षा जिम्मेवारी विवरण संसोधन गर्नुहोस्</span>';
+        document.getElementById('assignSubmitBtn').innerText = 'विवरण अद्यावधिक (Update) गर्नुहोस्';
+        document.getElementById('assignModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
     function closeAssignModal() {
         document.getElementById('assignModal').classList.add('hidden');
     }
 
+    // Notice when Principal is selected in dropdown
+    function checkPrincipalSelection() {
+        const select = document.getElementById('as_teacher_id');
+        const opt = select.options[select.selectedIndex];
+        const note = document.getElementById('as_teacher_note');
+        if (!opt) return;
+        const pos = opt.getAttribute('data-position') || '';
+        if (pos.includes('प्रधानाध्यापक') && !pos.includes('सहायक')) {
+            note.innerText = '⚠️ ध्यान दिनुहोस्: रीता फुयल प्रधानाध्यापक हुनुहुन्छ। उहाँलाई समग्र संस्थागत नेतृत्वमा मात्र राख्नुपर्छ, कक्षा शिक्षक बनाउनु उपयुक्त हुँदैन।';
+            note.classList.remove('hidden');
+        } else {
+            note.classList.add('hidden');
+        }
+    }
+    document.getElementById('as_teacher_id').addEventListener('change', checkPrincipalSelection);
+
     document.getElementById('assignSaveForm').addEventListener('submit', async function(e) {
         e.preventDefault();
+        const editId = document.getElementById('as_edit_id').value;
+        const secVal = parseInt(document.getElementById('as_section_id').value) || 0;
+
         const payload = {
             teacher_id: parseInt(document.getElementById('as_teacher_id').value),
             academic_year_id: 1,
             class_id: parseInt(document.getElementById('as_class_id').value),
-            section_id: parseInt(document.getElementById('as_section_id').value),
+            section_id: secVal > 0 ? secVal : null,
             is_class_teacher: document.getElementById('as_is_class_teacher').checked ? 1 : 0
         };
 
-        const res = await fetch('/api/teachers/assignments', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-            alert(data.message);
-            window.location.reload();
-        } else {
-            alert(data.detail || 'त्रुटि भयो।');
+        const url = editId ? `/api/teachers/assignments/${editId}` : '/api/teachers/assignments';
+        const method = editId ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'कार्य सम्पन्न हुन सकेन।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि भयो।');
         }
     });
 
-    async function deleteAssignment(id) {
-        if (confirm('के तपाईं यो कक्षा बाँडफाँड मेटाउन चाहनुहुन्छ?')) {
+    async function deleteAssignment(id, teacherName) {
+        if (!confirm(`के तपाईं निश्चित हुनुहुन्छ? '${teacherName}' को यो कक्षा बाँडफाँड विवरण डिलिट गर्न चाहनुहुन्छ?`)) return;
+        try {
             const res = await fetch(`/api/teachers/assignments/${id}`, {method: 'DELETE'});
             const data = await res.json();
-            if (data.success) {
+            if (res.ok && data.success) {
                 alert(data.message);
                 window.location.reload();
+            } else {
+                alert(data.detail || 'डिलिट हुन सकेन।');
             }
+        } catch(err) {
+            alert('सर्भर त्रुटि भयो।');
         }
     }
 </script>

@@ -37,6 +37,14 @@ class TeacherAssignmentCreate(BaseModel):
     subject_id: Optional[int] = None
     is_class_teacher: Optional[int] = 0
 
+class TeacherAssignmentUpdate(BaseModel):
+    teacher_id: int
+    academic_year_id: Optional[int] = 1
+    class_id: int
+    section_id: Optional[int] = None
+    subject_id: Optional[int] = None
+    is_class_teacher: Optional[int] = 0
+
 @router.get("")
 def list_teachers(
     subject: Optional[str] = Query(None),
@@ -265,7 +273,7 @@ def get_all_assignments(request: Request):
 
 @router.post("/assignments")
 def assign_teacher_class(data: TeacherAssignmentCreate, request: Request):
-    user = require_role("SUPER_ADMIN", "PRINCIPAL")(request)
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
@@ -279,9 +287,29 @@ def assign_teacher_class(data: TeacherAssignmentCreate, request: Request):
     log_audit("ASSIGN_TEACHER_CLASS", "TEACHER_ASSIGNMENT", record_id=str(new_id), new_value=data.dict(), user=user, request=request)
     return {"success": True, "message": "शिक्षकलाई कक्षा सफलतापूर्वक बाँडफाँड गरियो।", "id": new_id}
 
+@router.put("/assignments/{id}")
+def update_teacher_assignment(id: int, data: TeacherAssignmentUpdate, request: Request):
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE teacher_class_assignments 
+        SET teacher_id = ?, 
+            class_id = ?, 
+            section_id = ?, 
+            subject_id = ?, 
+            is_class_teacher = ?
+        WHERE id = ?
+    """, (data.teacher_id, data.class_id, data.section_id, data.subject_id, data.is_class_teacher, id))
+    conn.commit()
+    conn.close()
+    
+    log_audit("UPDATE_TEACHER_CLASS", "TEACHER_ASSIGNMENT", record_id=str(id), new_value=data.dict(), user=user, request=request)
+    return {"success": True, "message": "कक्षा बाँडफाँड विवरण सफलतापूर्वक संसोधन गरियो।"}
+
 @router.delete("/assignments/{id}")
 def delete_teacher_assignment(id: int, request: Request):
-    user = require_role("SUPER_ADMIN", "PRINCIPAL")(request)
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM teacher_class_assignments WHERE id = ?", (id,))

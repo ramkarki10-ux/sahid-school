@@ -692,12 +692,26 @@ def admin_teacher_assignments(request: Request):
     teachers = [dict(r) for r in cursor.fetchall()]
     cursor.execute("SELECT * FROM classes ORDER BY class_numeric ASC")
     classes = [dict(r) for r in cursor.fetchall()]
+    cursor.execute("SELECT * FROM sections ORDER BY class_id ASC, name ASC")
+    sections = [dict(r) for r in cursor.fetchall()]
+    
+    # Principal information
+    cursor.execute("SELECT * FROM teachers WHERE position = 'प्रधानाध्यापक' OR name_nepali LIKE '%रीता फुयल%' LIMIT 1")
+    principal_row = cursor.fetchone()
+    principal = dict(principal_row) if principal_row else None
+    
     cursor.execute("""
-        SELECT a.*, t.name_nepali as teacher_name, c.class_name_ne 
+        SELECT a.*, 
+               t.name_nepali as teacher_name, 
+               t.employee_id, 
+               t.position as teacher_position,
+               c.class_name_ne,
+               sec.name as section_name
         FROM teacher_class_assignments a
         JOIN teachers t ON a.teacher_id = t.id
         JOIN classes c ON a.class_id = c.id
-        ORDER BY c.class_numeric ASC, a.is_class_teacher DESC
+        LEFT JOIN sections sec ON a.section_id = sec.id
+        ORDER BY c.class_numeric ASC, a.is_class_teacher DESC, t.name_nepali ASC
     """)
     assignments = [dict(r) for r in cursor.fetchall()]
     conn.close()
@@ -705,7 +719,9 @@ def admin_teacher_assignments(request: Request):
     ctx.update({
         "teachers": teachers,
         "classes": classes,
-        "assignments": assignments
+        "sections": sections,
+        "assignments": assignments,
+        "principal": principal
     })
     return templates.TemplateResponse(request, "admin/teacher_assignments.html", ctx)
 
