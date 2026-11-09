@@ -5,6 +5,7 @@ from datetime import date
 from app.database import get_db
 from app.auth import get_current_user
 from app.templates import templates
+from app.utils.nepali_date import get_today_bs, ad_to_bs, bs_to_ad
 
 router = APIRouter(prefix="/teacher", tags=["teacher_views"])
 
@@ -12,7 +13,7 @@ def check_teacher_auth(request: Request):
     user = get_current_user(request)
     if not user:
         return None
-    if user["role"] not in ["TEACHER", "SUPER_ADMIN", "PRINCIPAL"]:
+    if user["role"] not in ["TEACHER", "SUPER_ADMIN", "ADMIN", "PRINCIPAL"]:
         return None
     return user
 
@@ -20,13 +21,10 @@ def get_teacher_classes(user: dict):
     conn = get_db()
     cursor = conn.cursor()
     teacher_id = user.get("teacher_id")
-    if not teacher_id and user["role"] == "TEACHER":
-        cursor.execute("SELECT id FROM teachers WHERE email = ? OR phone = ? LIMIT 1", (user["username"], user["username"]))
-        t_row = cursor.fetchone()
-        if t_row:
-            teacher_id = t_row["id"]
+    is_admin_or_principal = user.get("role") in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"]
 
-    if teacher_id:
+    classes = []
+    if teacher_id and not is_admin_or_principal:
         cursor.execute("""
             SELECT a.class_id, a.is_class_teacher,
                    c.class_name_ne, c.class_numeric, 'A' as section,
@@ -36,9 +34,12 @@ def get_teacher_classes(user: dict):
             LEFT JOIN students s ON c.id = s.class_id AND s.status = 'सक्रिय'
             WHERE a.teacher_id = ?
             GROUP BY a.class_id
-            ORDER BY c.class_numeric ASC
+            ORDER BY c.class_numeric ASC, c.id ASC
         """, (teacher_id,))
-    else:
+        classes = [dict(r) for r in cursor.fetchall()]
+
+    # If admin/principal or teacher has no specific assignments, load all classes
+    if not classes:
         cursor.execute("""
             SELECT c.id as class_id, 'सम्पूर्ण कक्षा' as subject_name, 1 as is_class_teacher,
                    c.class_name_ne, c.class_numeric, 'A' as section,
@@ -46,9 +47,10 @@ def get_teacher_classes(user: dict):
             FROM classes c
             LEFT JOIN students s ON c.id = s.class_id AND s.status = 'सक्रिय'
             GROUP BY c.id
-            ORDER BY c.class_numeric ASC
+            ORDER BY c.class_numeric ASC, c.id ASC
         """)
-    classes = [dict(r) for r in cursor.fetchall()]
+        classes = [dict(r) for r in cursor.fetchall()]
+
     conn.close()
     return classes
 
@@ -89,12 +91,19 @@ def teacher_attendance(request: Request, class_id: int = Query(None)):
     if not class_id and assigned_classes:
         class_id = assigned_classes[0]["class_id"]
 
+    today_ad = date.today().isoformat()
+    today_bs = get_today_bs()
+
     return templates.TemplateResponse(request, "teacher/attendance.html", {
         "user": user,
         "settings": settings,
         "assigned_classes": assigned_classes,
         "selected_class_id": class_id,
-        "today_date": date.today().isoformat()
+        "today_date": today_ad,
+        "today_bs": today_bs,
+        "today_bs_date": today_bs["date_bs"],
+        "today_bs_formatted": today_bs["formatted"],
+        "today_bs_full": today_bs["formatted_full"],
     })
 
 @router.get("/absent", response_class=HTMLResponse)

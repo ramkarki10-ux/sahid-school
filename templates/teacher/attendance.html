@@ -1,161 +1,446 @@
 {% extends "teacher/base_teacher.html" %}
 
-{% block title %}विद्यार्थी हाजिरी फारम | {{ settings.name_ne }}{% endblock %}
+{% block title %}विद्यार्थी हाजिरी फारम (वि.सं.) | {{ settings.name_ne }}{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
     
-    <!-- Top Step 1 & Step 2 Selection Box (Section 3.1) -->
+    <!-- Top Step 1 & Step 2 Selection Box with Bikram Sambat Date System -->
     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b border-slate-100 pb-3">
             <div>
                 <h1 class="text-lg font-black text-instBlue flex items-center gap-2">
                     <i data-lucide="check-square" class="w-5 h-5 text-emerald-600"></i>
-                    <span>विद्यार्थी दैनिक अनलाइन हाजिरी (Student Attendance Portal)</span>
+                    <span>विद्यार्थी दैनिक अनलाइन हाजिरी (Smart Attendance Portal)</span>
                 </h1>
-                <p class="text-xs text-slate-500 mt-0.5">मिति र कक्षा छनोट गरी उपस्थित, अनुपस्थित वा बिदा चिन्ह लगाउनुहोस्</p>
+                <p class="text-xs text-slate-500 mt-0.5">विक्रम सम्वत् मिति र कक्षा/संकाय छनोट गरी उपस्थित, अनुपस्थित वा बिदा चिन्ह लगाउनुहोस्।</p>
             </div>
             
-            <div class="text-xs text-slate-600">
-                हाजिरी लिने शिक्षक: <strong class="text-slate-900 font-bold">{{ user.full_name or user.username }}</strong>
+            <div class="flex items-center gap-2 bg-blue-50/70 border border-blue-200/60 px-3 py-1.5 rounded-xl text-xs text-slate-700">
+                <i data-lucide="user-check" class="w-4 h-4 text-instBlue"></i>
+                <span>हाजिरी लिने शिक्षक: <strong class="text-slate-900 font-bold">{{ user.full_name or user.username }}</strong></span>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            <!-- Step 1: Date Selection -->
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">
-                    Step 1: हाजिरी मिति छनोट गर्नुहोस् *
-                </label>
-                <input type="date" id="t_att_date" value="{{ today_date }}" max="{{ today_date }}" onchange="loadTeacherAttendance()" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-bold font-mono focus:ring-2 focus:ring-instBlue focus:outline-none">
-                <span class="text-[10px] text-slate-400 mt-0.5 block">* भविष्यको मितिमा हाजिरी गर्न मिल्दैन।</span>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            
+            <!-- Step 1: Bikram Sambat Date Selection (Columns 1-7) -->
+            <div class="lg:col-span-7 bg-slate-50/80 p-3.5 rounded-xl border border-slate-200 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-instBlue flex items-center gap-1.5">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-500"></i>
+                        <span>Step 1: हाजिरी मिति (विक्रम सम्वत् - B.S.) *</span>
+                    </label>
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="setTodayNepaliDate()" class="text-[11px] font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 px-2.5 py-0.5 rounded shadow-xs transition">
+                            आज (२०८३-०७-२३)
+                        </button>
+                        <button type="button" onclick="setYesterdayNepaliDate()" class="text-[11px] font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2 py-0.5 rounded transition">
+                            हिजो
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bikram Sambat Selectors: Year, Month, Day -->
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-500 block mb-0.5">साल (Year)</label>
+                        <select id="bs_year" onchange="onBsDateChange()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold font-mono focus:ring-2 focus:ring-instBlue focus:outline-none bg-white">
+                            <option value="2083" selected>२०८३ साल</option>
+                            <option value="2082">२०८२ साल</option>
+                            <option value="2081">२०८१ साल</option>
+                            <option value="2080">२०८० साल</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-500 block mb-0.5">महिना (Month)</label>
+                        <select id="bs_month" onchange="onBsDateChange()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold focus:ring-2 focus:ring-instBlue focus:outline-none bg-white">
+                            <option value="1">१. बैशाख</option>
+                            <option value="2">२. जेठ</option>
+                            <option value="3">३. असार</option>
+                            <option value="4">४. साउन</option>
+                            <option value="5">५. भदौ</option>
+                            <option value="6">६. असोज</option>
+                            <option value="7" selected>७. कात्तिक</option>
+                            <option value="8">८. मंसिर</option>
+                            <option value="9">९. पुस</option>
+                            <option value="10">१०. माघ</option>
+                            <option value="11">११. फागुन</option>
+                            <option value="12">१२. चैत</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-500 block mb-0.5">गते (Day)</label>
+                        <select id="bs_day" onchange="onBsDateChange()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold font-mono focus:ring-2 focus:ring-instBlue focus:outline-none bg-white">
+                            <!-- Populated dynamically via JS up to month length -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Display Selected Bikram Sambat Date & Synced Gregorian Date -->
+                <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-200">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="font-bold text-instBlue" id="bs_display_label">
+                            २०८३ साल कात्तिक २३ गते (आज)
+                        </span>
+                    </div>
+                    <!-- Hidden synced AD date input for seamless API compatibility -->
+                    <input type="hidden" id="t_att_date" value="{{ today_date }}">
+                    <span class="text-[10px] text-slate-400 font-mono" id="ad_sync_label">
+                        (A.D.: {{ today_date }})
+                    </span>
+                </div>
             </div>
 
-            <!-- Step 2: Class Selection (Classes 1 to 12) -->
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">
-                    Step 2: कक्षा छनोट गर्नुहोस् *
-                </label>
-                <select id="t_class_select" onchange="loadTeacherAttendance()" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-instBlue focus:outline-none">
-                    <option value="">-- कक्षा छनोट गर्नुहोस् (१ देखि १२) --</option>
-                    {% for c in assigned_classes %}
-                    <option value="{{ c.class_id }}" {% if selected_class_id == c.class_id %}selected{% endif %}>
-                        {{ c.class_name_ne }} (विद्यार्थी: {{ c.student_count }} जना)
-                    </option>
-                    {% endfor %}
-                </select>
+            <!-- Step 2: Class Selection (Nursery, UKG, 1-10, 11/12 Streams) (Columns 8-12) -->
+            <div class="lg:col-span-5 bg-slate-50/80 p-3.5 rounded-xl border border-slate-200 space-y-2.5 flex flex-col justify-between">
+                <div>
+                    <label class="block text-xs font-bold text-instBlue mb-1 flex items-center gap-1.5">
+                        <i data-lucide="layers" class="w-3.5 h-3.5 text-sky-600"></i>
+                        <span>Step 2: कक्षा / संकाय छनोट गर्नुहोस् *</span>
+                    </label>
+                    <select id="t_class_select" onchange="loadTeacherAttendance()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold focus:ring-2 focus:ring-instBlue focus:outline-none bg-white">
+                        <option value="">-- कक्षा वा संकाय छान्नुहोस् --</option>
+                        
+                        <optgroup label="पूर्व-प्राथमिक (Pre-Primary)">
+                            {% for c in assigned_classes if c.class_numeric <= 0 %}
+                            <option value="{{ c.class_id }}" {% if selected_class_id == c.class_id %}selected{% endif %}>
+                                {{ c.class_name_ne }} (विद्यार्थी: {{ c.student_count }} जना)
+                            </option>
+                            {% endfor %}
+                        </optgroup>
+
+                        <optgroup label="आधारभूत तथा माध्यमिक (कक्षा १ देखि १०)">
+                            {% for c in assigned_classes if c.class_numeric >= 1 and c.class_numeric <= 10 %}
+                            <option value="{{ c.class_id }}" {% if selected_class_id == c.class_id %}selected{% endif %}>
+                                {{ c.class_name_ne }} (विद्यार्थी: {{ c.student_count }} जना)
+                            </option>
+                            {% endfor %}
+                        </optgroup>
+
+                        <optgroup label="कक्षा ११ संकायहरू (Class 11 Streams)">
+                            {% for c in assigned_classes if c.class_numeric == 11 %}
+                            <option value="{{ c.class_id }}" {% if selected_class_id == c.class_id %}selected{% endif %}>
+                                {{ c.class_name_ne }} (विद्यार्थी: {{ c.student_count }} जना)
+                            </option>
+                            {% endfor %}
+                        </optgroup>
+
+                        <optgroup label="कक्षा १२ संकायहरू (Class 12 Streams)">
+                            {% for c in assigned_classes if c.class_numeric == 12 %}
+                            <option value="{{ c.class_id }}" {% if selected_class_id == c.class_id %}selected{% endif %}>
+                                {{ c.class_name_ne }} (विद्यार्थी: {{ c.student_count }} जना)
+                            </option>
+                            {% endfor %}
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- Quick Attendance Status Pill -->
+                <div class="flex items-center justify-between pt-1 border-t border-slate-200 text-xs">
+                    <span class="text-slate-500 text-[11px]">हाजिरी स्थिति:</span>
+                    <span id="att_state_badge" class="font-bold text-[11px] text-slate-400">कक्षा छान्नुहोस्</span>
+                </div>
             </div>
 
-            <!-- Quick Bulk Action -->
-            <div class="flex items-end">
-                <button type="button" onclick="markAllPresent()" class="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center justify-center gap-1.5">
-                    <i data-lucide="check-check" class="w-4 h-4"></i>
-                    <span>सबैलाई उपस्थित (Mark All Present)</span>
+        </div>
+    </div>
+
+    <!-- Attendance Action & Status Alert (Notice if already submitted, with edit & delete options) -->
+    <div id="alreadySubmittedAlert" class="hidden p-4 rounded-2xl border border-blue-200 bg-blue-50/70 text-slate-800 text-xs shadow-xs space-y-2">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-start gap-2.5">
+                <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5"></i>
+                <div>
+                    <h4 class="font-bold text-sm text-instBlue">यस मितिको हाजिरी दर्ता भइसकेको छ</h4>
+                    <p id="submittedDetails" class="text-xs text-slate-600 mt-0.5"></p>
+                </div>
+            </div>
+            
+            <!-- Quick Actions: Edit or Reset/Delete -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <button type="button" onclick="enableEditMode()" class="px-3.5 py-1.5 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+                    <i data-lucide="edit-3" class="w-3.5 h-3.5 text-amber-300"></i>
+                    <span>हाजिरी संसोधन गर्नुहोस् (Edit)</span>
+                </button>
+                <button type="button" onclick="deleteClassAttendance()" class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-600"></i>
+                    <span>हाजिरी डिलिट गर्नुहोस् (Delete)</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Duplicate Submission Notice (Shown if attendance is already recorded for this date & class) -->
-    <div id="alreadySubmittedAlert" class="hidden p-4 rounded-xl border border-amber-300 bg-amber-50 text-amber-900 text-xs flex items-start gap-3 shadow-xs">
-        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
-        <div class="space-y-1">
-            <h4 class="font-bold text-sm">सूचना: यस कक्षाको आजको हाजिरी दर्ता भइसकेको छ!</h4>
-            <p id="submittedDetails" class="leading-relaxed"></p>
-            <p class="text-[11px] text-amber-700 font-semibold" id="duplicateWarningText">
-                * दोहोरो दर्ता रोक्न शिक्षकको लागि यो फारम सुरक्षित गरिएको छ। कुनै सच्याउनुपर्ने भएमा Admin सँग सम्पर्क गर्नुहोस्।
-            </p>
-        </div>
-    </div>
-
-    <!-- Attendance Form / Sheet Container -->
-    <div id="attendanceContainer" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-10 text-center text-slate-400 text-xs">
-            <i data-lucide="layers" class="w-8 h-8 text-slate-300 mx-auto mb-2"></i>
-            कृपया माथिका विकल्पबाट कक्षा छनोट गर्नुहोस्।
-        </div>
-    </div>
-
-    <!-- Real-time Summary Card & Submit Button Floating Bar (Section 3.3) -->
-    <div id="saveBar" class="hidden sticky bottom-4 z-30 bg-slate-900/95 backdrop-blur text-white p-4 rounded-2xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-slate-800">
-        <div class="flex flex-wrap items-center gap-4 text-xs">
-            <div class="flex items-center gap-1.5">
-                <span class="text-slate-400 font-medium">कुल विद्यार्थी:</span>
-                <span id="stat_total" class="font-mono font-bold text-white text-sm">0</span>
+    <!-- Student Attendance Sheet & Filter Section -->
+    <div id="attendanceMainBox" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        
+        <!-- Filter Bar: Residential vs Day Scholars & Bulk Actions -->
+        <div id="filterBar" class="hidden p-4 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+            <!-- Residential vs Day Filter Tabs -->
+            <div class="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-slate-200 shadow-xs">
+                <button type="button" onclick="filterStudents('ALL')" id="tab_all" class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-instBlue text-white shadow-xs">
+                    <span>👥 सबै विद्यार्थी</span>
+                    <span id="tab_all_cnt" class="ml-1 text-[10px] bg-white/20 px-1.5 py-0.2 rounded-full">0</span>
+                </button>
+                <button type="button" onclick="filterStudents('RESIDENTIAL')" id="tab_res" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-700 hover:bg-slate-100">
+                    <span class="text-purple-700">🏠 आवासीय विद्यार्थी</span>
+                    <span id="tab_res_cnt" class="ml-1 text-[10px] bg-purple-100 text-purple-900 px-1.5 py-0.2 rounded-full">0</span>
+                </button>
+                <button type="button" onclick="filterStudents('DAY')" id="tab_day" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-700 hover:bg-slate-100">
+                    <span class="text-teal-700">☀️ दिवा विद्यार्थी</span>
+                    <span id="tab_day_cnt" class="ml-1 text-[10px] bg-teal-100 text-teal-900 px-1.5 py-0.2 rounded-full">0</span>
+                </button>
             </div>
-            <div class="flex items-center gap-1.5 bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-800/40">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
+
+            <!-- Quick Bulk Buttons -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <button type="button" onclick="markFilteredPresent()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition flex items-center gap-1">
+                    <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
+                    <span>सबैलाई उपस्थित (Present)</span>
+                </button>
+                <button type="button" onclick="markAllLeave()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold shadow-xs transition flex items-center gap-1">
+                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                    <span>सबैलाई बिदा (Leave)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Attendance Sheet Table Container -->
+        <div id="attendanceContainer">
+            <div class="p-12 text-center text-slate-400 text-xs">
+                <i data-lucide="layers" class="w-10 h-10 text-slate-300 mx-auto mb-2"></i>
+                <div class="font-bold text-slate-600 text-sm">कक्षा वा संकाय छनोट गर्नुहोस्</div>
+                <p class="text-slate-400 mt-1">माथिको Step 2 बाट कक्षा छनोट गरेपछि विद्यार्थीहरूको नामावली खुल्नेछ।</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Real-time Floating Summary & Submit Bar -->
+    <div id="saveBar" class="hidden sticky bottom-4 z-30 bg-slate-900/95 backdrop-blur text-white p-4 rounded-2xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-slate-800">
+        <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-xs">
+            <div class="flex items-center gap-1.5">
+                <span class="text-slate-400 font-medium">कुल:</span>
+                <span id="stat_total" class="font-mono font-bold text-white text-sm">0</span>
+                <span class="text-[10px] text-slate-400">
+                    (आवासीय: <strong id="stat_res" class="text-purple-300 font-mono">0</strong>, दिवा: <strong id="stat_day" class="text-teal-300 font-mono">0</strong>)
+                </span>
+            </div>
+            <div class="flex items-center gap-1.5 bg-emerald-950/70 px-2.5 py-1 rounded-lg border border-emerald-800/40">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
                 <span class="text-emerald-300 font-semibold">उपस्थित:</span>
                 <span id="stat_present" class="font-mono font-bold text-emerald-400 text-sm">0</span>
             </div>
-            <div class="flex items-center gap-1.5 bg-rose-950/60 px-2.5 py-1 rounded-lg border border-rose-800/40">
-                <span class="w-2.5 h-2.5 rounded-full bg-rose-400 inline-block"></span>
+            <div class="flex items-center gap-1.5 bg-rose-950/70 px-2.5 py-1 rounded-lg border border-rose-800/40">
+                <span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span>
                 <span class="text-rose-300 font-semibold">अनुपस्थित:</span>
                 <span id="stat_absent" class="font-mono font-bold text-rose-400 text-sm">0</span>
             </div>
-            <div class="flex items-center gap-1.5 bg-amber-950/60 px-2.5 py-1 rounded-lg border border-amber-800/40">
-                <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>
+            <div class="flex items-center gap-1.5 bg-amber-950/70 px-2.5 py-1 rounded-lg border border-amber-800/40">
+                <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
                 <span class="text-amber-300 font-semibold">बिदा:</span>
                 <span id="stat_leave" class="font-mono font-bold text-amber-400 text-sm">0</span>
             </div>
-            <div class="flex items-center gap-1.5 bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-800/40">
-                <span class="text-indigo-300 font-semibold">हाजिरी प्रतिशत:</span>
+            <div class="flex items-center gap-1.5 bg-indigo-950/70 px-2.5 py-1 rounded-lg border border-indigo-800/40">
+                <span class="text-indigo-300 font-semibold">उपस्थिति:</span>
                 <span id="stat_percentage" class="font-mono font-bold text-indigo-300 text-sm">0%</span>
             </div>
         </div>
 
-        <button type="button" onclick="saveAttendance()" id="saveAttBtn" class="w-full md:w-auto px-6 py-2.5 bg-instGold hover:bg-amber-400 text-slate-900 font-black rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-2">
+        <button type="button" onclick="saveAttendance()" id="saveAttBtn" class="w-full md:w-auto px-6 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-2 active:scale-95">
             <i data-lucide="save" class="w-4 h-4"></i>
-            <span>हाजिरी Submit गर्नुहोस् (Submit Attendance)</span>
+            <span id="saveBtnText">हाजिरी सुरक्षित गर्नुहोस् (Submit Attendance)</span>
         </button>
     </div>
 
 </div>
 
 <script>
+    // --- BIKRAM SAMBAT CALENDAR ENGINE ---
+    const NEPALI_MONTHS = ["बैशाख", "जेठ", "असार", "साउन", "भदौ", "असोज", "कात्तिक", "मंसिर", "पुस", "माघ", "फागुन", "चैत"];
+    const NEPALI_DAYS = ["सोमबार", "मंगलबार", "बुधबार", "बिहीबार", "शुक्रबार", "शनिबार", "आइतबार"];
+    const NEPALI_DIGITS = {'0':'०','1':'१','2':'२','3':'३','4':'४','5':'५','6':'६','7':'७','8':'८','9':'९'};
+    
+    function toNepaliDigits(num) {
+        return String(num).split('').map(c => NEPALI_DIGITS[c] || c).join('');
+    }
+
+    const BS_CALENDAR = {
+        2080: { baisakh1: '2023-04-14', days: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30] },
+        2081: { baisakh1: '2024-04-13', days: [31, 31, 32, 32, 31, 30, 30, 30, 29, 30, 29, 31] },
+        2082: { baisakh1: '2025-04-14', days: [31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31] },
+        2083: { baisakh1: '2026-04-14', days: [31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30] },
+        2084: { baisakh1: '2027-04-14', days: [31, 31, 32, 31, 31, 30, 30, 30, 29, 30, 29, 31] },
+        2085: { baisakh1: '2028-04-13', days: [31, 32, 31, 32, 31, 30, 30, 30, 29, 30, 29, 31] }
+    };
+
+    function adToBs(adDateStr) {
+        const adDate = new Date(adDateStr + 'T00:00:00');
+        let matchedBsYear = null;
+        
+        for (const [y, data] of Object.entries(BS_CALENDAR)) {
+            const b1 = new Date(data.baisakh1 + 'T00:00:00');
+            const totalDays = data.days.reduce((a, b) => a + b, 0);
+            const yEnd = new Date(b1.getTime() + totalDays * 86400000);
+            if (adDate >= b1 && adDate < yEnd) {
+                matchedBsYear = parseInt(y);
+                break;
+            }
+        }
+        
+        if (!matchedBsYear) {
+            return { year: 2083, month: 7, day: 23, formatted: '२०८३ साल कात्तिक २३ गते' };
+        }
+        
+        const b1 = new Date(BS_CALENDAR[matchedBsYear].baisakh1 + 'T00:00:00');
+        let diffDays = Math.floor((adDate - b1) / 86400000);
+        const mDays = BS_CALENDAR[matchedBsYear].days;
+        
+        let bsMonth = 1;
+        for (const mLen of mDays) {
+            if (diffDays < mLen) break;
+            diffDays -= mLen;
+            bsMonth++;
+        }
+        const bsDay = diffDays + 1;
+        const mName = NEPALI_MONTHS[bsMonth - 1];
+        const dayIdx = (adDate.getDay() + 6) % 7;
+        const weekday = NEPALI_DAYS[dayIdx];
+        
+        return {
+            year: matchedBsYear,
+            month: bsMonth,
+            day: bsDay,
+            monthName: mName,
+            weekday: weekday,
+            formatted: `${toNepaliDigits(matchedBsYear)} साल ${mName} ${toNepaliDigits(bsDay)} गते`,
+            formattedFull: `${toNepaliDigits(matchedBsYear)} साल ${mName} ${toNepaliDigits(bsDay)} गते ${weekday}`,
+            dateBs: `${matchedBsYear}-${String(bsMonth).padStart(2,'0')}-${String(bsDay).padStart(2,'0')}`
+        };
+    }
+
+    function bsToAd(bsYear, bsMonth, bsDay) {
+        if (!BS_CALENDAR[bsYear]) {
+            return new Date().toISOString().split('T')[0];
+        }
+        const cal = BS_CALENDAR[bsYear];
+        const b1 = new Date(cal.baisakh1 + 'T00:00:00');
+        let daysToAdd = 0;
+        for (let i = 0; i < bsMonth - 1; i++) {
+            daysToAdd += cal.days[i];
+        }
+        daysToAdd += (bsDay - 1);
+        const adDate = new Date(b1.getTime() + daysToAdd * 86400000);
+        return adDate.toISOString().split('T')[0];
+    }
+
+    function populateBsDays(selectedDay = 23) {
+        const year = parseInt(document.getElementById('bs_year').value);
+        const month = parseInt(document.getElementById('bs_month').value);
+        const daySelect = document.getElementById('bs_day');
+        
+        const maxDays = (BS_CALENDAR[year] && BS_CALENDAR[year].days[month - 1]) ? BS_CALENDAR[year].days[month - 1] : 30;
+        
+        daySelect.innerHTML = '';
+        for (let d = 1; d <= maxDays; d++) {
+            const opt = document.createElement('option');
+            opt.value = d;
+            opt.innerText = `${toNepaliDigits(d)} गते`;
+            if (d === selectedDay || (selectedDay > maxDays && d === maxDays)) {
+                opt.selected = true;
+            }
+            daySelect.appendChild(opt);
+        }
+    }
+
+    function onBsDateChange() {
+        const year = parseInt(document.getElementById('bs_year').value);
+        const month = parseInt(document.getElementById('bs_month').value);
+        const day = parseInt(document.getElementById('bs_day').value) || 1;
+        
+        const adDate = bsToAd(year, month, day);
+        document.getElementById('t_att_date').value = adDate;
+        
+        const bs = adToBs(adDate);
+        document.getElementById('bs_display_label').innerText = `${bs.formatted} (${bs.weekday})`;
+        document.getElementById('ad_sync_label').innerText = `(A.D.: ${adDate})`;
+        
+        loadTeacherAttendance();
+    }
+
+    function setTodayNepaliDate() {
+        // Today is 2083-07-23 (2026-11-09)
+        document.getElementById('bs_year').value = "2083";
+        document.getElementById('bs_month').value = "7";
+        populateBsDays(23);
+        onBsDateChange();
+    }
+
+    function setYesterdayNepaliDate() {
+        // Yesterday is 2083-07-22 (2026-11-08)
+        document.getElementById('bs_year').value = "2083";
+        document.getElementById('bs_month').value = "7";
+        populateBsDays(22);
+        onBsDateChange();
+    }
+
+    // --- ATTENDANCE MANAGEMENT STATE ---
     let currentStudents = [];
-    const currentUserRole = "{{ user.role }}";
+    let activeFilter = 'ALL';
     let isAlreadySubmitted = false;
+    let isEditMode = false;
 
     async function loadTeacherAttendance() {
         const classId = document.getElementById('t_class_select').value;
         const attDate = document.getElementById('t_att_date').value;
         const container = document.getElementById('attendanceContainer');
+        const filterBar = document.getElementById('filterBar');
         const saveBar = document.getElementById('saveBar');
         const alertBox = document.getElementById('alreadySubmittedAlert');
+        const stateBadge = document.getElementById('att_state_badge');
 
         if (!classId) {
-            container.innerHTML = '<div class="p-10 text-center text-slate-400 text-xs">कृपया कक्षा छनोट गर्नुहोस्।</div>';
+            container.innerHTML = `
+                <div class="p-12 text-center text-slate-400 text-xs">
+                    <i data-lucide="layers" class="w-10 h-10 text-slate-300 mx-auto mb-2"></i>
+                    <div class="font-bold text-slate-600 text-sm">कक्षा वा संकाय छनोट गर्नुहोस्</div>
+                    <p class="text-slate-400 mt-1">माथिको Step 2 बाट कक्षा छनोट गरेपछि विद्यार्थीहरूको नामावली खुल्नेछ।</p>
+                </div>
+            `;
+            filterBar.classList.add('hidden');
             saveBar.classList.add('hidden');
             alertBox.classList.add('hidden');
+            stateBadge.innerText = 'कक्षा छान्नुहोस्';
+            stateBadge.className = 'font-bold text-[11px] text-slate-400';
+            if (window.lucide) lucide.createIcons();
             return;
         }
 
-        container.innerHTML = '<div class="p-10 text-center text-slate-500 text-xs"><i data-lucide="loader" class="w-6 h-6 animate-spin mx-auto mb-2 text-instBlue"></i>लोड हुँदैछ...</div>';
+        container.innerHTML = '<div class="p-12 text-center text-slate-500 text-xs"><i data-lucide="loader" class="w-7 h-7 animate-spin mx-auto mb-2 text-instBlue"></i>विद्यार्थी विवरण लोड हुँदैछ...</div>';
         if (window.lucide) lucide.createIcons();
 
         try {
-            // Check submission status first
+            // Check status
             const checkRes = await fetch(`/api/attendance/check-class-status?class_id=${classId}&attendance_date=${attDate}`);
             const checkData = await checkRes.json();
             
             isAlreadySubmitted = checkData.submitted;
+            isEditMode = false;
+
             if (isAlreadySubmitted) {
                 alertBox.classList.remove('hidden');
                 document.getElementById('submittedDetails').innerText = 
-                    `रेकर्ड गर्ने शिक्षक: ${checkData.recorder || 'शिक्षक'} | समय: ${checkData.submitted_at || '-'} | उपस्थित: ${checkData.present} | अनुपस्थित: ${checkData.absent} | बिदा: ${checkData.leave}`;
+                    `रेकर्ड गर्ने: ${checkData.recorder || 'शिक्षक'} | समय: ${checkData.submitted_at || '-'} | उपस्थित: ${checkData.present} जना | अनुपस्थित: ${checkData.absent} जना | बिदा: ${checkData.leave} जना`;
                 
-                // If regular teacher, lock submit button
-                if (currentUserRole === 'TEACHER') {
-                    document.getElementById('saveAttBtn').disabled = true;
-                    document.getElementById('saveAttBtn').classList.add('opacity-50', 'cursor-not-allowed');
-                    document.getElementById('saveAttBtn').title = 'हाजिरी दर्ता भइसकेको छ। सच्याउन Admin सँग सम्पर्क गर्नुहोस्।';
-                }
+                stateBadge.innerText = '✓ हाजिरी दर्ता भइसकेको';
+                stateBadge.className = 'font-bold text-[11px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200';
+                
+                document.getElementById('saveBtnText').innerText = 'हाजिरी संशोधन सुरक्षित गर्नुहोस् (Save Corrections)';
             } else {
                 alertBox.classList.add('hidden');
-                document.getElementById('saveAttBtn').disabled = false;
-                document.getElementById('saveAttBtn').classList.remove('opacity-50', 'cursor-not-allowed');
-                document.getElementById('saveAttBtn').title = '';
+                stateBadge.innerText = '⏳ हाजिरी दर्ता हुन बाँकी';
+                stateBadge.className = 'font-bold text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200';
+                document.getElementById('saveBtnText').innerText = 'हाजिरी सुरक्षित गर्नुहोस् (Submit Attendance)';
             }
 
             // Fetch sheet
@@ -164,21 +449,65 @@
             currentStudents = data.sheet || [];
 
             if (currentStudents.length === 0) {
-                container.innerHTML = '<div class="p-10 text-center text-slate-500 text-xs">यस कक्षामा कुनै सक्रिय विद्यार्थी भेटिएन।</div>';
+                container.innerHTML = '<div class="p-12 text-center text-slate-500 text-xs">यस कक्षा वा संकायमा कुनै सक्रिय विद्यार्थी भेटिएन।</div>';
+                filterBar.classList.add('hidden');
                 saveBar.classList.add('hidden');
                 return;
             }
 
-            renderAttendanceTable();
+            filterBar.classList.remove('hidden');
             saveBar.classList.remove('hidden');
+            
+            updateFilterCounts();
+            renderAttendanceTable();
             updateCounters();
+
         } catch (e) {
-            container.innerHTML = '<div class="p-10 text-center text-red-500 text-xs">डेटा लोड गर्न सकिएन: ' + e.message + '</div>';
+            container.innerHTML = `<div class="p-10 text-center text-rose-600 text-xs font-semibold">त्रुटि: ${e.message}</div>`;
         }
+    }
+
+    function updateFilterCounts() {
+        const total = currentStudents.length;
+        const resCnt = currentStudents.filter(s => (s.residential_status || 'दिवा') === 'आवासीय').length;
+        const dayCnt = currentStudents.filter(s => (s.residential_status || 'दिवा') === 'दिवा').length;
+
+        document.getElementById('tab_all_cnt').innerText = total;
+        document.getElementById('tab_res_cnt').innerText = resCnt;
+        document.getElementById('tab_day_cnt').innerText = dayCnt;
+    }
+
+    function filterStudents(filterType) {
+        activeFilter = filterType;
+        
+        ['ALL', 'RESIDENTIAL', 'DAY'].forEach(type => {
+            const btn = document.getElementById(type === 'ALL' ? 'tab_all' : (type === 'RESIDENTIAL' ? 'tab_res' : 'tab_day'));
+            if (!btn) return;
+            if (type === filterType) {
+                btn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition bg-instBlue text-white shadow-xs';
+            } else {
+                btn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-700 hover:bg-slate-100';
+            }
+        });
+
+        renderAttendanceTable();
     }
 
     function renderAttendanceTable() {
         const container = document.getElementById('attendanceContainer');
+        
+        let filtered = currentStudents;
+        if (activeFilter === 'RESIDENTIAL') {
+            filtered = currentStudents.filter(s => (s.residential_status || 'दिवा') === 'आवासीय');
+        } else if (activeFilter === 'DAY') {
+            filtered = currentStudents.filter(s => (s.residential_status || 'दिवा') === 'दिवा');
+        }
+
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="p-10 text-center text-slate-400 text-xs">यस फिल्टरमा कुनै विद्यार्थी फेला परेन।</div>';
+            return;
+        }
+
         let html = `
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
@@ -186,25 +515,40 @@
                     <tr>
                         <th class="py-3 px-3 text-center w-14">रोल नं.</th>
                         <th class="py-3 px-4">विद्यार्थीको नाम र थर</th>
+                        <th class="py-3 px-3 text-center">विद्यार्थी प्रकार</th>
                         <th class="py-3 px-4">अभिभावक / फोन</th>
-                        <th class="py-3 px-4 text-center w-80">हाजिरी स्थिति छनोट (Exclusive Buttons)</th>
+                        <th class="py-3 px-4 text-center w-80">हाजिरी स्थिति छनोट (Status)</th>
                         <th class="py-3 px-4">कैफियत (Remarks)</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
         `;
 
-        currentStudents.forEach((s, idx) => {
+        filtered.forEach((s, idx) => {
             const st = s.attendance_status || s.status || 'PRESENT';
             s.status = st;
             s.attendance_status = st;
-            
+            const isRes = (s.residential_status || 'दिवा') === 'आवासीय';
+
             html += `
             <tr class="hover:bg-slate-50 transition" id="row_${s.student_id}">
                 <td class="py-3 px-3 text-center font-bold text-slate-700 font-mono text-sm">${s.roll_no || idx + 1}</td>
                 <td class="py-3 px-4">
                     <span class="font-bold text-slate-900 block text-sm">${s.name_nepali}</span>
                     <span class="text-[10px] text-slate-400 font-mono">${s.name_english || ''}</span>
+                </td>
+                <td class="py-3 px-3 text-center">
+                    ${isRes ? `
+                        <span class="inline-flex items-center gap-1 bg-purple-100 text-purple-900 border border-purple-200 px-2 py-0.5 rounded-full text-[11px] font-bold">
+                            <i data-lucide="home" class="w-3 h-3 text-purple-700"></i>
+                            <span>आवासीय</span>
+                        </span>
+                    ` : `
+                        <span class="inline-flex items-center gap-1 bg-teal-100 text-teal-900 border border-teal-200 px-2 py-0.5 rounded-full text-[11px] font-bold">
+                            <i data-lucide="sun" class="w-3 h-3 text-teal-700"></i>
+                            <span>दिवा</span>
+                        </span>
+                    `}
                 </td>
                 <td class="py-3 px-4 text-slate-600">
                     <p class="font-medium text-slate-800">${s.guardian_name || '-'}</p>
@@ -214,19 +558,19 @@
                     <div class="inline-flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200 shadow-inner">
                         <!-- Present Button (Green) -->
                         <button type="button" onclick="setStatus(${s.student_id}, 'PRESENT')" id="btn_p_${s.student_id}" 
-                            class="px-4 py-2 rounded-lg font-black text-xs transition flex items-center gap-1 ${st === 'PRESENT' ? 'bg-emerald-600 text-white shadow-md' : 'bg-transparent text-slate-600 hover:bg-slate-200'}">
+                            class="px-4 py-1.5 rounded-lg font-black text-xs transition flex items-center gap-1 ${st === 'PRESENT' ? 'bg-emerald-600 text-white shadow-md' : 'bg-transparent text-slate-600 hover:bg-slate-200'}">
                             <i data-lucide="check" class="w-3.5 h-3.5"></i>
                             <span>उपस्थित</span>
                         </button>
                         <!-- Absent Button (Red) -->
                         <button type="button" onclick="setStatus(${s.student_id}, 'ABSENT')" id="btn_a_${s.student_id}" 
-                            class="px-4 py-2 rounded-lg font-black text-xs transition flex items-center gap-1 ${st === 'ABSENT' ? 'bg-rose-600 text-white shadow-md' : 'bg-transparent text-slate-600 hover:bg-slate-200'}">
+                            class="px-4 py-1.5 rounded-lg font-black text-xs transition flex items-center gap-1 ${st === 'ABSENT' ? 'bg-rose-600 text-white shadow-md' : 'bg-transparent text-slate-600 hover:bg-slate-200'}">
                             <i data-lucide="x" class="w-3.5 h-3.5"></i>
                             <span>अनुपस्थित</span>
                         </button>
                         <!-- Leave Button (Amber) -->
                         <button type="button" onclick="setStatus(${s.student_id}, 'LEAVE')" id="btn_l_${s.student_id}" 
-                            class="px-4 py-2 rounded-lg font-black text-xs transition flex items-center gap-1 ${st === 'LEAVE' ? 'bg-amber-500 text-white shadow-md' : 'bg-transparent text-slate-600 hover:bg-slate-200'}">
+                            class="px-4 py-1.5 rounded-lg font-black text-xs transition flex items-center gap-1 ${st === 'LEAVE' ? 'bg-amber-500 text-white shadow-md' : 'bg-transparent text-slate-600 hover:bg-slate-200'}">
                             <i data-lucide="clock" class="w-3.5 h-3.5"></i>
                             <span>बिदा</span>
                         </button>
@@ -254,11 +598,11 @@
                 const b = document.getElementById(`btn_${type[0].toLowerCase()}_${studentId}`);
                 if (!b) return;
                 if (type === newStatus) {
-                    if (type === 'PRESENT') b.className = 'px-4 py-2 rounded-lg font-black text-xs transition flex items-center gap-1 bg-emerald-600 text-white shadow-md';
-                    else if (type === 'ABSENT') b.className = 'px-4 py-2 rounded-lg font-black text-xs transition flex items-center gap-1 bg-rose-600 text-white shadow-md';
-                    else b.className = 'px-4 py-2 rounded-lg font-black text-xs transition flex items-center gap-1 bg-amber-500 text-white shadow-md';
+                    if (type === 'PRESENT') b.className = 'px-4 py-1.5 rounded-lg font-black text-xs transition flex items-center gap-1 bg-emerald-600 text-white shadow-md';
+                    else if (type === 'ABSENT') b.className = 'px-4 py-1.5 rounded-lg font-black text-xs transition flex items-center gap-1 bg-rose-600 text-white shadow-md';
+                    else b.className = 'px-4 py-1.5 rounded-lg font-black text-xs transition flex items-center gap-1 bg-amber-500 text-white shadow-md';
                 } else {
-                    b.className = 'px-4 py-2 rounded-lg font-black text-xs transition flex items-center gap-1 bg-transparent text-slate-600 hover:bg-slate-200';
+                    b.className = 'px-4 py-1.5 rounded-lg font-black text-xs transition flex items-center gap-1 bg-transparent text-slate-600 hover:bg-slate-200';
                 }
             });
 
@@ -266,19 +610,48 @@
         }
     }
 
-    function markAllPresent() {
-        if (currentStudents.length === 0) return;
-        currentStudents.forEach(s => setStatus(s.student_id, 'PRESENT'));
+    function markFilteredPresent() {
+        let targets = currentStudents;
+        if (activeFilter === 'RESIDENTIAL') {
+            targets = currentStudents.filter(s => (s.residential_status || 'दिवा') === 'आवासीय');
+        } else if (activeFilter === 'DAY') {
+            targets = currentStudents.filter(s => (s.residential_status || 'दिवा') === 'दिवा');
+        }
+        targets.forEach(s => setStatus(s.student_id, 'PRESENT'));
+    }
+
+    function markAllLeave() {
+        let targets = currentStudents;
+        if (activeFilter === 'RESIDENTIAL') {
+            targets = currentStudents.filter(s => (s.residential_status || 'दिवा') === 'आवासीय');
+        } else if (activeFilter === 'DAY') {
+            targets = currentStudents.filter(s => (s.residential_status || 'दिवा') === 'दिवा');
+        }
+        targets.forEach(s => setStatus(s.student_id, 'LEAVE'));
+    }
+
+    function enableEditMode() {
+        isEditMode = true;
+        document.getElementById('alreadySubmittedAlert').classList.add('border-emerald-300', 'bg-emerald-50/70');
+        document.getElementById('alreadySubmittedAlert').classList.remove('bg-blue-50/70', 'border-blue-200');
+        document.getElementById('saveBtnText').innerText = 'संशोधन सुरक्षित गर्नुहोस् (Save Corrections)';
+        alert('संशोधन मोड सक्रिय भयो! अब तपाईंले विद्यार्थीहरूको हाजिरी चिन्ह र कैफियत फेरबदल गरी तलको बटनबाट सुरक्षित गर्न सक्नुहुन्छ।');
     }
 
     function updateCounters() {
         const total = currentStudents.length;
+        const resCnt = currentStudents.filter(s => (s.residential_status || 'दिवा') === 'आवासीय').length;
+        const dayCnt = currentStudents.filter(s => (s.residential_status || 'दिवा') === 'दिवा').length;
+
         const present = currentStudents.filter(s => (s.status || s.attendance_status) === 'PRESENT').length;
         const absent = currentStudents.filter(s => (s.status || s.attendance_status) === 'ABSENT').length;
         const leave = currentStudents.filter(s => (s.status || s.attendance_status) === 'LEAVE').length;
         const pct = total > 0 ? ((present / total) * 100).toFixed(1) : '0';
 
         document.getElementById('stat_total').innerText = total;
+        document.getElementById('stat_res').innerText = resCnt;
+        document.getElementById('stat_day').innerText = dayCnt;
+
         document.getElementById('stat_present').innerText = present;
         document.getElementById('stat_absent').innerText = absent;
         document.getElementById('stat_leave').innerText = leave;
@@ -286,24 +659,12 @@
     }
 
     async function saveAttendance() {
-        if (isAlreadySubmitted && currentUserRole === 'TEACHER') {
-            alert('यस कक्षाको आजको हाजिरी दर्ता भइसकेको छ। शिक्षकले दोहोरो दर्ता गर्न मिल्दैन। सच्याउन आवश्यक भएमा Admin सँग सम्पर्क गर्नुहोस्।');
-            return;
-        }
-
         const classId = document.getElementById('t_class_select').value;
         const attDate = document.getElementById('t_att_date').value;
         const btn = document.getElementById('saveAttBtn');
 
         if (!classId) {
-            alert('कृपया कक्षा छनोट गर्नुहोस्।');
-            return;
-        }
-
-        // Validate that all students have a valid status
-        const unassigned = currentStudents.filter(s => !['PRESENT', 'ABSENT', 'LEAVE'].includes(s.status));
-        if (unassigned.length > 0) {
-            alert(`कृपया सबै विद्यार्थीहरूको हाजिरी चिन्ह लगाउनुहोस्। (${unassigned.length} जना बाँकी)`);
+            alert('कृपया कक्षा वा संकाय छनोट गर्नुहोस्।');
             return;
         }
 
@@ -312,7 +673,12 @@
         const leaveCount = currentStudents.filter(s => s.status === 'LEAVE').length;
         const pct = ((presentCount / currentStudents.length) * 100).toFixed(1);
 
-        const confirmMsg = `हाजिरी विवरण:\n- कुल विद्यार्थी: ${currentStudents.length}\n- उपस्थित: ${presentCount}\n- अनुपस्थित: ${absentCount}\n- बिदा: ${leaveCount}\n- हाजिरी प्रतिशत: ${pct}%\n\nके तपाईं यो हाजिरी सुरक्षित गर्न निश्चित हुनुहुन्छ?`;
+        const bsYear = document.getElementById('bs_year').value;
+        const bsMonth = NEPALI_MONTHS[parseInt(document.getElementById('bs_month').value) - 1];
+        const bsDay = document.getElementById('bs_day').value;
+        const bsDateStr = `${toNepaliDigits(bsYear)} साल ${bsMonth} ${toNepaliDigits(bsDay)} गते`;
+
+        const confirmMsg = `हाजिरी विवरण (मिति: ${bsDateStr}):\n- कुल विद्यार्थी: ${currentStudents.length}\n- उपस्थित: ${presentCount}\n- अनुपस्थित: ${absentCount}\n- बिदा: ${leaveCount}\n- हाजिरी प्रतिशत: ${pct}%\n\nके तपाईं यो हाजिरी सुरक्षित (Submit) गर्न निश्चित हुनुहुन्छ?`;
         if (!confirm(confirmMsg)) return;
 
         const payload = {
@@ -339,21 +705,58 @@
             });
             const data = await res.json();
             if (res.ok) {
-                alert(`✓ सफलतापूर्वक हाजिरी सुरक्षित भयो!\n\nकुल दर्ता: ${data.saved_count}\nउपस्थित: ${data.present_count}\nअनुपस्थित: ${data.absent_count}\nबिदा: ${data.leave_count}`);
+                alert(`✓ हाजिरी सफलतापूर्वक सुरक्षित गरियो!\n\nमिति: ${bsDateStr}\nदर्ता संख्या: ${data.saved_count}\nउपस्थित: ${data.present_count}\nअनुपस्थित: ${data.absent_count}\nबिदा: ${data.leave_count}`);
                 loadTeacherAttendance();
             } else {
-                alert('त्रुटि: ' + (data.detail || 'हाजिरी सुरक्षित गर्न सकिएन।'));
+                alert('त्रुटि: ' + (data.detail || 'हाजिरी सुरक्षित हुन सकेन।'));
             }
         } catch (e) {
             alert('सर्भर त्रुटि: ' + e.message);
         } finally {
             btn.disabled = false;
-            btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i><span>हाजिरी Submit गर्नुहोस् (Submit Attendance)</span>';
+            btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i><span>हाजिरी सुरक्षित गर्नुहोस् (Submit Attendance)</span>';
             if (window.lucide) lucide.createIcons();
         }
     }
 
+    async function deleteClassAttendance() {
+        const classId = document.getElementById('t_class_select').value;
+        const attDate = document.getElementById('t_att_date').value;
+        
+        const bsYear = document.getElementById('bs_year').value;
+        const bsMonth = NEPALI_MONTHS[parseInt(document.getElementById('bs_month').value) - 1];
+        const bsDay = document.getElementById('bs_day').value;
+        const bsDateStr = `${toNepaliDigits(bsYear)} साल ${bsMonth} ${toNepaliDigits(bsDay)} गते`;
+
+        if (!confirm(`के तपाईं निश्चित हुनुहुन्छ? मिति '${bsDateStr}' को यस कक्षाको सम्पूर्ण हाजिरी डिलिट (मेटाउन) चाहनुहुन्छ?`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/attendance/class-day?class_id=${classId}&attendance_date=${attDate}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(`✓ मिति ${bsDateStr} को हाजिरी सफलतापूर्वक मेटाइयो।`);
+                loadTeacherAttendance();
+            } else {
+                alert('डिलिट हुन सकेन: ' + (data.detail || 'त्रुटि भयो'));
+            }
+        } catch(e) {
+            alert('सर्भर त्रुटि: ' + e.message);
+        }
+    }
+
+    // Initialize Nepali Date on Page Load
     window.addEventListener('DOMContentLoaded', () => {
+        // Default to today: 2083-07-23 (2026-11-09)
+        document.getElementById('bs_year').value = "2083";
+        document.getElementById('bs_month').value = "7";
+        populateBsDays(23);
+        
+        onBsDateChange();
+
         const select = document.getElementById('t_class_select');
         if (select && select.value) {
             loadTeacherAttendance();

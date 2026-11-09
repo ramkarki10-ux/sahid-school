@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from app.database import get_db
 from app.auth import get_current_user, require_role
 from app.templates import templates
+from app.utils.nepali_date import ad_to_bs, get_today_bs, bs_to_ad, to_nepali_digits
 
 router = APIRouter(prefix="/admin", tags=["admin_views"])
 
@@ -247,7 +248,7 @@ def admin_attendance_daily(request: Request, att_date: Optional[str] = Query(Non
         LEFT JOIN attendance a ON s.id = a.student_id AND a.attendance_date = ?
         LEFT JOIN users u ON a.recorded_by = u.id
         GROUP BY c.id
-        ORDER BY c.class_numeric ASC
+        ORDER BY c.class_numeric ASC, c.id ASC
     """, (target_date,))
     classes_summary = [dict(r) for r in cursor.fetchall()]
     
@@ -272,6 +273,8 @@ def admin_attendance_daily(request: Request, att_date: Optional[str] = Query(Non
     trend_rows.reverse()
     conn.close()
     
+    target_date_bs = ad_to_bs(target_date)
+
     ctx.update({
         "classes_summary": classes_summary,
         "pending_classes": pending_classes,
@@ -282,6 +285,7 @@ def admin_attendance_daily(request: Request, att_date: Optional[str] = Query(Non
         "total_leave": total_leave,
         "attendance_pct": attendance_pct,
         "target_date": target_date,
+        "target_date_bs": target_date_bs,
         "today_date": date.today().isoformat(),
         "trend_rows": trend_rows
     })
@@ -565,15 +569,16 @@ def admin_attendance_correction(
         return RedirectResponse(url="/login", status_code=303)
         
     target_date = att_date or date.today().isoformat()
+    target_date_bs = ad_to_bs(target_date)
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM classes ORDER BY class_numeric ASC")
+    cursor.execute("SELECT * FROM classes ORDER BY class_numeric ASC, id ASC")
     classes = [dict(r) for r in cursor.fetchall()]
     
     selected_class_id = class_id or (classes[0]["id"] if classes else 1)
     
     cursor.execute("""
-        SELECT s.id, s.roll_no, s.name_nepali, c.class_name_ne,
+        SELECT s.id, s.roll_no, s.name_nepali, s.residential_status, c.class_name_ne,
                a.status, a.remark, a.updated_at
         FROM students s
         JOIN classes c ON s.class_id = c.id
@@ -599,6 +604,8 @@ def admin_attendance_correction(
         "classes": classes,
         "selected_class_id": selected_class_id,
         "target_date": target_date,
+        "target_date_bs": target_date_bs,
+        "today_bs": get_today_bs(),
         "students": students,
         "audit_logs": audit_logs
     })

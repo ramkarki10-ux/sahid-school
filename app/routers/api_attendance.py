@@ -7,6 +7,7 @@ from datetime import date
 from app.database import get_db
 from app.auth import require_auth, require_role, get_current_user
 from app.utils.audit import log_audit
+from app.utils.nepali_date import ad_to_bs, bs_to_ad, to_nepali_digits, get_today_bs
 from app.utils.excel_handler import (
     export_attendance_to_excel,
     export_daily_attendance_excel,
@@ -55,25 +56,28 @@ def get_class_attendance_sheet(
     conn = get_db()
     cursor = conn.cursor()
     
-    # If teacher, verify authorization to access this class
+    # If teacher, verify authorization to access this class (allow if assigned, or if teacher has no restrictions)
     if user["role"] == "TEACHER" and user.get("teacher_id"):
-        cursor.execute("""
-            SELECT id FROM teacher_class_assignments
-            WHERE teacher_id = ? AND class_id = ? AND (section_id = ? OR section_id IS NULL)
-        """, (user["teacher_id"], class_id, section_id))
-        if not cursor.fetchone():
-            conn.close()
-            raise HTTPException(status_code=403, detail="तपाईंलाई यो कक्षाको हाजिरी लिने अनुमति छैन।")
+        cursor.execute("SELECT COUNT(*) FROM teacher_class_assignments WHERE teacher_id = ?", (user["teacher_id"],))
+        has_assignments = cursor.fetchone()[0] > 0
+        if has_assignments:
+            cursor.execute("""
+                SELECT id FROM teacher_class_assignments
+                WHERE teacher_id = ? AND class_id = ? AND (section_id = ? OR section_id IS NULL)
+            """, (user["teacher_id"], class_id, section_id))
+            if not cursor.fetchone():
+                conn.close()
+                raise HTTPException(status_code=403, detail="तपाईंलाई यो कक्षाको हाजिरी लिने अनुमति छैन।")
             
     if not academic_year_id:
         cursor.execute("SELECT active_academic_year_id FROM school_settings WHERE id = 1")
         row = cursor.fetchone()
         academic_year_id = row[0] if row else 1
         
-    # Get students in this class/section
+    # Get students in this class/section with residential status
     q = """
         SELECT s.id as student_id, s.roll_no, s.name_nepali, s.name_english,
-               s.address, s.guardian_name, s.guardian_phone,
+               s.residential_status, s.address, s.guardian_name, s.guardian_phone,
                a.id as attendance_id, a.status as attendance_status, a.remark
         FROM students s
         LEFT JOIN attendance a ON s.id = a.student_id AND a.attendance_date = ?
@@ -90,6 +94,8 @@ def get_class_attendance_sheet(
     
     # Default status to 'PRESENT' if not recorded yet
     for s in students:
+        if not s.get("residential_status"):
+            s["residential_status"] = "दिवा"
         if not s["attendance_status"]:
             s["attendance_status"] = "PRESENT"
             
@@ -102,11 +108,13 @@ def get_class_attendance_sheet(
         sec_info = cursor.fetchone()
         
     conn.close()
+    bs_info = ad_to_bs(attendance_date)
     return {
         "success": True,
         "class_name": c_info["class_name_ne"] if c_info else "",
         "section_name": sec_info["name"] if sec_info else "All",
         "attendance_date": attendance_date,
+        "bs_date": bs_info,
         "total_students": len(students),
         "students": students,
         "sheet": students
@@ -157,15 +165,18 @@ def save_attendance(data: BulkAttendanceSaveRequest, request: Request):
     conn = get_db()
     cursor = conn.cursor()
     
-    # Teacher permission check
+    # Teacher permission check (allow if assigned or if teacher has general access)
     if user["role"] == "TEACHER" and user.get("teacher_id"):
-        cursor.execute("""
-            SELECT id FROM teacher_class_assignments
-            WHERE teacher_id = ? AND class_id = ? AND (section_id = ? OR section_id IS NULL)
-        """, (user["teacher_id"], data.class_id, data.section_id))
-        if not cursor.fetchone():
-            conn.close()
-            raise HTTPException(status_code=403, detail="तपाईंलाई यो कक्षाको हाजिरी लिने अनुमति छैन।")
+        cursor.execute("SELECT COUNT(*) FROM teacher_class_assignments WHERE teacher_id = ?", (user["teacher_id"],))
+        has_assignments = cursor.fetchone()[0] > 0
+        if has_assignments:
+            cursor.execute("""
+                SELECT id FROM teacher_class_assignments
+                WHERE teacher_id = ? AND class_id = ? AND (section_id = ? OR section_id IS NULL)
+            """, (user["teacher_id"], data.class_id, data.section_id))
+            if not cursor.fetchone():
+                conn.close()
+                raise HTTPException(status_code=403, detail="तपाईंलाई यो कक्षाको हाजिरी लिने अनुमति छैन।")
             
     saved_count = 0
     present_count = 0
@@ -489,6 +500,41 @@ def correct_student_attendance(data: AttendanceCorrectionRequest, request: Reque
         "success": True,
         "message": f"हाजिरी सफलतापूर्वक सच्याइयो ({previous_status} -> {data.new_status})।"
     }
+
+@router.delete("/class-day")
+def delete_class_day_attendance(
+    class_id: int = Query(...),
+    attendance_date: str = Query(...),
+    request: Request = None
+):
+    user = require_auth(request)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        DELETE FROM attendance
+        WHERE class_id = ? AND attendance_date = ?
+    """, (class_id, attendance_date))
+    deleted_count = cursor.rowcount
+    conn.commit()
+    conn.close()
+    
+    log_audit("DELETE_CLASS_ATTENDANCE", "ATTENDANCE", record_id=f"{class_id}_{attendance_date}", user=user, request=request)
+    return {
+        "success": True,
+        "message": f"कक्षाको मिति {attendance_date} को सम्पूर्ण हाजिरी ({deleted_count} रेकर्ड) सफलतापूर्वक मेटाइयो।",
+        "deleted_count": deleted_count
+    }
+
+@router.delete("/record/{id}")
+def delete_attendance_record(id: int, request: Request):
+    user = require_auth(request)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM attendance WHERE id = ?", (id,))
+    deleted = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return {"success": True, "message": "हाजिरी रेकर्ड मेटाइयो।", "deleted": deleted}
 
 @router.get("/audit-logs")
 def get_attendance_audit_logs(request: Request, limit: int = 50):

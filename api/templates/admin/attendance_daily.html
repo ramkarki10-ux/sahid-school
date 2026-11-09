@@ -12,9 +12,13 @@
                 <i data-lucide="check-square" class="w-6 h-6 text-emerald-600"></i>
                 <span>दैनिक विद्यार्थी हाजिरी ड्यासबोर्ड (Daily Attendance Dashboard)</span>
             </h1>
-            <p class="text-xs text-slate-500 mt-1">
-                विद्यालयका सबै कक्षाहरूको दैनिक हाजिरी स्थिति, शिक्षक रेकर्ड र रियल-टाइम तथ्याङ्क
-            </p>
+            <div class="flex items-center gap-2 mt-1">
+                <span class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full text-xs font-bold shadow-xs">
+                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-700"></i>
+                    <span>वि.सं. मिति: {{ target_date_bs.formatted_full if target_date_bs else '२०८३ साल कात्तिक २३ गते' }}</span>
+                </span>
+                <span class="text-xs text-slate-500 font-mono">(A.D.: {{ target_date }})</span>
+            </div>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">

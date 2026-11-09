@@ -12,7 +12,13 @@
                 <i data-lucide="edit-3" class="w-6 h-6 text-rose-600"></i>
                 <span>हाजिरी सच्याउने पोर्टल (Attendance Correction & Audit Log)</span>
             </h1>
-            <p class="text-xs text-slate-500 mt-1">अधिकारप्राप्त Admin ले विद्यार्थीको हाजिरी अवस्था सच्याउन र अडिट लग हेर्न सक्ने</p>
+            <div class="flex items-center gap-2 mt-1">
+                <span class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full text-xs font-bold shadow-xs">
+                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-700"></i>
+                    <span>वि.सं. मिति: {{ target_date_bs.formatted_full if target_date_bs else '२०८३ साल कात्तिक २३ गते' }}</span>
+                </span>
+                <span class="text-xs text-slate-500 font-mono">(A.D.: {{ target_date }})</span>
+            </div>
         </div>
 
         <form method="get" action="/admin/attendance/correction" class="flex flex-wrap items-center gap-2">
@@ -62,7 +68,20 @@
                         {% for s in students %}
                         <tr class="hover:bg-slate-50 transition">
                             <td class="py-3 px-3 text-center font-bold text-slate-700 font-mono text-sm">{{ s.roll_no }}</td>
-                            <td class="py-3 px-4 font-bold text-slate-900 text-sm">{{ s.name_nepali }}</td>
+                            <td class="py-3 px-4">
+                                <span class="font-bold text-slate-900 text-sm block">{{ s.name_nepali }}</span>
+                                {% if s.residential_status == 'आवासीय' %}
+                                <span class="inline-flex items-center gap-1 bg-purple-100 text-purple-900 border border-purple-200 px-1.5 py-0.2 rounded text-[10px] font-bold">
+                                    <i data-lucide="home" class="w-3 h-3 text-purple-700"></i>
+                                    <span>आवासीय</span>
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center gap-1 bg-teal-100 text-teal-900 border border-teal-200 px-1.5 py-0.2 rounded text-[10px] font-bold">
+                                    <i data-lucide="sun" class="w-3 h-3 text-teal-700"></i>
+                                    <span>दिवा</span>
+                                </span>
+                                {% endif %}
+                            </td>
                             <td class="py-3 px-4 text-slate-700 font-semibold">{{ s.class_name_ne }}</td>
                             <td class="py-3 px-4 text-center">
                                 {% if s.status == 'PRESENT' %}
