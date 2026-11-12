@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from typing import Optional
+import json
 from app.database import get_db
 from app.auth import get_current_user
 from app.routers.api_parent import get_current_parent
@@ -265,10 +266,11 @@ def page_assistant_principal(request: Request):
 def page_teachers(request: Request):
     settings, ticker_notice = get_school_context()
     user = get_current_user(request)
-    is_admin = bool(user and user.get("role") in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL", "CONTENT_EDITOR"])
+    # Strictly restricted to SUPER_ADMIN, ADMIN, and PRINCIPAL roles only
+    is_admin = bool(user and user.get("role") in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"])
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM teachers WHERE status = 'सक्रिय' ORDER BY id ASC")
+    cursor.execute("SELECT * FROM teachers WHERE status != 'निष्क्रिय' OR status IS NULL ORDER BY id ASC")
     teachers = [dict(r) for r in cursor.fetchall()]
     conn.close()
     return templates.TemplateResponse(request, "public/teachers.html", {
@@ -772,17 +774,57 @@ def page_leave_application(request: Request):
     })
 
 @router.get("/calendar", response_class=HTMLResponse)
+@router.get("/academic-calendar", response_class=HTMLResponse)
 def page_calendar(request: Request):
     settings, ticker_notice = get_school_context()
+    user = get_current_user(request)
+    is_admin = bool(user and user.get("role") in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"])
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM school_calendar_events ORDER BY start_date ASC")
     events = [dict(r) for r in cursor.fetchall()]
+
+    # Retrieve latest academic calendar file
+    cursor.execute("SELECT * FROM academic_calendar_files ORDER BY id DESC LIMIT 1")
+    file_row = cursor.fetchone()
+    calendar_file = dict(file_row) if file_row else None
+
     conn.close()
     return templates.TemplateResponse(request, "public/calendar.html", {
         "settings": settings,
         "ticker_notice": ticker_notice,
         "events": events,
+        "calendar_file": calendar_file,
+        "current_user": user,
+        "is_admin": is_admin,
+        "active_menu": "academics"
+    })
+
+@router.get("/action-plan", response_class=HTMLResponse)
+@router.get("/annual-action-plan", response_class=HTMLResponse)
+def page_action_plan(request: Request):
+    settings, ticker_notice = get_school_context()
+    user = get_current_user(request)
+    is_admin = bool(user and user.get("role") in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"])
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM annual_action_plans ORDER BY id DESC LIMIT 1")
+    plan_row = cursor.fetchone()
+    plan = dict(plan_row) if plan_row else None
+    grid_data = []
+    if plan and plan.get("grid_data"):
+        try:
+            grid_data = json.loads(plan["grid_data"])
+        except Exception:
+            grid_data = []
+    conn.close()
+    return templates.TemplateResponse(request, "public/action_plan.html", {
+        "settings": settings,
+        "ticker_notice": ticker_notice,
+        "plan": plan,
+        "grid_data": grid_data,
+        "current_user": user,
+        "is_admin": is_admin,
         "active_menu": "academics"
     })
 

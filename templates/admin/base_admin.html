@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="ne">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}प्रशासनिक ड्यासबोर्ड | {{ settings.name_ne }}{% endblock %}</title>
-    
+
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -43,10 +46,12 @@
     <link rel="stylesheet" href="/static/css/custom.css">
     {% block extra_head %}{% endblock %}
 </head>
+
 <body class="bg-slate-100 text-slate-800 font-sans antialiased flex h-screen overflow-hidden">
 
     <!-- SIDEBAR (Section 45) -->
-    <aside id="adminSidebar" class="w-64 bg-instBlue-dark text-slate-300 flex flex-col flex-shrink-0 z-30 transition-all duration-300">
+    <aside id="adminSidebar"
+        class="w-64 bg-instBlue-dark text-slate-300 flex flex-col flex-shrink-0 z-30 transition-all duration-300">
         <!-- School & Brand in Sidebar -->
         <div class="h-16 px-4 bg-instBlue flex items-center justify-between border-b border-instBlue-light/60">
             <a href="/admin/dashboard" class="flex items-center gap-2.5">
@@ -63,13 +68,15 @@
 
         <!-- Sidebar Navigation Menu -->
         <div class="flex-grow overflow-y-auto custom-scrollbar p-3 space-y-1 text-xs font-medium">
-            
-            <a href="/admin/dashboard" class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'dashboard' %}bg-instBlue text-white font-bold border-l-4 border-amber-400{% endif %}">
+
+            <a href="/admin/dashboard"
+                class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'dashboard' %}bg-instBlue text-white font-bold border-l-4 border-amber-400{% endif %}">
                 <i data-lucide="layout-dashboard" class="w-4 h-4 text-instGold-light"></i>
                 <span>ड्यासबोर्ड</span>
             </a>
 
-            <a href="/feed" class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition hover:bg-instBlue hover:text-white text-amber-300 font-semibold">
+            <a href="/feed"
+                class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition hover:bg-instBlue hover:text-white text-amber-300 font-semibold">
                 <i data-lucide="newspaper" class="w-4 h-4 text-instGold"></i>
                 <span>न्युज फिड (फेसबुक शैली)</span>
             </a>
@@ -78,46 +85,58 @@
             <div class="pt-2">
                 <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">विद्यार्थी व्यवस्थापन</p>
                 <div class="mt-1 space-y-0.5">
-                    <a href="/admin/students" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'students' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/students"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'students' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="users" class="w-4 h-4"></i>
                         <span>विद्यार्थी सूची</span>
                     </a>
-                    <a href="/admin/documents" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'documents' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/documents"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'documents' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="file-check" class="w-4 h-4 text-emerald-400"></i>
                         <span>कागजात प्रमाणीकरण</span>
                     </a>
-                    <a href="/admin/homework" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'homework' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/homework"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'homework' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="book-open" class="w-4 h-4 text-amber-400"></i>
                         <span>दैनिक गृहकार्य</span>
                     </a>
-                    <a href="/admin/results" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'results' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/results"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'results' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="award" class="w-4 h-4 text-purple-400"></i>
                         <span>परीक्षा नतिजा लेजर</span>
                     </a>
-                    <a href="/admin/leave-applications" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'leave_applications' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/leave-applications"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'leave_applications' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="clipboard-pen" class="w-4 h-4 text-red-400"></i>
                         <span>बिदा निवेदन</span>
                     </a>
-                    <a href="/admin/registrations" class="flex items-center justify-between px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'registrations' %}bg-instBlue text-white font-bold border-l-2 border-emerald-400{% endif %}">
+                    <a href="/admin/registrations"
+                        class="flex items-center justify-between px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'registrations' %}bg-instBlue text-white font-bold border-l-2 border-emerald-400{% endif %}">
                         <div class="flex items-center gap-2.5">
                             <i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i>
                             <span>एकाउन्ट Approval (अनुमोदन)</span>
                         </div>
                         {% if pending_registrations_count is defined and pending_registrations_count > 0 %}
-                        <span class="text-[10px] bg-rose-600 text-white font-black px-1.5 py-0.2 rounded-full animate-pulse">{{ pending_registrations_count }}</span>
+                        <span
+                            class="text-[10px] bg-rose-600 text-white font-black px-1.5 py-0.2 rounded-full animate-pulse">{{
+                            pending_registrations_count }}</span>
                         {% else %}
-                        <span class="text-[9px] bg-slate-700 text-slate-300 font-bold px-1.5 py-0.5 rounded-full">०</span>
+                        <span
+                            class="text-[9px] bg-slate-700 text-slate-300 font-bold px-1.5 py-0.5 rounded-full">०</span>
                         {% endif %}
                     </a>
-                    <a href="/admin/students/import" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'student_import' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/students/import"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'student_import' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="file-spreadsheet" class="w-4 h-4 text-green-400"></i>
                         <span>Excel आयात (Import)</span>
                     </a>
-                    <a href="/admin/students/promotion" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'promotion' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/students/promotion"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'promotion' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="arrow-up-right" class="w-4 h-4 text-amber-400"></i>
                         <span>कक्षा बढुवा (Promotion)</span>
                     </a>
-                    <a href="/admin/alumni" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'alumni' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/alumni"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'alumni' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="graduation-cap" class="w-4 h-4 text-amber-300"></i>
                         <span>पूर्व विद्यार्थी (Alumni)</span>
                     </a>
@@ -126,45 +145,56 @@
 
             <!-- हाजिरी (Attendance Group - Section 4) -->
             <div class="pt-2">
-                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">विद्यार्थी हाजिरी व्यवस्थापन</p>
+                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">विद्यार्थी हाजिरी
+                    व्यवस्थापन</p>
                 <div class="mt-1 space-y-0.5">
-                    <a href="/admin/attendance/daily" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_daily' or admin_active == 'attendance' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/attendance/daily"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_daily' or admin_active == 'attendance' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="check-square" class="w-4 h-4 text-emerald-400"></i>
                         <span>दैनिक हाजिरी (Daily Attendance)</span>
                     </a>
-                    <a href="/admin/attendance/class-wise" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_class_wise' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/attendance/class-wise"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_class_wise' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="layers" class="w-4 h-4 text-sky-400"></i>
                         <span>कक्षागत हाजिरी (Class-wise)</span>
                     </a>
-                    <a href="/admin/attendance/monthly" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_monthly' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/attendance/monthly"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_monthly' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="calendar" class="w-4 h-4 text-amber-400"></i>
                         <span>मासिक हाजिरी (Monthly)</span>
                     </a>
-                    <a href="/admin/attendance/quarterly" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_quarterly' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/attendance/quarterly"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_quarterly' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="pie-chart" class="w-4 h-4 text-purple-400"></i>
                         <span>त्रैमासिक हाजिरी (Quarterly)</span>
                     </a>
-                    <a href="/admin/attendance/annual" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_annual' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/attendance/annual"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_annual' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="award" class="w-4 h-4 text-indigo-400"></i>
                         <span>वार्षिक हाजिरी (Annual)</span>
                     </a>
-                    <a href="/admin/attendance/correction" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_correction' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/attendance/correction"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_correction' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="edit-3" class="w-4 h-4 text-rose-400"></i>
                         <span>हाजिरी सच्याउने (Correction)</span>
                     </a>
-                    <a href="/admin/attendance/export" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_export' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/attendance/export"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_export' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
                         <span>हाजिरी Export (Excel)</span>
                     </a>
-                    <a href="/admin/attendance/absent" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_absent' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/attendance/absent"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'attendance_absent' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="user-x" class="w-4 h-4 text-rose-400"></i>
                         <span>आज अनुपस्थित विद्यार्थी</span>
                     </a>
-                    <a href="/admin/sms-gateway" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'sms_gateway' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/sms-gateway"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'sms_gateway' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="smartphone" class="w-4 h-4 text-amber-400"></i>
                         <span>SMS गेटवे सेटिङ्स</span>
                     </a>
-                    <a href="/admin/sms-history" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'sms_history' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/sms-history"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'sms_history' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="message-square" class="w-4 h-4 text-sky-400"></i>
                         <span>SMS सूचना लग (History)</span>
                     </a>
@@ -175,19 +205,23 @@
             <div class="pt-2">
                 <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">जनशक्ति</p>
                 <div class="mt-1 space-y-0.5">
-                    <a href="/admin/teachers" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'teachers' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/teachers"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'teachers' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="graduation-cap" class="w-4 h-4"></i>
                         <span>शिक्षक व्यवस्थापन</span>
                     </a>
-                    <a href="/admin/teacher-attendance" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'teacher_attendance' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/teacher-attendance"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'teacher_attendance' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i>
                         <span>शिक्षक हाजिरी (Admin Only)</span>
                     </a>
-                    <a href="/admin/teachers/assignments" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'teacher_assignments' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/teachers/assignments"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'teacher_assignments' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="user-plus" class="w-4 h-4 text-sky-400"></i>
                         <span>कक्षा बाँडफाँड (Assignments)</span>
                     </a>
-                    <a href="/admin/staff" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'staff' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/staff"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'staff' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="briefcase" class="w-4 h-4"></i>
                         <span>कर्मचारी व्यवस्थापन</span>
                     </a>
@@ -198,15 +232,18 @@
             <div class="pt-2">
                 <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">प्रशासन तथा समिति</p>
                 <div class="mt-1 space-y-0.5">
-                    <a href="/admin/management-committee" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'mgmt_comm' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/management-committee"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'mgmt_comm' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="shield" class="w-4 h-4"></i>
                         <span>व्यवस्थापन समिति</span>
                     </a>
-                    <a href="/admin/trustee-committee" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'trustee_comm' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/trustee-committee"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'trustee_comm' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="landmark" class="w-4 h-4 text-amber-400"></i>
                         <span>गुठियार समिति</span>
                     </a>
-                    <a href="/admin/leadership" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'leadership' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/leadership"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'leadership' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="award" class="w-4 h-4 text-instGold"></i>
                         <span>प्रधानाध्यापक / सहायक प्र.अ.</span>
                     </a>
@@ -217,15 +254,18 @@
             <div class="pt-2">
                 <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">सेवा तथा पूर्वाधार</p>
                 <div class="mt-1 space-y-0.5">
-                    <a href="/admin/hostels" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'hostels' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/hostels"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'hostels' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="bed-double" class="w-4 h-4 text-purple-400"></i>
                         <span>छात्रावास (Hostel)</span>
                     </a>
-                    <a href="/admin/transport" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'transport' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/transport"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'transport' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="bus" class="w-4 h-4 text-amber-400"></i>
                         <span>यातायात (Transport)</span>
                     </a>
-                    <a href="/admin/facilities" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'facilities' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/facilities"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'facilities' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="building" class="w-4 h-4"></i>
                         <span>सुविधा (Facilities)</span>
                     </a>
@@ -236,35 +276,43 @@
             <div class="pt-2">
                 <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">वेबसाइट सामग्री</p>
                 <div class="mt-1 space-y-0.5">
-                    <a href="/admin/notices" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'notices' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/notices"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'notices' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="bell" class="w-4 h-4 text-red-400"></i>
                         <span>सूचना व्यवस्थापन</span>
                     </a>
-                    <a href="/admin/news" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'news' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/news"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'news' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="newspaper" class="w-4 h-4"></i>
                         <span>समाचार</span>
                     </a>
-                    <a href="/admin/publications" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'publications' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/publications"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'publications' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="file-text" class="w-4 h-4 text-sky-400"></i>
                         <span>प्रकाशन (Publications)</span>
                     </a>
-                    <a href="/admin/gallery" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'gallery' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/gallery"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'gallery' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="image" class="w-4 h-4"></i>
                         <span>फोटो ग्यालेरी</span>
                     </a>
-                    <a href="/admin/videos" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'videos' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/videos"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'videos' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="video" class="w-4 h-4 text-red-500"></i>
                         <span>भिडियो</span>
                     </a>
-                    <a href="/admin/calendar" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'calendar' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/calendar"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'calendar' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="calendar" class="w-4 h-4 text-purple-400"></i>
                         <span>शैक्षिक क्यालेन्डर</span>
                     </a>
-                    <a href="/admin/admissions" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'admissions' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/admissions"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'admissions' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="user-plus" class="w-4 h-4 text-green-400"></i>
                         <span>अनलाइन भर्ना आवेदन</span>
                     </a>
-                    <a href="/admin/contact-messages" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'contact_messages' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/contact-messages"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'contact_messages' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="mail" class="w-4 h-4 text-sky-400"></i>
                         <span>सम्पर्क सन्देशहरू</span>
                     </a>
@@ -275,7 +323,8 @@
             <div class="pt-2">
                 <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">सहयोग तथा साझेदार</p>
                 <div class="mt-1 space-y-0.5">
-                    <a href="/admin/support" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'support' %}bg-instBlue text-white font-bold border-l-2 border-rose-400{% endif %}">
+                    <a href="/admin/support"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'support' %}bg-instBlue text-white font-bold border-l-2 border-rose-400{% endif %}">
                         <i data-lucide="heart-handshake" class="w-4 h-4 text-rose-400"></i>
                         <span>सहयोग / साझेदार आवेदन</span>
                     </a>
@@ -286,23 +335,28 @@
             <div class="pt-2 pb-6">
                 <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">सिस्टम र सेटिङ</p>
                 <div class="mt-1 space-y-0.5">
-                    <a href="/admin/navigation" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'navigation' %}bg-instBlue text-white font-bold border-l-2 border-amber-400{% endif %}">
+                    <a href="/admin/navigation"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'navigation' %}bg-instBlue text-white font-bold border-l-2 border-amber-400{% endif %}">
                         <i data-lucide="layout-grid" class="w-4 h-4 text-instGold"></i>
                         <span>हेडर, लोगो तथा मुख्य मेनु</span>
                     </a>
-                    <a href="/admin/users" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'users' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/users"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'users' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i>
                         <span>प्रयोगकर्ता र भूमिका (RBAC)</span>
                     </a>
-                    <a href="/admin/audit-logs" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'audit' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/audit-logs"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'audit' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="history" class="w-4 h-4 text-slate-400"></i>
                         <span>अडिट लग (Audit Logs)</span>
                     </a>
-                    <a href="/admin/settings" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'settings' %}bg-instBlue text-white font-bold{% endif %}">
+                    <a href="/admin/settings"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'settings' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="settings" class="w-4 h-4 text-amber-400"></i>
                         <span>विद्यालय सेटिङ</span>
                     </a>
-                    <a href="/download" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white text-emerald-400 font-bold">
+                    <a href="/download"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white text-emerald-400 font-bold">
                         <i data-lucide="download-cloud" class="w-4 h-4 text-emerald-400"></i>
                         <span>ब्याकअप तथा डाउनलोड</span>
                     </a>
@@ -314,15 +368,19 @@
         <!-- Sidebar User Footer -->
         <div class="p-3 border-t border-instBlue-light/60 bg-instBlue/50 flex items-center justify-between text-xs">
             <div class="flex items-center gap-2 overflow-hidden">
-                <div class="w-8 h-8 rounded-full bg-instGold text-white font-bold flex items-center justify-center flex-shrink-0">
+                <div
+                    class="w-8 h-8 rounded-full bg-instGold text-white font-bold flex items-center justify-center flex-shrink-0">
                     {{ current_user.username[:1].upper() if current_user else 'A' }}
                 </div>
                 <div class="truncate">
-                    <p class="font-bold text-white leading-tight truncate">{{ current_user.full_name_ne if current_user else 'प्रशासक' }}</p>
-                    <p class="text-[10px] text-slate-400 truncate">{{ current_user.role if current_user else 'ADMIN' }}</p>
+                    <p class="font-bold text-white leading-tight truncate">{{ current_user.full_name_ne if current_user
+                        else 'प्रशासक' }}</p>
+                    <p class="text-[10px] text-slate-400 truncate">{{ current_user.role if current_user else 'ADMIN' }}
+                    </p>
                 </div>
             </div>
-            <button onclick="handleLogout()" class="p-1.5 rounded text-slate-400 hover:text-white hover:bg-red-600 transition" title="लगआउट">
+            <button onclick="handleLogout()"
+                class="p-1.5 rounded text-slate-400 hover:text-white hover:bg-red-600 transition" title="लगआउट">
                 <i data-lucide="log-out" class="w-4 h-4"></i>
             </button>
         </div>
@@ -330,21 +388,24 @@
 
     <!-- MAIN ADMIN CONTENT AREA -->
     <div class="flex-grow flex flex-col h-full overflow-hidden">
-        
+
         <!-- Top Admin Header Bar -->
-        <header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between flex-shrink-0 z-20">
+        <header
+            class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between flex-shrink-0 z-20">
             <div class="flex items-center gap-3">
                 <button id="sidebarOpenBtn" class="lg:hidden p-1.5 rounded text-slate-600 hover:bg-slate-100">
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
                 <div class="hidden sm:block">
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">विद्यालय व्यवस्थापन प्रणाली</span>
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">विद्यालय व्यवस्थापन
+                        प्रणाली</span>
                     <h1 class="text-sm font-bold text-instBlue leading-none">{{ settings.name_ne }}</h1>
                 </div>
             </div>
 
             <div class="flex items-center gap-3 sm:gap-4 text-xs">
-                <a href="/" target="_blank" class="hidden sm:flex items-center gap-1.5 text-instBlue hover:text-instBlue-dark font-semibold px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 rounded-md transition">
+                <a href="/" target="_blank"
+                    class="hidden sm:flex items-center gap-1.5 text-instBlue hover:text-instBlue-dark font-semibold px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 rounded-md transition">
                     <i data-lucide="globe" class="w-3.5 h-3.5"></i>
                     <span>वेबसाइट हेर्नुहोस्</span>
                 </a>
@@ -352,11 +413,14 @@
                 <div class="h-6 w-px bg-slate-200"></div>
 
                 <!-- एकाउन्ट Approval (प्रमुख एडमिनको छेउमा) -->
-                <a href="/admin/registrations" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-sm transition active:scale-95 border border-emerald-500" title="विद्यार्थी तथा शिक्षक एकाउन्ट Approval (स्वीकृत / अस्वीकृत)">
+                <a href="/admin/registrations"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-sm transition active:scale-95 border border-emerald-500"
+                    title="विद्यार्थी तथा शिक्षक एकाउन्ट Approval (स्वीकृत / अस्वीकृत)">
                     <i data-lucide="user-check" class="w-4 h-4 text-emerald-200"></i>
                     <span>एकाउन्ट Approval</span>
                     {% if pending_registrations_count is defined and pending_registrations_count > 0 %}
-                    <span class="bg-rose-500 text-white font-black text-[10px] px-1.5 py-0.2 rounded-full animate-bounce shadow">
+                    <span
+                        class="bg-rose-500 text-white font-black text-[10px] px-1.5 py-0.2 rounded-full animate-bounce shadow">
                         {{ pending_registrations_count }}
                     </span>
                     {% endif %}
@@ -366,11 +430,14 @@
 
                 <div class="flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
-                    <span class="font-bold text-slate-700 hidden sm:inline">{{ current_user.username if current_user else 'admin' }}</span>
-                    <span class="bg-blue-100 text-instBlue font-bold text-[10px] px-2 py-0.5 rounded uppercase">प्रमुख एडमिन ({{ current_user.role if current_user else 'SUPER_ADMIN' }})</span>
+                    <span class="font-bold text-slate-700 hidden sm:inline">{{ current_user.username if current_user
+                        else 'admin' }}</span>
+                    <span class="bg-blue-100 text-instBlue font-bold text-[10px] px-2 py-0.5 rounded uppercase">प्रमुख
+                        एडमिन ({{ current_user.role if current_user else 'SUPER_ADMIN' }})</span>
                 </div>
 
-                <button onclick="handleLogout()" class="inline-flex items-center gap-1 text-slate-600 hover:text-red-600 px-2.5 py-1.5 rounded hover:bg-slate-100 transition font-medium">
+                <button onclick="handleLogout()"
+                    class="inline-flex items-center gap-1 text-slate-600 hover:text-red-600 px-2.5 py-1.5 rounded hover:bg-slate-100 transition font-medium">
                     <i data-lucide="log-out" class="w-4 h-4"></i>
                     <span class="hidden sm:inline">लगआउट</span>
                 </button>
@@ -390,25 +457,25 @@
                 try {
                     localStorage.removeItem('auth_token');
                     document.cookie = "session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax";
-                } catch(e) {}
-                fetch('/api/auth/logout', {method: 'POST'})
+                } catch (e) { }
+                fetch('/api/auth/logout', { method: 'POST' })
                     .then(() => window.location.href = '/login');
             }
         }
 
         // Global Universal Image Compressor (Max 300 KB)
-        window.compressAndResizeImage = function(file, maxDimension = 800, maxSizeBytes = 300 * 1024) {
+        window.compressAndResizeImage = function (file, maxDimension = 800, maxSizeBytes = 300 * 1024) {
             return new Promise((resolve, reject) => {
                 if (!file || !file.type.startsWith('image/')) {
-                    resolve({ blob: file, dataUrl: null, sizeKb: (file.size/1024).toFixed(1) });
+                    resolve({ blob: file, dataUrl: null, sizeKb: (file.size / 1024).toFixed(1) });
                     return;
                 }
                 const reader = new FileReader();
                 reader.onerror = () => reject(new Error("फाइल पढ्न सकिएन।"));
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     const img = new Image();
                     img.onerror = () => reject(new Error("तस्विर लोड हुन सकेन।"));
-                    img.onload = function() {
+                    img.onload = function () {
                         let width = img.width, height = img.height;
                         if (width > maxDimension || height > maxDimension) {
                             if (width > height) {
@@ -458,7 +525,7 @@
         };
 
         // Global Admin Universal File Upload Helper (with Auto-Resize for Images <= 300 KB)
-        window.adminUploadFile = async function(fileInput, targetInputId, statusElId) {
+        window.adminUploadFile = async function (fileInput, targetInputId, statusElId) {
             if (!fileInput.files || !fileInput.files[0]) return;
             const file = fileInput.files[0];
             const statusEl = statusElId ? document.getElementById(statusElId) : null;
@@ -503,7 +570,7 @@
                 } else {
                     if (statusEl) statusEl.innerHTML = `<span class="text-emerald-600 font-bold">✓ तस्विर सुरक्षित भयो (${sizeText})</span>`;
                 }
-            } catch(err) {
+            } catch (err) {
                 if (statusEl) statusEl.innerHTML = '<span class="text-red-500 font-bold">अपलोड त्रुटि: ' + err.message + '</span>';
             }
         };
@@ -530,4 +597,5 @@
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>
+
 </html>

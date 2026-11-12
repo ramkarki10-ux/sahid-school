@@ -1,0 +1,849 @@
+{% extends "base.html" %}
+
+{% block title %}वार्षिक कार्ययोजना (Annual Action Plan) | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb & Page Banner -->
+<div class="bg-gradient-to-r from-instBlue-dark via-instBlue to-slate-800 text-white py-8 border-b border-blue-900/40 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 relative z-10">
+        <div class="flex items-center gap-2 text-xs text-blue-200/80 mb-3">
+            <a href="/" class="hover:text-amber-300 transition">गृहपृष्ठ</a>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            <a href="/academics" class="hover:text-amber-300 transition">शैक्षिक कार्यक्रम</a>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            <span class="text-amber-300 font-semibold">वार्षिक कार्ययोजना</span>
+        </div>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-300/30 text-amber-300 text-xs font-bold mb-2">
+                    <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i>
+                    <span>शैक्षिक सत्र {{ plan.academic_year or '२०८२/८३' }}</span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">वार्षिक कार्ययोजना (Annual Academic Action Plan)</h1>
+                <p class="text-xs sm:text-sm text-blue-100/90 mt-1.5 max-w-2xl leading-relaxed">
+                    सहिद स्मृति आवासीय माध्यमिक विद्यालयको शैक्षिक, सह-क्रियाकलाप, परीक्षा, भौतिक तथा प्रशासनिक क्रियाकलापको विस्तृत वार्षिक कार्ययोजना तालिका।
+                </p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-2.5">
+                <a href="/api/action-plan/export" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition hover:-translate-y-0.5">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                    <span>एक्सेल डाउनलोड</span>
+                </a>
+                <button onclick="window.print()" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-4 py-2.5 rounded-xl border border-white/20 backdrop-blur-sm transition">
+                    <i data-lucide="printer" class="w-4 h-4"></i>
+                    <span>प्रिन्ट</span>
+                </button>
+                {% if is_admin %}
+                <button onclick="toggleAdminPanel()" class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-4 py-2.5 rounded-xl shadow-lg transition hover:-translate-y-0.5">
+                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                    <span id="btnAdminToggleText">व्यवस्थापन प्यानल खोल्नुहोस्</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="py-8 bg-slate-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 space-y-8">
+
+        {% if is_admin %}
+        <!-- ADMIN MANAGEMENT MODULE (3 FLEXIBLE ENTRY METHODS) -->
+        <div id="adminActionPlanPanel" class="bg-white rounded-2xl border-2 border-amber-300 shadow-xl overflow-hidden transition-all duration-300">
+            <div class="bg-gradient-to-r from-amber-500/15 via-amber-400/10 to-transparent p-5 border-b border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shadow-md">
+                        <i data-lucide="settings" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-base sm:text-lg font-bold text-slate-900">कार्ययोजना व्यवस्थापन (Admin Control)</h2>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500 text-slate-950 uppercase tracking-wider">Super Admin / Principal Mode</span>
+                        </div>
+                        <p class="text-xs text-slate-600">३ विधिहरू मध्ये कुनै पनि एक प्रयोग गरी कार्ययोजना व्यवस्थापन गर्नुहोस्।</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="saveStatusIndicator" class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 hidden flex items-center gap-1.5">
+                        <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                        <span>अद्यावधिक भयो</span>
+                    </span>
+                    <button onclick="toggleAdminPanel()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Management Tabs -->
+            <div class="border-b border-slate-200 px-5 pt-3 bg-slate-50/50 flex flex-wrap gap-2">
+                <button type="button" onclick="switchAdminTab('grid')" id="tabBtn-grid" class="admin-tab-btn active px-4 py-2.5 text-xs font-bold rounded-t-xl border-b-2 flex items-center gap-2 transition">
+                    <i data-lucide="table" class="w-4 h-4"></i>
+                    <span>विधि १: प्रत्यक्ष ग्रिड इन्ट्री (Direct Excel-like Grid)</span>
+                </button>
+                <button type="button" onclick="switchAdminTab('paste')" id="tabBtn-paste" class="admin-tab-btn px-4 py-2.5 text-xs font-bold rounded-t-xl border-b-2 flex items-center gap-2 transition text-slate-600 hover:text-slate-900">
+                    <i data-lucide="clipboard" class="w-4 h-4"></i>
+                    <span>विधि २: एक्सेल/वर्डबाट सिधै पेस्ट (Copy-Paste)</span>
+                </button>
+                <button type="button" onclick="switchAdminTab('upload')" id="tabBtn-upload" class="admin-tab-btn px-4 py-2.5 text-xs font-bold rounded-t-xl border-b-2 flex items-center gap-2 transition text-slate-600 hover:text-slate-900">
+                    <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                    <span>विधि ३: फाइल अपलोड (PDF/Word/Excel)</span>
+                </button>
+            </div>
+
+            <div class="p-5 sm:p-6">
+                <!-- TAB 1: Direct Excel-like Grid Entry -->
+                <div id="adminTab-grid" class="admin-tab-pane space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-blue-50/60 p-3.5 rounded-xl border border-blue-100">
+                        <div class="text-xs text-blue-900 leading-relaxed">
+                            <span class="font-bold">तालिका सम्पादन निर्देशन:</span> कुनै पनि कोठा (Cell) मा क्लिक गरी सिधै सम्पादन गर्न सक्नुहुन्छ। पङ्क्ति थप्न वा हटाउन दायाँपट्टिको बटन प्रयोग गर्नुहोस्।
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <button type="button" onclick="addNewGridRow()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                <span>+ नयाँ पङ्क्ति थप्नुहोस्</span>
+                            </button>
+                            <button type="button" onclick="saveInteractiveGrid()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-md flex items-center gap-1.5 transition">
+                                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                                <span>तालिका सुरक्षित गर्नुहोस्</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Editable Spreadsheet Table -->
+                    <div class="overflow-x-auto rounded-xl border border-slate-300 shadow-sm max-h-[550px] overflow-y-auto">
+                        <table class="w-full text-xs text-left border-collapse" id="editableSpreadsheetTable">
+                            <thead class="bg-slate-800 text-white sticky top-0 z-10 shadow-sm">
+                                <tr>
+                                    <th class="py-2.5 px-2 text-center w-12 border-r border-slate-700 font-bold">क्र.सं.</th>
+                                    <th class="py-2.5 px-3 w-28 border-r border-slate-700 font-bold">महिना</th>
+                                    <th class="py-2.5 px-3 min-w-[240px] border-r border-slate-700 font-bold">प्रमुख क्रियाकलाप / कार्यक्रम</th>
+                                    <th class="py-2.5 px-3 min-w-[160px] border-r border-slate-700 font-bold">लक्षित समूह</th>
+                                    <th class="py-2.5 px-3 min-w-[160px] border-r border-slate-700 font-bold">जिम्मेवार व्यक्ति/शाखा</th>
+                                    <th class="py-2.5 px-3 min-w-[180px] border-r border-slate-700 font-bold">अपेक्षित उपलब्धि / सूचक</th>
+                                    <th class="py-2.5 px-3 w-28 border-r border-slate-700 font-bold">कैफियत / स्थिति</th>
+                                    <th class="py-2.5 px-2 text-center w-14 font-bold">कार्य</th>
+                                </tr>
+                            </thead>
+                            <tbody id="editableSpreadsheetBody" class="divide-y divide-slate-200 bg-white">
+                                <!-- Populated dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 2: Copy-Paste from Excel or Word -->
+                <div id="adminTab-paste" class="admin-tab-pane hidden space-y-4">
+                    <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-4 text-xs text-amber-950 space-y-2">
+                        <div class="font-bold flex items-center gap-1.5 text-amber-900">
+                            <i data-lucide="info" class="w-4 h-4"></i>
+                            <span>एक्सेल वा वर्डबाट तालिका कपी-पेस्ट गर्ने सजिलो तरिका:</span>
+                        </div>
+                        <ol class="list-decimal list-inside space-y-1 text-slate-700 leading-relaxed pl-1">
+                            <li>तपाईंको कम्प्युटरमा भएको Microsoft Excel, Google Sheets वा Word को कार्ययोजना तालिका सेलेक्ट गरी <kbd class="px-1.5 py-0.5 bg-white border border-slate-300 rounded font-mono text-[10px]">Ctrl + C</kbd> थिची कपी गर्नुहोस्।</li>
+                            <li>तलको बाकसमा क्लिक गरी <kbd class="px-1.5 py-0.5 bg-white border border-slate-300 rounded font-mono text-[10px]">Ctrl + V</kbd> थिची पेस्ट गर्नुहोस्।</li>
+                            <li><b>"तालिकामा रूपान्तरण गर्नुहोस्"</b> बटन थिच्नुहोस्। यसले स्वतः सम्पूर्ण विवरण ग्रिडमा भरेर वेबसाइटमा सुरक्षित गरिदिनेछ।</li>
+                        </ol>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-800 mb-1.5">पेस्ट गर्ने ठाउँ (Paste Raw Spreadsheet Data Here):</label>
+                        <textarea id="rawClipboardData" rows="8" placeholder="महिना	प्रमुख क्रियाकलाप	लक्षित समूह	जिम्मेवार	अपेक्षित उपलब्धि	स्थिति
+बैशाख	नयाँ शैक्षिक सत्र भर्ना तथा पाठ्यपुस्तक वितरण	कक्षा १-१२	भर्ना समिति	शतप्रतिशत पाठ्यपुस्तक	सम्पन्न
+जेठ	प्रथम अभिभावक भेला तथा स्वास्थ्य परीक्षण	सम्पूर्ण विद्यार्थी	प्रशासन	स्वास्थ्य कार्ड अद्यावधिक	सञ्चालन..." class="w-full text-xs font-mono p-3.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] text-slate-500">कॉलमहरू ट्याब (Tab), अल्पविराम (Comma) वा ठाडो बार (|) बाट स्वतः छुट्याइन्छ।</span>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="document.getElementById('rawClipboardData').value=''" class="px-3 py-2 text-xs text-slate-600 hover:text-slate-900 font-semibold">खाली गर्नुहोस्</button>
+                            <button type="button" onclick="parseAndImportClipboardData()" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold rounded-xl shadow-md flex items-center gap-2 transition">
+                                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                <span>तालिकामा रूपान्तरण तथा सुरक्षित गर्नुहोस्</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: File Upload (PDF/Word/Excel) -->
+                <div id="adminTab-upload" class="admin-tab-pane hidden space-y-5">
+                    <form id="actionPlanFileUploadForm" onsubmit="handleActionPlanFileUpload(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">शैक्षिक सत्र (Academic Year) *</label>
+                                <input type="text" id="uploadAcademicYear" name="academic_year" value="{{ plan.academic_year or '२०८२/८३' }}" required class="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">फाइलको शीर्षक (Document Title)</label>
+                                <input type="text" id="uploadDocTitle" name="title" value="{{ plan.title or 'सहिद स्मृति आवासीय मा.वि. वार्षिक कार्ययोजना २०८२/८३' }}" class="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                            </div>
+                        </div>
+
+                        <!-- Drag and Drop Dropzone -->
+                        <div id="actionPlanDropzone" class="border-2 border-dashed border-slate-300 hover:border-instBlue bg-slate-50 hover:bg-blue-50/40 rounded-2xl p-8 text-center transition cursor-pointer relative" onclick="document.getElementById('actionPlanFileInput').click()">
+                            <input type="file" id="actionPlanFileInput" name="file" accept=".pdf,.docx,.doc,.xlsx,.xls,.png,.jpg,.jpeg" class="hidden" onchange="handleFileSelected(this)">
+                            <div class="space-y-2">
+                                <div class="w-12 h-12 mx-auto rounded-full bg-blue-100 text-instBlue flex items-center justify-center">
+                                    <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                                </div>
+                                <div class="text-xs text-slate-700">
+                                    <span class="font-bold text-instBlue hover:underline">फाइल छनौट गर्नुहोस्</span> वा यहाँ तानेर ल्याउनुहोस् (Drag & Drop)
+                                </div>
+                                <p class="text-[11px] text-slate-400">PDF, Word (.docx), Excel (.xlsx) वा छवि फाइलहरू (अधिकतम १५ MB सम्म)</p>
+                                <div id="selectedFileInfo" class="hidden mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-800 shadow-sm">
+                                    <i data-lucide="file-check" class="w-4 h-4 text-emerald-600"></i>
+                                    <span id="selectedFileName">फाइल</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-3 pt-2">
+                            <button type="submit" id="btnUploadActionPlanSubmit" class="px-5 py-2.5 bg-instBlue hover:bg-instBlue-dark text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2 transition">
+                                <i data-lucide="upload" class="w-4 h-4"></i>
+                                <span>फाइल अपलोड तथा सेभ गर्नुहोस्</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    {% if plan and plan.file_url %}
+                    <!-- Current Uploaded File Preview Card -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-100 text-instBlue flex items-center justify-center font-bold">
+                                <i data-lucide="file-text" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-900">{{ plan.file_name or 'वार्षिक कार्ययोजना दस्तावेज' }}</h4>
+                                <p class="text-[11px] text-slate-500">साइज: {{ plan.file_size or 'अज्ञात' }} | प्रकार: {{ plan.file_type or 'दस्तावेज' }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <a href="{{ plan.file_url }}" target="_blank" download="{{ plan.file_name or 'Annual_Action_Plan.pdf' }}" class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-sm">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                <span>डाउनलोड</span>
+                            </a>
+                            <button type="button" onclick="deleteUploadedActionPlanFile()" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg" title="फाइल हटाउनुहोस्">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- OFFICIAL DOCUMENT DOWNLOAD / PREVIEW CARD (VISITORS & PUBLIC) -->
+        <div id="officialDocNoticeBox" class="bg-gradient-to-r from-blue-900 to-indigo-950 text-white rounded-2xl p-6 sm:p-7 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-5 relative overflow-hidden">
+            <div class="absolute -right-8 -bottom-8 w-48 h-48 rounded-full bg-white/5 pointer-events-none"></div>
+            <div class="space-y-2 max-w-2xl relative z-10">
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/30 text-amber-300 text-[11px] font-bold">
+                    <i data-lucide="check-circle" class="w-3 h-3"></i>
+                    <span>आधिकारिक स्वीकृत दस्तावेज (Official Approved Document)</span>
+                </div>
+                <h3 class="text-lg sm:text-xl font-bold tracking-tight" id="publicDocTitleDisplay">{{ plan.title or 'वार्षिक शैक्षिक तथा अतिरिक्त क्रियाकलाप कार्ययोजना २०८२/८३' }}</h3>
+                <p class="text-xs text-blue-200/90 leading-relaxed">
+                    प्रशासन तथा विद्यालय व्यवस्थापन समितिद्वारा स्वीकृत आधिकारिक कार्ययोजना। शिक्षक, अभिभावक तथा विद्यार्थीहरूले विस्तृत अध्ययनका लागि सुरक्षित रूपमा डाउनलोड वा अनलाइन हेर्न सक्नुहुन्छ।
+                </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3 relative z-10">
+                <button type="button" onclick="previewActionPlanDoc()" id="btnPreviewPublicDoc" class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl border border-white/20 backdrop-blur-sm flex items-center gap-2 transition">
+                    <i data-lucide="eye" class="w-4 h-4"></i>
+                    <span>अनलाइन हेर्नुहोस्</span>
+                </button>
+                <a id="btnDownloadPublicDoc" href="{{ plan.file_url or '#' }}" download="{{ plan.file_name or 'Annual_Action_Plan.pdf' }}" class="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-extrabold rounded-xl shadow-lg flex items-center gap-2 transition hover:-translate-y-0.5">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>दस्तावेज डाउनलोड</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- PUBLIC ACTION PLAN INTERACTIVE TABLE -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <!-- Table Controls & Filters -->
+            <div class="p-5 border-b border-slate-200 bg-slate-50/70 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                            <i data-lucide="calendar-check" class="w-5 h-5 text-instBlue"></i>
+                            <span>महिनावारी कार्ययोजना तालिका</span>
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-0.5">महिना वा त्रैमासिक अनुसार क्रियाकलापहरू खोजी र अवलोकन गर्नुहोस्।</p>
+                    </div>
+
+                    <!-- Search Input -->
+                    <div class="relative w-full sm:w-72">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
+                        <input type="text" id="actionPlanSearchInput" oninput="filterActionPlanTable()" placeholder="क्रियाकलाप, जिम्मेवार, सूचक खोजी..." class="w-full text-xs pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Month / Quarter Filters -->
+                <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span class="text-xs font-bold text-slate-600 mr-1.5">अवधि:</span>
+                    <button type="button" onclick="setMonthFilter('all')" class="month-filter-btn active px-3 py-1 text-xs font-semibold rounded-lg bg-instBlue text-white shadow-sm transition">सबै महिना</button>
+                    <button type="button" onclick="setQuarterFilter('Q1')" class="month-filter-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition">प्रथम त्रैमास (बैशाख-असार)</button>
+                    <button type="button" onclick="setQuarterFilter('Q2')" class="month-filter-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition">दोस्रो त्रैमास (साउन-असोज)</button>
+                    <button type="button" onclick="setQuarterFilter('Q3')" class="month-filter-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition">तेस्रो त्रैमास (कार्तिक-पुष)</button>
+                    <button type="button" onclick="setQuarterFilter('Q4')" class="month-filter-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition">चौथो त्रैमास (माघ-चैत)</button>
+                </div>
+            </div>
+
+            <!-- Table Responsive Container -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs text-left border-collapse" id="publicActionPlanTable">
+                    <thead class="bg-slate-100 text-slate-700 border-b border-slate-200 uppercase font-bold text-[11px] tracking-wider">
+                        <tr>
+                            <th class="py-3 px-3 text-center w-12">क्र.सं.</th>
+                            <th class="py-3 px-3 w-24">महिना</th>
+                            <th class="py-3 px-4 min-w-[240px]">प्रमुख क्रियाकलाप / कार्यक्रम</th>
+                            <th class="py-3 px-3 min-w-[160px]">लक्षित समूह</th>
+                            <th class="py-3 px-3 min-w-[160px]">जिम्मेवार व्यक्ति/शाखा</th>
+                            <th class="py-3 px-4 min-w-[200px]">अपेक्षित उपलब्धि / सूचक</th>
+                            <th class="py-3 px-3 text-center w-24">स्थिति</th>
+                        </tr>
+                    </thead>
+                    <tbody id="publicActionPlanBody" class="divide-y divide-slate-100 text-slate-700">
+                        <!-- Populated dynamically by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="noMatchMessage" class="hidden p-8 text-center text-xs text-slate-500">
+                <i data-lucide="info" class="w-6 h-6 mx-auto mb-2 text-slate-400"></i>
+                तपाईंले खोज्नुभएको विवरण फेला परेन।
+            </div>
+            
+            <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-500 gap-2">
+                <div>कुल क्रियाकलापहरू: <span id="totalActivitiesCount" class="font-bold text-slate-800">०</span> वटा</div>
+                <div>अन्तिम अद्यावधिक: {{ plan.updated_at or 'हालै' }} (प्रशासन शाखा)</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- DOCUMENT PREVIEW MODAL -->
+<div id="actionPlanDocModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-5xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div class="p-4 bg-slate-800 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i data-lucide="file-text" class="w-4 h-4 text-amber-400"></i>
+                <h4 class="text-xs sm:text-sm font-bold" id="docModalTitle">दस्तावेज अनलाइन पूर्वावलोकन</h4>
+            </div>
+            <div class="flex items-center gap-2">
+                <a id="modalDownloadBtn" href="#" download class="px-3 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold rounded-lg flex items-center gap-1 transition">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>डाउनलोड</span>
+                </a>
+                <button type="button" onclick="closeDocModal()" class="p-1.5 text-slate-300 hover:text-white rounded-lg hover:bg-slate-700">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+        <div class="flex-1 bg-slate-100 relative" id="docModalBody">
+            <iframe id="docModalIframe" class="w-full h-full border-none" src="about:blank"></iframe>
+        </div>
+    </div>
+</div>
+
+<!-- CLIENT STATE MANAGEMENT & DUAL LOCALSTORAGE ENGINE -->
+<script>
+const MONTHS_LIST = ["बैशाख", "जेठ", "असार", "साउन", "भदौ", "असोज", "कार्तिक", "मंसिर", "पुष", "माघ", "फागुन", "चैत"];
+const QUARTERS = {
+    'Q1': ["बैशाख", "जेठ", "असार"],
+    'Q2': ["साउन", "भदौ", "असोज"],
+    'Q3': ["कार्तिक", "मंसिर", "पुष"],
+    'Q4': ["माघ", "फागुन", "चैत"]
+};
+
+// Initial data from server
+let currentActionPlan = {
+    academic_year: {{ (plan.academic_year or '२०८२/८३')|tojson }},
+    title: {{ (plan.title or 'वार्षिक कार्ययोजना')|tojson }},
+    file_url: {{ (plan.file_url or '')|tojson }},
+    file_name: {{ (plan.file_name or '')|tojson }},
+    file_type: {{ (plan.file_type or '')|tojson }},
+    file_size: {{ (plan.file_size or '')|tojson }}
+};
+
+let currentGridData = {{ (grid_data or [])|tojson }};
+
+// LocalStorage dual-sync key
+const STORAGE_KEY = 'sahid_school_action_plan_v2';
+
+function loadStoredState() {
+    try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed && Array.isArray(parsed.grid) && parsed.grid.length > 0) {
+                // If local storage has newer rows, keep them
+                if (currentGridData.length === 0 || parsed.updatedAt > (window.serverRenderTime || 0)) {
+                    currentGridData = parsed.grid;
+                }
+            }
+            if (parsed && parsed.file && parsed.file.file_url) {
+                if (!currentActionPlan.file_url) {
+                    currentActionPlan.file_url = parsed.file.file_url;
+                    currentActionPlan.file_name = parsed.file.file_name;
+                    currentActionPlan.file_size = parsed.file.file_size;
+                }
+            }
+        }
+    } catch(e) {
+        console.warn('LocalStorage error:', e);
+    }
+}
+
+function persistState() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            grid: currentGridData,
+            file: currentActionPlan,
+            updatedAt: Date.now()
+        }));
+    } catch(e) {
+        console.warn('Could not persist to LocalStorage:', e);
+    }
+}
+
+// Render Public Table
+function renderPublicTable(filterMonth = 'all', searchQuery = '') {
+    const tbody = document.getElementById('publicActionPlanBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    let visibleCount = 0;
+    const query = searchQuery.trim().toLowerCase();
+
+    currentGridData.forEach((row, index) => {
+        const rowMonth = (row.month || '').trim();
+
+        // Month filter
+        if (filterMonth !== 'all') {
+            if (Array.isArray(filterMonth)) {
+                if (!filterMonth.includes(rowMonth)) return;
+            } else if (rowMonth !== filterMonth) {
+                return;
+            }
+        }
+
+        // Search query filter
+        if (query) {
+            const textMatch = [row.month, row.activity, row.target_group, row.responsible, row.outcome, row.remarks]
+                .join(' ').toLowerCase();
+            if (!textMatch.includes(query)) return;
+        }
+
+        visibleCount++;
+
+        // Status badge style
+        const status = (row.remarks || 'प्रस्तावित').trim();
+        let statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900">प्रस्तावित</span>';
+        if (status.includes('सम्पन्न')) {
+            statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-900"><i data-lucide="check" class="w-3 h-3 mr-0.5"></i>सम्पन्न</span>';
+        } else if (status.includes('सञ्चालन')) {
+            statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-900"><i data-lucide="loader" class="w-3 h-3 mr-0.5"></i>सञ्चालन</span>';
+        } else if (status.includes('तयारी')) {
+            statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-900">तयारी</span>';
+        } else if (status.includes('प्राथमिकता')) {
+            statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-900">प्राथमिकता</span>';
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+        tr.innerHTML = `
+            <td class="py-3 px-3 text-center font-mono font-bold text-slate-500">${row.sn || index + 1}</td>
+            <td class="py-3 px-3 font-bold text-instBlue whitespace-nowrap">${row.month || '-'}</td>
+            <td class="py-3 px-4 font-semibold text-slate-900 leading-snug">${row.activity || '-'}</td>
+            <td class="py-3 px-3 text-slate-600">${row.target_group || '-'}</td>
+            <td class="py-3 px-3 text-slate-600 font-medium">${row.responsible || '-'}</td>
+            <td class="py-3 px-4 text-slate-600">${row.outcome || '-'}</td>
+            <td class="py-3 px-3 text-center whitespace-nowrap">${statusBadge}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById('totalActivitiesCount').innerText = visibleCount;
+    const noMatch = document.getElementById('noMatchMessage');
+    if (noMatch) {
+        noMatch.classList.toggle('hidden', visibleCount > 0);
+    }
+    if (window.lucide) lucide.createIcons();
+}
+
+// Render Editable Spreadsheet in Admin Tab
+function renderEditableSpreadsheet() {
+    const tbody = document.getElementById('editableSpreadsheetBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    currentGridData.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-amber-50/30 transition';
+        tr.innerHTML = `
+            <td class="py-1 px-2 text-center border-r border-slate-200">
+                <input type="text" value="${row.sn || idx + 1}" onchange="updateGridCell(${idx}, 'sn', this.value)" class="w-full text-center font-bold font-mono text-slate-700 bg-transparent border-0 focus:ring-1 focus:ring-amber-500 rounded p-1">
+            </td>
+            <td class="py-1 px-2 border-r border-slate-200">
+                <select onchange="updateGridCell(${idx}, 'month', this.value)" class="w-full bg-transparent border-0 font-bold text-instBlue text-xs focus:ring-1 focus:ring-amber-500 rounded p-1">
+                    ${MONTHS_LIST.map(m => `<option value="${m}" ${row.month === m ? 'selected' : ''}>${m}</option>`).join('')}
+                    <option value="वार्षिक" ${row.month === 'वार्षिक' ? 'selected' : ''}>वार्षिक</option>
+                </select>
+            </td>
+            <td class="py-1 px-2 border-r border-slate-200">
+                <input type="text" value="${escapeHtml(row.activity || '')}" onchange="updateGridCell(${idx}, 'activity', this.value)" placeholder="क्रियाकलापको विवरण..." class="w-full text-xs font-semibold text-slate-900 bg-transparent border-0 focus:ring-1 focus:ring-amber-500 rounded p-1">
+            </td>
+            <td class="py-1 px-2 border-r border-slate-200">
+                <input type="text" value="${escapeHtml(row.target_group || '')}" onchange="updateGridCell(${idx}, 'target_group', this.value)" placeholder="लक्षित समूह..." class="w-full text-xs text-slate-700 bg-transparent border-0 focus:ring-1 focus:ring-amber-500 rounded p-1">
+            </td>
+            <td class="py-1 px-2 border-r border-slate-200">
+                <input type="text" value="${escapeHtml(row.responsible || '')}" onchange="updateGridCell(${idx}, 'responsible', this.value)" placeholder="जिम्मेवार शाखा..." class="w-full text-xs text-slate-700 bg-transparent border-0 focus:ring-1 focus:ring-amber-500 rounded p-1">
+            </td>
+            <td class="py-1 px-2 border-r border-slate-200">
+                <input type="text" value="${escapeHtml(row.outcome || '')}" onchange="updateGridCell(${idx}, 'outcome', this.value)" placeholder="अपेक्षित सूचक..." class="w-full text-xs text-slate-700 bg-transparent border-0 focus:ring-1 focus:ring-amber-500 rounded p-1">
+            </td>
+            <td class="py-1 px-2 border-r border-slate-200">
+                <select onchange="updateGridCell(${idx}, 'remarks', this.value)" class="w-full bg-transparent border-0 text-xs font-bold focus:ring-1 focus:ring-amber-500 rounded p-1">
+                    <option value="सम्पन्न" ${row.remarks === 'सम्पन्न' ? 'selected' : ''}>सम्पन्न</option>
+                    <option value="सञ्चालन" ${row.remarks === 'सञ्चालन' ? 'selected' : ''}>सञ्चालन</option>
+                    <option value="प्रस्तावित" ${(!row.remarks || row.remarks === 'प्रस्तावित') ? 'selected' : ''}>प्रस्तावित</option>
+                    <option value="तयारी" ${row.remarks === 'तयारी' ? 'selected' : ''}>तयारी</option>
+                    <option value="प्राथमिकता" ${row.remarks === 'प्राथमिकता' ? 'selected' : ''}>प्राथमिकता</option>
+                </select>
+            </td>
+            <td class="py-1 px-2 text-center">
+                <button type="button" onclick="deleteGridRow(${idx})" class="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded" title="पङ्क्ति हटाउनुहोस्">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    if (window.lucide) lucide.createIcons();
+}
+
+function updateGridCell(index, field, value) {
+    if (currentGridData[index]) {
+        currentGridData[index][field] = value;
+    }
+}
+
+function addNewGridRow() {
+    const nextSn = currentGridData.length + 1;
+    currentGridData.push({
+        sn: nextSn,
+        month: "बैशाख",
+        activity: "",
+        target_group: "कक्षा १-१२",
+        responsible: "शिक्षक / प्रशासन",
+        outcome: "",
+        remarks: "प्रस्तावित"
+    });
+    renderEditableSpreadsheet();
+    renderPublicTable();
+}
+
+function deleteGridRow(index) {
+    if (confirm("के तपाईं यो पङ्क्ति हटाउन चाहनुहुन्छ?")) {
+        currentGridData.splice(index, 1);
+        renderEditableSpreadsheet();
+        renderPublicTable();
+    }
+}
+
+// Method 1: Save Interactive Grid to Server & LocalStorage
+async function saveInteractiveGrid() {
+    persistState();
+    renderPublicTable();
+
+    try {
+        const res = await fetch('/api/action-plan/save-grid', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                academic_year: currentActionPlan.academic_year || '२०८२/८३',
+                title: currentActionPlan.title || 'सहिद स्मृति आवासीय मा.वि. वार्षिक कार्ययोजना',
+                grid_data: currentGridData
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            flashSaveSuccess("तालिका सफलतापूर्वक सेभ भयो!");
+        } else {
+            alert(data.detail || "सुरक्षित गर्न सकिएन।");
+        }
+    } catch(e) {
+        console.error(e);
+        flashSaveSuccess("स्थानिय रूपमा सुरक्षित गरियो (Offline Sync)!");
+    }
+}
+
+// Method 2: Parse and Import Clipboard Data (Excel/Word Copy-Paste)
+function parseAndImportClipboardData() {
+    const raw = document.getElementById('rawClipboardData').value.trim();
+    if (!raw) {
+        alert("कृपया पहिला एक्सेल वा वर्डबाट तालिका कपी गरी यहाँ पेस्ट गर्नुहोस्।");
+        return;
+    }
+
+    const lines = raw.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (lines.length === 0) return;
+
+    const parsedRows = [];
+    let startIdx = 0;
+
+    // Check if first row is header
+    const firstLine = lines[0].toLowerCase();
+    if (firstLine.includes('महिना') || firstLine.includes('क्रियाकलाप') || firstLine.includes('activity') || firstLine.includes('month') || firstLine.includes('sn')) {
+        startIdx = 1;
+    }
+
+    for (let i = startIdx; i < lines.length; i++) {
+        // Split by tabs or pipes or commas
+        let parts = lines[i].split('\t');
+        if (parts.length === 1) parts = lines[i].split('|');
+        if (parts.length === 1) parts = lines[i].split(',');
+
+        parts = parts.map(p => p.trim());
+        if (parts.length === 0 || !parts.some(p => p.length > 0)) continue;
+
+        let sn = parsedRows.length + 1;
+        let month = "बैशाख";
+        let activity = "";
+        let target = "";
+        let responsible = "";
+        let outcome = "";
+        let remarks = "प्रस्तावित";
+
+        // Heuristic detection based on columns
+        if (parts.length >= 6) {
+            // Might have SN first or month first
+            if (/^\d+$/.test(parts[0])) {
+                sn = parseInt(parts[0]);
+                month = parts[1] || month;
+                activity = parts[2] || "";
+                target = parts[3] || "";
+                responsible = parts[4] || "";
+                outcome = parts[5] || "";
+                remarks = parts[6] || remarks;
+            } else {
+                month = parts[0] || month;
+                activity = parts[1] || "";
+                target = parts[2] || "";
+                responsible = parts[3] || "";
+                outcome = parts[4] || "";
+                remarks = parts[5] || remarks;
+            }
+        } else if (parts.length >= 4) {
+            month = parts[0];
+            activity = parts[1];
+            responsible = parts[2] || "";
+            outcome = parts[3] || "";
+        } else if (parts.length >= 2) {
+            month = parts[0];
+            activity = parts[1];
+        } else {
+            activity = parts[0];
+        }
+
+        parsedRows.push({
+            sn: sn,
+            month: month,
+            activity: activity,
+            target_group: target || "सम्पूर्ण विद्यार्थी",
+            responsible: responsible || "प्रशासन",
+            outcome: outcome || "सिकाइ सुदृढीकरण",
+            remarks: remarks || "प्रस्तावित"
+        });
+    }
+
+    if (parsedRows.length === 0) {
+        alert("कुनै पनि पङ्क्ति फेला परेन। कृपया सही ढाँचामा पेस्ट गर्नुहोस्।");
+        return;
+    }
+
+    currentGridData = parsedRows;
+    renderEditableSpreadsheet();
+    renderPublicTable();
+    saveInteractiveGrid();
+    switchAdminTab('grid');
+    alert(`सफलतापूर्वक ${parsedRows.length} वटा पङ्क्ति तालिकामा थपियो!`);
+}
+
+// Method 3: File Upload Handler (PDF, Word, Excel)
+function handleFileSelected(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        document.getElementById('selectedFileName').innerText = `${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+        document.getElementById('selectedFileInfo').classList.remove('hidden');
+    }
+}
+
+async function handleActionPlanFileUpload(e) {
+    e.preventDefault();
+    const input = document.getElementById('actionPlanFileInput');
+    if (!input.files || !input.files[0]) {
+        alert("कृपया अपलोड गर्नका लागि फाइल छनौट गर्नुहोस्।");
+        return;
+    }
+
+    const file = input.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('academic_year', document.getElementById('uploadAcademicYear').value);
+    formData.append('title', document.getElementById('uploadDocTitle').value);
+
+    const btn = document.getElementById('btnUploadActionPlanSubmit');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> अपलोड हुँदैछ...`;
+
+    try {
+        const res = await fetch('/api/action-plan/upload-file', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+            currentActionPlan.file_url = data.file_url;
+            currentActionPlan.file_name = data.file_name;
+            currentActionPlan.file_size = data.file_size;
+            persistState();
+
+            // Update Public Card
+            const dlBtn = document.getElementById('btnDownloadPublicDoc');
+            if (dlBtn) {
+                dlBtn.href = data.file_url;
+                dlBtn.setAttribute('download', data.file_name);
+            }
+            flashSaveSuccess("फाइल सफलतापूर्वक अपलोड भयो!");
+            setTimeout(() => window.location.reload(), 1200);
+        } else {
+            alert(data.detail || "अपलोड असफल भयो।");
+        }
+    } catch(err) {
+        console.error(err);
+        alert("सर्भरसँग सम्पर्क हुन सकेन।");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        if (window.lucide) lucide.createIcons();
+    }
+}
+
+async function deleteUploadedActionPlanFile() {
+    if (!confirm("के तपाईं यो फाइल हटाउन चाहनुहुन्छ?")) return;
+    try {
+        const res = await fetch('/api/action-plan/file', {method: 'DELETE'});
+        const data = await res.json();
+        if (data.success) {
+            currentActionPlan.file_url = '';
+            persistState();
+            window.location.reload();
+        }
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+// Preview Modal
+function previewActionPlanDoc() {
+    const url = currentActionPlan.file_url;
+    if (!url || url === '#' || url === '') {
+        alert("हाल कुनै फाइल अपलोड गरिएको छैन। तलको कार्ययोजना तालिका अवलोकन गर्नुहोस्।");
+        return;
+    }
+
+    const modal = document.getElementById('actionPlanDocModal');
+    const iframe = document.getElementById('docModalIframe');
+    const dl = document.getElementById('modalDownloadBtn');
+    dl.href = url;
+    dl.setAttribute('download', currentActionPlan.file_name || 'Annual_Action_Plan.pdf');
+
+    iframe.src = url;
+    modal.classList.remove('hidden');
+}
+
+function closeDocModal() {
+    const modal = document.getElementById('actionPlanDocModal');
+    const iframe = document.getElementById('docModalIframe');
+    iframe.src = 'about:blank';
+    modal.classList.add('hidden');
+}
+
+// UI Tabs and Filters
+function switchAdminTab(tabKey) {
+    document.querySelectorAll('.admin-tab-pane').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.admin-tab-btn').forEach(el => {
+        el.classList.remove('active', 'border-amber-500', 'text-amber-800', 'bg-white');
+        el.classList.add('text-slate-600');
+    });
+
+    const pane = document.getElementById(`adminTab-${tabKey}`);
+    const btn = document.getElementById(`tabBtn-${tabKey}`);
+    if (pane) pane.classList.remove('hidden');
+    if (btn) {
+        btn.classList.add('active', 'border-amber-500', 'text-amber-800', 'bg-white');
+        btn.classList.remove('text-slate-600');
+    }
+}
+
+function toggleAdminPanel() {
+    const panel = document.getElementById('adminActionPlanPanel');
+    const btnText = document.getElementById('btnAdminToggleText');
+    if (!panel) return;
+    if (panel.classList.contains('hidden')) {
+        panel.classList.remove('hidden');
+        if (btnText) btnText.innerText = 'व्यवस्थापन प्यानल बन्द गर्नुहोस्';
+    } else {
+        panel.classList.add('hidden');
+        if (btnText) btnText.innerText = 'व्यवस्थापन प्यानल खोल्नुहोस्';
+    }
+}
+
+function setMonthFilter(month) {
+    document.querySelectorAll('.month-filter-btn').forEach(b => b.classList.remove('active', 'bg-instBlue', 'text-white'));
+    event.target.classList.add('active', 'bg-instBlue', 'text-white');
+    renderPublicTable(month, document.getElementById('actionPlanSearchInput').value);
+}
+
+function setQuarterFilter(qKey) {
+    document.querySelectorAll('.month-filter-btn').forEach(b => b.classList.remove('active', 'bg-instBlue', 'text-white'));
+    event.target.classList.add('active', 'bg-instBlue', 'text-white');
+    const months = QUARTERS[qKey] || [];
+    renderPublicTable(months, document.getElementById('actionPlanSearchInput').value);
+}
+
+function filterActionPlanTable() {
+    const activeBtn = document.querySelector('.month-filter-btn.active');
+    renderPublicTable('all', document.getElementById('actionPlanSearchInput').value);
+}
+
+function flashSaveSuccess(msg) {
+    const ind = document.getElementById('saveStatusIndicator');
+    if (ind) {
+        ind.querySelector('span').innerText = msg;
+        ind.classList.remove('hidden');
+        setTimeout(() => ind.classList.add('hidden'), 3500);
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return text.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+// Initialization on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+    loadStoredState();
+    renderPublicTable();
+    renderEditableSpreadsheet();
+    if (window.lucide) lucide.createIcons();
+});
+</script>
+{% endblock %}

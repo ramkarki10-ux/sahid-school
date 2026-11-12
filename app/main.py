@@ -30,7 +30,8 @@ from app.routers import (
     api_mobile,
     api_menus,
     api_alumni,
-    api_support
+    api_support,
+    api_action_plan
 )
 
 app = FastAPI(
@@ -118,6 +119,7 @@ app.include_router(api_mobile.router)
 app.include_router(api_menus.router)
 app.include_router(api_alumni.router)
 app.include_router(api_support.router)
+app.include_router(api_action_plan.router)
 
 @app.on_event("startup")
 def on_startup():

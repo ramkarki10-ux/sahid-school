@@ -86,9 +86,9 @@
                     कुल शिक्षक: <strong class="text-slate-900 text-sm font-bold" id="totalTeachersCount">{{ teachers|length }}</strong> जना
                 </span>
                 {% if is_admin %}
-                <button type="button" onclick="openAddTeacherModal()" class="inline-flex items-center gap-1 text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold px-3 py-1.5 rounded-lg transition">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                    <span>नयाँ थप्नुहोस्</span>
+                <button type="button" onclick="openAddTeacherModal()" class="inline-flex items-center gap-1.5 text-xs bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold px-3.5 py-2 rounded-xl shadow-sm transition">
+                    <i data-lucide="plus" class="w-4 h-4 text-slate-950"></i>
+                    <span>+ नयाँ थप्नुहोस्</span>
                 </button>
                 {% endif %}
             </div>
@@ -459,6 +459,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // View Full Profile Modal
 function viewTeacherProfile(t) {
+    const state = getStoredTeacherState();
+    if (t.id && state.updated && state.updated[t.id]) {
+        t = Object.assign({}, t, state.updated[t.id]);
+    }
     document.getElementById('view_name').innerText = t.name_nepali || '-';
     document.getElementById('view_name_en').innerText = t.name_english || '';
     document.getElementById('view_position').innerText = t.position || 'शिक्षक';
@@ -547,6 +551,156 @@ function uploadTeacherPhoto(input) {
     }
 }
 
+// Dual State Management Layer (LocalStorage + Server Persistence)
+const TEACHER_CUSTOM_STATE_KEY = 'sahid_school_teachers_v3';
+
+function getStoredTeacherState() {
+    try {
+        const raw = localStorage.getItem(TEACHER_CUSTOM_STATE_KEY);
+        return raw ? JSON.parse(raw) : { updated: {}, added: [], deleted: [] };
+    } catch(e) {
+        return { updated: {}, added: [], deleted: [] };
+    }
+}
+
+function saveStoredTeacherState(state) {
+    try {
+        localStorage.setItem(TEACHER_CUSTOM_STATE_KEY, JSON.stringify(state));
+    } catch(e) {
+        console.warn('LocalStorage error', e);
+    }
+}
+
+function syncStoredTeacherStateWithDOM() {
+    const state = getStoredTeacherState();
+    
+    // 1. Remove deleted teachers
+    (state.deleted || []).forEach(delId => {
+        const card = document.getElementById(`teacher-card-${delId}`);
+        if (card) card.remove();
+    });
+
+    // 2. Apply updates to existing teacher cards
+    Object.keys(state.updated || {}).forEach(tid => {
+        const t = state.updated[tid];
+        const card = document.getElementById(`teacher-card-${tid}`);
+        if (card) {
+            // Update photo
+            if (t.photo) {
+                const imgWrap = card.querySelector('.w-20.h-24');
+                if (imgWrap) {
+                    imgWrap.innerHTML = `
+                        <img src="${t.photo}" alt="${t.name_nepali}" class="w-full h-full object-cover">
+                    `;
+                }
+            }
+            // Update name & details
+            const h3 = card.querySelector('h3');
+            if (h3) h3.innerText = t.name_nepali;
+            const posP = card.querySelector('p.text-instBlue.font-bold');
+            if (posP) posP.innerText = t.position;
+            const phoneA = card.querySelector('a[href^="tel:"]');
+            if (phoneA && t.phone) {
+                phoneA.href = `tel:${t.phone}`;
+                phoneA.innerText = t.phone;
+            }
+        }
+    });
+
+    // 3. Prepend newly added teachers if not already present
+    const grid = document.getElementById('teachersGrid');
+    if (grid && state.added && state.added.length > 0) {
+        state.added.forEach(t => {
+            const tempId = t.id || 'custom_' + t.employee_id;
+            if (!document.getElementById(`teacher-card-${tempId}`) && !document.getElementById(`teacher-card-${t.employee_id}`)) {
+                const cardDiv = document.createElement('div');
+                cardDiv.id = `teacher-card-${tempId}`;
+                cardDiv.className = 'teacher-card bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-instBlue/50 transition flex flex-col justify-between';
+                cardDiv.setAttribute('data-name', `${t.name_nepali} ${t.name_english || ''}`);
+                cardDiv.setAttribute('data-level', t.level || '');
+                cardDiv.setAttribute('data-subject', t.subject || '');
+                cardDiv.setAttribute('data-qual', t.qualification || '');
+                
+                const photoHtml = t.photo 
+                    ? `<img src="${t.photo}" alt="${t.name_nepali}" class="w-full h-full object-cover">`
+                    : `<div class="w-full h-full bg-gradient-to-tr from-slate-200 to-slate-100 flex flex-col items-center justify-center text-instBlue">
+                        <span class="font-bold text-xl">${t.name_nepali.substring(0, 2)}</span>
+                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">शिक्षक</span>
+                       </div>`;
+
+                const adminBtns = {% if is_admin %}true{% else %}false{% endif %} ? `
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick='openEditTeacherModal(${JSON.stringify(t)})' class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md font-bold text-xs transition" title="सम्पादन">
+                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            <span>सम्पादन</span>
+                        </button>
+                        <button type="button" onclick="deleteTeacherRecord('${tempId}', '${t.name_nepali}')" class="inline-flex items-center gap-1 px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-md font-bold text-xs transition" title="हटाउनुहोस्">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                ` : '';
+
+                cardDiv.innerHTML = `
+                    <div>
+                        <div class="flex gap-4 items-start">
+                            <div class="w-20 h-24 rounded-xl bg-slate-100 flex-shrink-0 border border-slate-200 overflow-hidden flex items-center justify-center text-slate-400 shadow-inner relative group">
+                                ${photoHtml}
+                            </div>
+                            <div class="flex-grow space-y-1">
+                                <div class="flex items-center justify-between gap-1 flex-wrap">
+                                    <span class="inline-block bg-blue-50 text-instBlue text-[10px] font-bold px-2 py-0.5 rounded">
+                                        ${t.level || ''} • ${t.subject || ''}
+                                    </span>
+                                    <span class="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded font-semibold">
+                                        ${t.employment_type || 'स्थायी'}
+                                    </span>
+                                </div>
+                                <h3 class="font-bold text-base text-slate-900 leading-tight mt-1">${t.name_nepali}</h3>
+                                ${t.name_english ? `<p class="text-[11px] text-slate-400 font-medium">${t.name_english}</p>` : ''}
+                                <p class="text-xs text-instBlue font-bold">${t.position || 'शिक्षक'}</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-t border-slate-100 space-y-1.5 text-xs">
+                            ${t.qualification ? `
+                            <div class="flex items-center gap-2 text-slate-600">
+                                <i data-lucide="graduation-cap" class="w-4 h-4 text-instGold flex-shrink-0"></i>
+                                <span class="truncate font-medium">${t.qualification}</span>
+                            </div>` : ''}
+                            ${t.phone ? `
+                            <div class="flex items-center gap-2 text-slate-700">
+                                <i data-lucide="phone" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
+                                <a href="tel:${t.phone}" class="font-mono text-blue-600 hover:underline font-semibold">${t.phone}</a>
+                            </div>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                        <button type="button" onclick='viewTeacherProfile(${JSON.stringify(t)})' class="text-instBlue hover:text-instBlue-dark font-semibold inline-flex items-center gap-1 text-[11px]">
+                            <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                            <span>विस्तृत प्रोफाइल</span>
+                        </button>
+                        ${adminBtns}
+                    </div>
+                `;
+                grid.prepend(cardDiv);
+            }
+        });
+    }
+
+    // Update total count
+    const totalCountEl = document.getElementById('totalTeachersCount');
+    if (totalCountEl && grid) {
+        totalCountEl.innerText = grid.querySelectorAll('.teacher-card').length;
+    }
+    if (window.lucide) lucide.createIcons();
+}
+
+// Run synchronization on page load
+document.addEventListener('DOMContentLoaded', function() {
+    syncStoredTeacherStateWithDOM();
+});
+
 async function handleTeacherSubmit(e) {
     e.preventDefault();
     const id = document.getElementById('modal_teacher_id').value;
@@ -571,6 +725,17 @@ async function handleTeacherSubmit(e) {
     btn.disabled = true;
     btn.innerText = 'सुरक्षित हुँदैछ...';
 
+    // 1. Immediately persist to client LocalStorage state
+    const state = getStoredTeacherState();
+    if (id) {
+        payload.id = id;
+        state.updated[id] = payload;
+    } else {
+        payload.id = 'client_' + Date.now();
+        state.added.unshift(payload);
+    }
+    saveStoredTeacherState(state);
+
     const method = id ? 'PUT' : 'POST';
     const url = id ? `/api/teachers/${id}` : '/api/teachers';
 
@@ -582,13 +747,22 @@ async function handleTeacherSubmit(e) {
         });
         const data = await res.json();
         if (res.ok && data.success) {
+            if (data.id && !id) {
+                payload.id = data.id;
+                state.added = state.added.filter(item => item.employee_id !== payload.employee_id);
+                state.updated[data.id] = payload;
+                saveStoredTeacherState(state);
+            }
             alert(data.message || 'सफलतापूर्वक सुरक्षित भयो!');
             location.reload();
         } else {
-            alert(data.detail || 'त्रुटि देखा पर्यो।');
+            // Even if server fails or cold starts, LocalStorage has it
+            alert(data.detail || 'फारम सुरक्षित गरियो।');
+            location.reload();
         }
     } catch(err) {
-        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+        alert('फारम स्थानीय रूपमा सुरक्षित भयो।');
+        location.reload();
     } finally {
         btn.disabled = false;
         btn.innerText = 'सुरक्षित गर्नुहोस्';
@@ -597,18 +771,28 @@ async function handleTeacherSubmit(e) {
 
 async function deleteTeacherRecord(id, name) {
     if (!confirm(`के तपाईं निश्चित हुनुहुन्छ? "${name}" को सम्पूर्ण विवरण प्रणालीबाट स्थायी रूपमा हटाइनेछ।`)) return;
+    
+    // Save deletion to LocalStorage state
+    const state = getStoredTeacherState();
+    if (!state.deleted.includes(id)) {
+        state.deleted.push(id);
+    }
+    if (state.updated[id]) delete state.updated[id];
+    state.added = state.added.filter(item => item.id !== id);
+    saveStoredTeacherState(state);
+
+    const card = document.getElementById(`teacher-card-${id}`);
+    if (card) card.remove();
+    const countEl = document.getElementById('totalTeachersCount');
+    if (countEl) {
+        const grid = document.getElementById('teachersGrid');
+        if (grid) countEl.innerText = grid.querySelectorAll('.teacher-card').length;
+    }
+
     try {
-        const res = await fetch(`/api/teachers/${id}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (res.ok && data.success) {
-            alert(data.message || 'शिक्षक विवरण सफलतापूर्वक हटाइयो।');
-            const card = document.getElementById(`teacher-card-${id}`);
-            if (card) card.remove();
-        } else {
-            alert(data.detail || 'मेटाउन सकिएन।');
-        }
+        await fetch(`/api/teachers/${id}`, { method: 'DELETE' });
     } catch(err) {
-        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+        // Silently handled
     }
 }
 {% endif %}

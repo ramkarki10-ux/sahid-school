@@ -75,7 +75,21 @@
                         </div>
                     </div>
 
-                    <a href="/academics" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i><span>शैक्षिक कार्यक्रम</span></a>
+                    <!-- शैक्षिक कार्यक्रम Dropdown Fallback -->
+                    <div class="relative group nav-dropdown-wrapper">
+                        <button type="button" onclick="toggleNavDropdown(event, 'dd-menu-fallback-academics')" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1 whitespace-nowrap cursor-pointer">
+                            <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-amber-400"></i>
+                            <span>शैक्षिक कार्यक्रम</span>
+                            <i data-lucide="chevron-down" class="w-3 h-3 transition-transform duration-200 group-hover:rotate-180"></i>
+                        </button>
+                        <div id="dd-menu-fallback-academics" class="nav-dropdown-box absolute left-0 top-full pt-1.5 hidden z-50 min-w-[210px]">
+                            <div class="bg-white text-slate-800 rounded-xl shadow-2xl border border-slate-200 py-1.5">
+                                <a href="/action-plan" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue"><i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-instBlue"></i><span>वार्षिक कार्ययोजना</span></a>
+                                <a href="/academic-calendar" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue"><i data-lucide="calendar" class="w-3.5 h-3.5 text-instBlue"></i><span>शैक्षिक क्यालेण्डर</span></a>
+                                <a href="/academics" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue border-t border-slate-100"><i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-instBlue"></i><span>समग्र शैक्षिक कार्यक्रम</span></a>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- विद्यार्थी Dropdown Fallback -->
                     <div class="relative group nav-dropdown-wrapper">
