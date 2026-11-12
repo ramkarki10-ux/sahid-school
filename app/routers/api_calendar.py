@@ -13,8 +13,17 @@ from app.utils.audit import log_audit
 
 router = APIRouter(prefix="/api/calendar", tags=["calendar"])
 
-UPLOAD_DIR = Path("static/uploads")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+IS_SERVERLESS = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+if IS_SERVERLESS:
+    UPLOAD_DIR = Path("/tmp/static/uploads")
+else:
+    UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "static" / "uploads"
+
+try:
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass
+
 ALLOWED_CALENDAR_EXTS = {".pdf", ".jpg", ".jpeg", ".png", ".webp", ".docx", ".doc"}
 MAX_CALENDAR_SIZE = 15 * 1024 * 1024  # 15 MB
 

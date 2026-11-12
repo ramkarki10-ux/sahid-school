@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}मोबाइल एप्लिकेसन इन्स्टल (iPhone & Android) | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<!-- Banner -->
+<div class="bg-gradient-to-r from-instBlue-dark via-instBlue to-slate-900 text-white py-10 relative overflow-hidden border-b border-blue-900/40">
+    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+    <div class="max-w-6xl mx-auto px-4 sm:px-8 relative z-10 text-center">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-400/20 border border-amber-300/30 text-amber-300 text-xs font-bold mb-3 shadow-sm">
+            <i data-lucide="smartphone" class="w-4 h-4"></i>
+            <span>आधिकारिक मोबाइल एप्लिकेसन (PWA & Native Mobile App)</span>
+        </div>
+        <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight">सहिद स्मृति मा.वि. मोबाइल एप इन्स्टल गर्नुहोस्</h1>
+        <p class="text-xs sm:text-sm text-blue-100/90 mt-2 max-w-2xl mx-auto leading-relaxed">
+            iPhone (iOS का सम्पूर्ण भर्सन) तथा Android का सम्पूर्ण स्मार्टफोनहरूमा कुनै पनि अतिरिक्त एप स्टोर झन्झट बिना १-क्लिकमा आफ्नै मोबाइलको होम स्क्रिनमा इन्स्टल गर्नुहोस्।
+        </p>
+
+        <!-- Quick Action Buttons -->
+        <div class="flex flex-wrap items-center justify-center gap-3.5 mt-6">
+            <button type="button" id="btnPageInstallNow" onclick="triggerDeviceInstall()" class="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs sm:text-sm font-extrabold rounded-xl shadow-xl flex items-center gap-2 transition hover:-translate-y-0.5">
+                <i data-lucide="download-cloud" class="w-4 h-4"></i>
+                <span id="btnPageInstallText">अहिले नै मोबाइलमा इन्स्टल गर्नुहोस्</span>
+            </button>
+            <a href="/" class="px-5 py-3 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-bold rounded-xl border border-white/20 backdrop-blur-sm flex items-center gap-2 transition">
+                <i data-lucide="globe" class="w-4 h-4"></i>
+                <span>वेबसाइट हेर्नुहोस्</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="py-10 bg-slate-50 min-h-screen">
+    <div class="max-w-6xl mx-auto px-4 sm:px-8 space-y-10">
+
+        <!-- Two Device Cards (Android & iPhone) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <!-- 1. ANDROID INSTALL CARD -->
+            <div class="bg-white rounded-3xl border-2 border-emerald-500/30 shadow-lg p-6 sm:p-8 flex flex-col justify-between hover:shadow-xl transition relative overflow-hidden">
+                <div class="absolute -right-6 -top-6 w-28 h-28 bg-emerald-50 rounded-full pointer-events-none"></div>
+                <div class="space-y-4 relative z-10">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center font-bold shadow-md">
+                            <i data-lucide="smartphone" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-extrabold text-slate-900">Android प्रयोगकर्ताका लागि</h3>
+                            <p class="text-xs text-slate-500">Samsung, Xiaomi, Vivo, Realme, OnePlus, आदि</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-emerald-50/60 rounded-2xl p-4 border border-emerald-100 space-y-2.5 text-xs text-slate-700">
+                        <div class="font-bold text-emerald-900 flex items-center gap-1.5">
+                            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+                            <span>एन्ड्रोइडमा इन्स्टल गर्ने सजिलो तरिका:</span>
+                        </div>
+                        <ol class="list-decimal list-inside space-y-1.5 pl-1 leading-relaxed text-slate-600">
+                            <li>आफ्नो एन्ड्रोइड मोबाइलमा <b>Google Chrome</b> वा कुनै पनि ब्राउजर खोल्नुहोस्।</li>
+                            <li>तलको <b>"Android मा इन्स्टल गर्नुहोस्"</b> बटन थिच्नुहोस्।</li>
+                            <li>ब्राउजरमा देखिने <b>"Install / Add to Home screen"</b> मा थिच्नुहोस्।</li>
+                            <li>एप तपाईंको मोबाइलको स्क्रिनमा एप आइकनका साथ सफलतापूर्वक इन्स्टल हुनेछ!</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="pt-6 relative z-10">
+                    <button type="button" onclick="triggerAndroidInstall()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold rounded-xl shadow-md flex items-center justify-center gap-2 transition hover:-translate-y-0.5">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Android मा इन्स्टल गर्नुहोस्</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. IPHONE (iOS) INSTALL CARD -->
+            <div class="bg-white rounded-3xl border-2 border-blue-500/30 shadow-lg p-6 sm:p-8 flex flex-col justify-between hover:shadow-xl transition relative overflow-hidden">
+                <div class="absolute -right-6 -top-6 w-28 h-28 bg-blue-50 rounded-full pointer-events-none"></div>
+                <div class="space-y-4 relative z-10">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md">
+                            <i data-lucide="apple" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-extrabold text-slate-900">iPhone / iPad (iOS) प्रयोगकर्ताका लागि</h3>
+                            <p class="text-xs text-slate-500">iOS का सम्पूर्ण भर्सन (iOS 12 देखि iOS 18+ सम्म)</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50/60 rounded-2xl p-4 border border-blue-100 space-y-2.5 text-xs text-slate-700">
+                        <div class="font-bold text-blue-900 flex items-center gap-1.5">
+                            <i data-lucide="check-circle-2" class="w-4 h-4 text-blue-600"></i>
+                            <span>iPhone मा इन्स्टल गर्ने ३-स्टेप विधि:</span>
+                        </div>
+                        <ol class="list-decimal list-inside space-y-2 pl-1 leading-relaxed text-slate-600">
+                            <li>iPhone को <b>Safari ब्राउजर</b> मा वेबसाइट (<span class="font-mono text-instBlue font-bold">sahid-school.vercel.app</span>) खोल्नुहोस्।</li>
+                            <li>सफारी ब्राउजरको तल रहेको <b>Share बटन</b> (<i data-lucide="share" class="w-3.5 h-3.5 inline text-blue-600"></i>) मा थिच्नुहोस्।</li>
+                            <li>सूचीलाई केही तल सारेर <b>"Add to Home Screen" (होम स्क्रिनमा थप्नुहोस्)</b> मा थिच्नुहोस्।</li>
+                            <li>माथि दायाँको <b>"Add"</b> थिच्नुहोस्। स्कूलको लोगो सहित एप तयार हुनेछ!</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="pt-6 relative z-10">
+                    <button type="button" onclick="showIosModal()" class="w-full py-3 bg-instBlue hover:bg-instBlue-dark text-white text-xs sm:text-sm font-extrabold rounded-xl shadow-md flex items-center justify-center gap-2 transition hover:-translate-y-0.5">
+                        <i data-lucide="share" class="w-4 h-4 text-amber-300"></i>
+                        <span>iPhone इन्स्टलेसन गाइड हेर्नुहोस्</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- QR CODE TO SCAN AND INSTALL ON MOBILE -->
+        <div class="bg-gradient-to-r from-slate-900 to-instBlue-dark text-white rounded-3xl p-7 sm:p-9 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 border border-slate-700">
+            <div class="space-y-3 max-w-xl text-center md:text-left">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-bold">
+                    <i data-lucide="qr-code" class="w-4 h-4"></i>
+                    <span>QR कोड स्क्यान गरी मोबाइलमा खोल्नुहोस्</span>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-extrabold">कम्प्युटर वा ल्यापटपबाट सिधै मोबाइलमा सार्नुहोस्</h2>
+                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                    आफ्नो iPhone वा Android मोबाइलको क्यामेरा खोलेर दायाँपट्टिको QR कोड स्क्यान गर्नुहोस्। एकै सेकेन्डमा मोबाइलमा वेबसाइट खुल्नेछ र सिधै इन्स्टल गर्न सकिनेछ।
+                </p>
+                <div class="pt-2 flex flex-wrap items-center gap-3 justify-center md:justify-start text-xs font-semibold text-amber-300">
+                    <span>✓ कुनै एप स्टोर एकाउन्ट नचाहिने</span>
+                    <span>✓ अफलाइन पनि चल्ने</span>
+                    <span>✓ फुलस्क्रिन मोबाइल अनुभव</span>
+                </div>
+            </div>
+
+            <!-- QR Code Display Box -->
+            <div class="bg-white p-4 rounded-2xl shadow-2xl flex-shrink-0 flex flex-col items-center">
+                <img id="schoolQrCodeImg" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://sahid-school.vercel.app/app" alt="App QR Code" class="w-40 h-40 rounded-lg">
+                <span class="text-[11px] font-bold text-slate-700 mt-2 font-mono">sahid-school.vercel.app</span>
+            </div>
+        </div>
+
+        <!-- APP FEATURES HIGHLIGHT -->
+        <div class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6">
+            <div class="text-center max-w-xl mx-auto">
+                <h3 class="text-xl font-extrabold text-slate-900">मोबाइल एप्लिकेसनका मुख्य सुविधाहरू</h3>
+                <p class="text-xs text-slate-500 mt-1">एप इन्स्टल गरेपछि प्राप्त हुने शक्तिशाली फिचर्सहरू</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2 hover:bg-blue-50/40 transition">
+                    <div class="w-9 h-9 rounded-xl bg-blue-100 text-instBlue flex items-center justify-center font-bold">
+                        <i data-lucide="newspaper" class="w-5 h-5"></i>
+                    </div>
+                    <h4 class="text-sm font-bold text-slate-900">डाइनामिक न्युज फिड</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed">फेसबुक जस्तै पोस्ट, लाइक, कमेन्ट र शैक्षिक गतिविधिहरू आदानप्रदान।</p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2 hover:bg-emerald-50/40 transition">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                        <i data-lucide="calendar-check" class="w-5 h-5"></i>
+                    </div>
+                    <h4 class="text-sm font-bold text-slate-900">विद्यार्थी अनलाइन हाजिरी</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed">शिक्षकले १-क्लिकमा कक्षागत हाजिरी लिने र अभिभावकले मासिक उपस्थिति हेर्ने।</p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2 hover:bg-purple-50/40 transition">
+                    <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+                        <i data-lucide="award" class="w-5 h-5"></i>
+                    </div>
+                    <h4 class="text-sm font-bold text-slate-900">परीक्षा नतिजा तथा लेजर</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed">त्रैमासिक तथा वार्षिक परीक्षाको नतिजा सिधै मोबाइलबाट खोज्ने र हेर्ने।</p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2 hover:bg-amber-50/40 transition">
+                    <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+                        <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+                    </div>
+                    <h4 class="text-sm font-bold text-slate-900">वार्षिक कार्ययोजना</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed">विद्यालयको सम्पूर्ण वर्षभरिको क्रियाकलाप तालिका तथा एक्सेल डाउनलोड।</p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2 hover:bg-rose-50/40 transition">
+                    <div class="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-bold">
+                        <i data-lucide="calendar" class="w-5 h-5"></i>
+                    </div>
+                    <h4 class="text-sm font-bold text-slate-900">शैक्षिक क्यालेण्डर २०८३</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed">सार्वजनिक बिदा, परीक्षा र कार्यक्रमहरूको आधिकारिक क्यालेन्डर।</p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2 hover:bg-sky-50/40 transition">
+                    <div class="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold">
+                        <i data-lucide="book-open" class="w-5 h-5"></i>
+                    </div>
+                    <h4 class="text-sm font-bold text-slate-900">दैनिक गृहकार्य (Homework)</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed">हरेक कक्षा र विषयको दैनिक अभ्यास विद्यार्थी तथा अभिभावकको पहुँचमा।</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- IPHONE INSTALLATION MODAL -->
+<div id="iosInstallModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 sm:p-7 space-y-5 text-center relative">
+        <button type="button" onclick="closeIosModal()" class="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+
+        <div class="w-16 h-16 rounded-2xl bg-blue-100 text-blue-600 mx-auto flex items-center justify-center font-bold">
+            <i data-lucide="apple" class="w-8 h-8"></i>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-bold text-slate-900">iPhone मा एप कसरी राख्ने?</h3>
+            <p class="text-xs text-slate-500 mt-1">iOS को सफारी ब्राउजर प्रयोग गरी केही सेकेन्डमै इन्स्टल गर्नुहोस्</p>
+        </div>
+
+        <div class="text-left bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3 text-xs text-slate-700">
+            <div class="flex items-start gap-2.5">
+                <span class="w-5 h-5 rounded-full bg-blue-600 text-white font-bold text-[11px] flex items-center justify-center flex-shrink-0">१</span>
+                <span>सफारी ब्राउजरको तल रहेको <b>Share (<i data-lucide="share" class="w-3.5 h-3.5 inline text-blue-600"></i>)</b> आइकनमा थिच्नुहोस्।</span>
+            </div>
+            <div class="flex items-start gap-2.5">
+                <span class="w-5 h-5 rounded-full bg-blue-600 text-white font-bold text-[11px] flex items-center justify-center flex-shrink-0">२</span>
+                <span>मेनुमा तल स्क्रोल गरी <b>"Add to Home Screen"</b> छान्नुहोस्।</span>
+            </div>
+            <div class="flex items-start gap-2.5">
+                <span class="w-5 h-5 rounded-full bg-blue-600 text-white font-bold text-[11px] flex items-center justify-center flex-shrink-0">३</span>
+                <span>माथि दायाँको <b>"Add"</b> मा थिच्नुहोस्।</span>
+            </div>
+        </div>
+
+        <button type="button" onclick="closeIosModal()" class="w-full py-2.5 bg-instBlue text-white text-xs font-bold rounded-xl shadow">
+            बुझें, बन्द गर्नुहोस्
+        </button>
+    </div>
+</div>
+
+<script>
+function triggerDeviceInstall() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS) {
+        showIosModal();
+    } else {
+        triggerAndroidInstall();
+    }
+}
+
+function triggerAndroidInstall() {
+    if (window.deferredPrompt) {
+        window.deferredPrompt.prompt();
+        window.deferredPrompt.userChoice.then((choice) => {
+            if (choice.outcome === 'accepted') {
+                alert("सहिद स्मृति मा.वि. मोबाइल एप सफलतापूर्वक इन्स्टल भयो!");
+            }
+            window.deferredPrompt = null;
+        });
+    } else {
+        alert("तपाईंको ब्राउजरको माथिल्लो दायाँ तीन थोप्ला (⋮) मा थिची 'Install App' वा 'Add to Home screen' रोज्नुहोस्।");
+    }
+}
+
+function showIosModal() {
+    document.getElementById('iosInstallModal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+}
+
+function closeIosModal() {
+    document.getElementById('iosInstallModal').classList.add('hidden');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.lucide) lucide.createIcons();
+});
+</script>
+{% endblock %}

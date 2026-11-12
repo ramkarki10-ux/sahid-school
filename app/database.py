@@ -2,6 +2,7 @@ import sqlite3
 import os
 import json
 import shutil
+import tempfile
 from pathlib import Path
 from datetime import datetime
 
@@ -17,37 +18,42 @@ def _find_source_db():
         Path.cwd() / "api" / "school.db",
     ]
     for c in candidates:
-        if c.exists():
+        if c.exists() and c.is_file() and c.stat().st_size > 0:
             return c
     return candidates[0]
 
 SOURCE_DB_PATH = _find_source_db()
 
-# On Vercel / Serverless environments, copy database to /tmp so read and write operations succeed
-if IS_SERVERLESS:
-    DB_PATH = Path("/tmp/school.db")
-    if not DB_PATH.exists() and SOURCE_DB_PATH.exists():
-        try:
-            shutil.copy2(SOURCE_DB_PATH, DB_PATH)
-        except Exception:
-            pass
-else:
-    DB_PATH = SOURCE_DB_PATH
+def _get_target_db_path():
+    if not IS_SERVERLESS:
+        return SOURCE_DB_PATH
+    tmp_path = Path(tempfile.gettempdir()) / "school.db"
+    src = _find_source_db()
+    if not tmp_path.exists() or tmp_path.stat().st_size == 0:
+        if src.exists():
+            try:
+                shutil.copy2(src, tmp_path)
+                return tmp_path
+            except Exception:
+                return src
+    return tmp_path if tmp_path.exists() else src
 
+DB_PATH = _get_target_db_path()
 _db_initialized = False
 
 def get_db():
     global _db_initialized
-    if IS_SERVERLESS and not DB_PATH.exists():
+    target = _get_target_db_path()
+    try:
+        conn = sqlite3.connect(str(target))
+    except Exception:
         src = _find_source_db()
-        if src.exists():
-            try:
-                shutil.copy2(src, DB_PATH)
-            except Exception:
-                pass
-    conn = sqlite3.connect(str(DB_PATH))
+        conn = sqlite3.connect(str(src))
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON;")
+    try:
+        conn.execute("PRAGMA foreign_keys = ON;")
+    except Exception:
+        pass
     
     if not _db_initialized:
         _db_initialized = True
@@ -58,6 +64,8 @@ def get_db():
                 init_db()
         except Exception:
             pass
+            
+    return conn
 
     return conn
 

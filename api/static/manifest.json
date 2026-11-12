@@ -1,0 +1,47 @@
+{
+  "name": "सहिद स्मृति आवासीय माध्यमिक विद्यालय",
+  "short_name": "सहिद स्मृति मा.वि.",
+  "description": "सहिद स्मृति आवासीय माध्यमिक विद्यालय, इटहरी–१९, सुनसरी - आधिकारिक मोबाइल एप्लिकेसन",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#15305b",
+  "theme_color": "#15305b",
+  "categories": ["education", "school"],
+  "icons": [
+    {
+      "src": "/static/images/logo_header.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/images/logo_header.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "न्युज फिड",
+      "url": "/feed",
+      "description": "विद्यालयको सामाजिक संवाद तथा समाचार"
+    },
+    {
+      "name": "हाजिरी",
+      "url": "/teacher/attendance",
+      "description": "दैनिक विद्यार्थी हाजिरी"
+    },
+    {
+      "name": "वार्षिक कार्ययोजना",
+      "url": "/action-plan",
+      "description": "वार्षिक कार्ययोजना तालिका"
+    },
+    {
+      "name": "शैक्षिक क्यालेण्डर",
+      "url": "/academic-calendar",
+      "description": "शैक्षिक क्यालेण्डर तथा बिदा"
+    }
+  ]
+}

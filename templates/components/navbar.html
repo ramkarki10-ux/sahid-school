@@ -121,6 +121,10 @@
 
             <!-- Quick Action / Super Admin link -->
             <div class="hidden xl:flex items-center gap-2 flex-shrink-0">
+                <a href="/app" class="inline-flex items-center gap-1.5 text-[12px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold px-3 py-1 rounded shadow transition" title="iPhone र Android मा मोबाइल एप इन्स्टल गर्नुहोस्">
+                    <i data-lucide="smartphone" class="w-3.5 h-3.5 text-amber-300"></i>
+                    <span>मोबाइल एप</span>
+                </a>
                 <a href="{% if current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN'] %}/admin/dashboard{% else %}/admin/login{% endif %}" class="inline-flex items-center gap-1.5 text-[12px] bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold px-3 py-1 rounded shadow transition">
                     <i data-lucide="shield-check" class="w-3.5 h-3.5 text-slate-950"></i>
                     <span>सुपर एडमिन</span>
@@ -173,6 +177,14 @@
 
         <!-- Drawer Links (Dynamic from get_navigation_menus()) -->
         <div class="p-3 space-y-1 text-sm font-medium">
+            <!-- Mobile App Install Shortcut Card -->
+            <a href="/app" onclick="closeMobileDrawer()" class="flex items-center justify-between p-2.5 mb-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-bold text-xs shadow-md">
+                <span class="flex items-center gap-2">
+                    <i data-lucide="smartphone" class="w-4 h-4 text-slate-950"></i>
+                    <span>मोबाइल एप इन्स्टल गर्नुहोस्</span>
+                </span>
+                <span class="text-[10px] bg-slate-950 text-amber-300 px-2 py-0.5 rounded-full font-extrabold uppercase">PWA</span>
+            </a>
             {% if nav_menus %}
                 {% for m in nav_menus %}
                     {% if m.children and m.children|length > 0 %}

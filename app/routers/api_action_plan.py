@@ -17,8 +17,16 @@ from app.utils.audit import log_audit
 
 router = APIRouter(prefix="/api/action-plan", tags=["action-plan"])
 
-UPLOAD_DIR = Path("static/uploads")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+IS_SERVERLESS = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+if IS_SERVERLESS:
+    UPLOAD_DIR = Path("/tmp/static/uploads")
+else:
+    UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "static" / "uploads"
+
+try:
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass
 
 ALLOWED_DOC_EXTS = {".pdf", ".docx", ".doc", ".xlsx", ".xls", ".png", ".jpg", ".jpeg"}
 MAX_DOC_SIZE = 15 * 1024 * 1024  # 15 MB

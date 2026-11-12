@@ -87,6 +87,21 @@ async def serve_uploaded_file(filename: str):
             return FileResponse(str(c))
     raise HTTPException(status_code=404, detail="Upload file not found")
 
+# PWA Root Files
+@app.get("/manifest.json")
+async def serve_manifest():
+    manifest_path = BASE_DIR / "static" / "manifest.json"
+    if not manifest_path.exists():
+        manifest_path = Path.cwd() / "static" / "manifest.json"
+    return FileResponse(str(manifest_path), media_type="application/manifest+json")
+
+@app.get("/sw.js")
+async def serve_sw():
+    sw_path = BASE_DIR / "static" / "sw.js"
+    if not sw_path.exists():
+        sw_path = Path.cwd() / "static" / "sw.js"
+    return FileResponse(str(sw_path), media_type="application/javascript")
+
 # Static Files
 if static_dir.exists():
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")

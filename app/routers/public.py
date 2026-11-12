@@ -828,6 +828,18 @@ def page_action_plan(request: Request):
         "active_menu": "academics"
     })
 
+@router.get("/app", response_class=HTMLResponse)
+@router.get("/mobile-app", response_class=HTMLResponse)
+def page_mobile_app(request: Request):
+    settings, ticker_notice = get_school_context()
+    user = get_current_user(request)
+    return templates.TemplateResponse(request, "public/mobile_app.html", {
+        "settings": settings,
+        "ticker_notice": ticker_notice,
+        "current_user": user,
+        "active_menu": "home"
+    })
+
 @router.get("/attendance-view", response_class=HTMLResponse)
 def page_attendance_view(request: Request):
     parent = get_current_parent(request)
