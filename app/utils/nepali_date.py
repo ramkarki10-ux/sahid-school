@@ -109,3 +109,4 @@ def bs_to_ad(bs_year: int, bs_month: int, bs_day: int) -> datetime.date:
 def get_today_bs() -> Dict[str, Any]:
     """Get current day's Bikram Sambat information."""
     return ad_to_bs(datetime.date.today())
+

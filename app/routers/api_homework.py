@@ -168,11 +168,15 @@ def create_homework(req: HomeworkCreateRequest, request: Request):
     cursor = conn.cursor()
 
     teacher_id = user.get("teacher_id")
-    if not teacher_id and user.get("role") in ["SUPER_ADMIN", "PRINCIPAL", "ADMIN"]:
-        # Use first teacher or placeholder
-        cursor.execute("SELECT id FROM teachers LIMIT 1")
-        row = cursor.fetchone()
-        teacher_id = row[0] if row else 103
+    if not teacher_id and user.get("role") in ["SUPER_ADMIN", "PRINCIPAL", "ADMIN", "TEACHER"]:
+        cursor.execute("SELECT id FROM teachers WHERE email = ? OR phone = ? LIMIT 1", (user.get("username"), user.get("phone")))
+        t_row = cursor.fetchone()
+        if t_row:
+            teacher_id = t_row[0]
+        else:
+            cursor.execute("SELECT id FROM teachers LIMIT 1")
+            row = cursor.fetchone()
+            teacher_id = row[0] if row else 103
     elif not teacher_id:
         conn.close()
         raise HTTPException(status_code=403, detail="केवल शिक्षक वा प्रशासकले गृहकार्य थप्न सक्दछन्।")
@@ -224,8 +228,8 @@ def update_homework(hw_id: int, req: HomeworkUpdateRequest, request: Request):
         conn.close()
         raise HTTPException(status_code=404, detail="गृहकार्य फेला परेन।")
 
-    # Only teacher who created or admin can edit
-    if user.get("role") not in ["SUPER_ADMIN", "PRINCIPAL", "ADMIN"] and user.get("teacher_id") != hw["teacher_id"]:
+    # Teachers and Admins can edit
+    if user.get("role") not in ["SUPER_ADMIN", "PRINCIPAL", "ADMIN", "TEACHER"]:
         conn.close()
         raise HTTPException(status_code=403, detail="तपाईंलाई यो गृहकार्य सम्पादन गर्ने अधिकार छैन।")
 
@@ -268,7 +272,7 @@ def delete_homework(hw_id: int, request: Request):
         conn.close()
         raise HTTPException(status_code=404, detail="गृहकार्य फेला परेन।")
 
-    if user.get("role") not in ["SUPER_ADMIN", "PRINCIPAL", "ADMIN"] and user.get("teacher_id") != hw["teacher_id"]:
+    if user.get("role") not in ["SUPER_ADMIN", "PRINCIPAL", "ADMIN", "TEACHER"]:
         conn.close()
         raise HTTPException(status_code=403, detail="तपाईंलाई यो गृहकार्य मेटाउने अधिकार छैन।")
 

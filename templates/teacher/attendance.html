@@ -104,7 +104,7 @@
                         <option value="">-- कक्षा वा संकाय छान्नुहोस् --</option>
                         
                         <optgroup label="पूर्व-प्राथमिक (Pre-Primary)">
-                            {% for c in assigned_classes if c.class_numeric <= 0 %}
+                            {% for c in all_classes or assigned_classes if c.class_numeric <= 0 %}
                             <option value="{{ c.class_id }}" {% if selected_class_id == c.class_id %}selected{% endif %}>
                                 {{ c.class_name_ne }} (विद्यार्थी: {{ c.student_count }} जना)
                             </option>
@@ -112,7 +112,7 @@
                         </optgroup>
 
                         <optgroup label="आधारभूत तथा माध्यमिक (कक्षा १ देखि १०)">
-                            {% for c in assigned_classes if c.class_numeric >= 1 and c.class_numeric <= 10 %}
+                            {% for c in all_classes or assigned_classes if c.class_numeric >= 1 and c.class_numeric <= 10 %}
                             <option value="{{ c.class_id }}" {% if selected_class_id == c.class_id %}selected{% endif %}>
                                 {{ c.class_name_ne }} (विद्यार्थी: {{ c.student_count }} जना)
                             </option>
@@ -120,7 +120,7 @@
                         </optgroup>
 
                         <optgroup label="कक्षा ११ संकायहरू (Class 11 Streams)">
-                            {% for c in assigned_classes if c.class_numeric == 11 %}
+                            {% for c in all_classes or assigned_classes if c.class_numeric == 11 %}
                             <option value="{{ c.class_id }}" {% if selected_class_id == c.class_id %}selected{% endif %}>
                                 {{ c.class_name_ne }} (विद्यार्थी: {{ c.student_count }} जना)
                             </option>
@@ -128,7 +128,7 @@
                         </optgroup>
 
                         <optgroup label="कक्षा १२ संकायहरू (Class 12 Streams)">
-                            {% for c in assigned_classes if c.class_numeric == 12 %}
+                            {% for c in all_classes or assigned_classes if c.class_numeric == 12 %}
                             <option value="{{ c.class_id }}" {% if selected_class_id == c.class_id %}selected{% endif %}>
                                 {{ c.class_name_ne }} (विद्यार्थी: {{ c.student_count }} जना)
                             </option>

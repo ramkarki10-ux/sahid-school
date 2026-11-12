@@ -67,15 +67,23 @@
             </a>
             <a href="/teacher/attendance" class="px-3 py-1.5 rounded hover:bg-white/10 flex items-center gap-1.5 font-medium whitespace-nowrap {% if active_page == 'attendance' %}bg-white/15 text-white font-bold{% endif %}">
                 <i data-lucide="calendar-check" class="w-3.5 h-3.5 text-emerald-400"></i>
-                <span>Student Attendance</span>
+                <span>विद्यार्थी हाजिरी (Attendance)</span>
             </a>
-            <a href="/teacher/daily-report" class="px-3 py-1.5 rounded hover:bg-white/10 flex items-center gap-1.5 font-medium whitespace-nowrap {% if active_page == 'daily_report' %}bg-white/15 text-white font-bold{% endif %}">
+            <a href="/teacher/homework" class="px-3 py-1.5 rounded hover:bg-white/10 flex items-center gap-1.5 font-medium whitespace-nowrap {% if active_page == 'homework' %}bg-white/15 text-white font-bold{% endif %}">
+                <i data-lucide="book-open" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>गृहकार्य (Homework)</span>
+            </a>
+            <a href="/teacher/reports" class="px-3 py-1.5 rounded hover:bg-white/10 flex items-center gap-1.5 font-medium whitespace-nowrap {% if active_page == 'reports' or active_page == 'daily_report' %}bg-white/15 text-white font-bold{% endif %}">
                 <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-sky-400"></i>
-                <span>Daily Attendance Report</span>
+                <span>रिपोर्टहरु (Reports)</span>
             </a>
             <a href="/teacher/absent" class="px-3 py-1.5 rounded hover:bg-white/10 flex items-center gap-1.5 font-medium whitespace-nowrap {% if active_page == 'teacher_absent' %}bg-white/15 text-white font-bold{% endif %}">
                 <i data-lucide="user-x" class="w-3.5 h-3.5 text-rose-400"></i>
-                <span>अनुपस्थित सूची (Absent List)</span>
+                <span>अनुपस्थित सूची</span>
+            </a>
+            <a href="/teacher/students" class="px-3 py-1.5 rounded hover:bg-white/10 flex items-center gap-1.5 font-medium whitespace-nowrap {% if active_page == 'students' %}bg-white/15 text-white font-bold{% endif %}">
+                <i data-lucide="users" class="w-3.5 h-3.5 text-teal-300"></i>
+                <span>विद्यार्थी नामावली</span>
             </a>
             <a href="/teacher/profile" class="px-3 py-1.5 rounded hover:bg-white/10 flex items-center gap-1.5 font-medium whitespace-nowrap {% if active_page == 'profile' %}bg-white/15 text-white font-bold{% endif %}">
                 <i data-lucide="user" class="w-3.5 h-3.5 text-amber-300"></i>

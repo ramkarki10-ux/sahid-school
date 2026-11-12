@@ -6,16 +6,19 @@
 <div class="space-y-6">
 
     <!-- Top Header & Filter (Section 4 & 5.1) -->
-    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div
+        class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
             <h1 class="text-xl font-black text-instBlue flex items-center gap-2">
                 <i data-lucide="check-square" class="w-6 h-6 text-emerald-600"></i>
                 <span>दैनिक विद्यार्थी हाजिरी ड्यासबोर्ड (Daily Attendance Dashboard)</span>
             </h1>
             <div class="flex items-center gap-2 mt-1">
-                <span class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full text-xs font-bold shadow-xs">
+                <span
+                    class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full text-xs font-bold shadow-xs">
                     <i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-700"></i>
-                    <span>वि.सं. मिति: {{ target_date_bs.formatted_full if target_date_bs else '२०८३ साल कात्तिक २३ गते' }}</span>
+                    <span>वि.सं. मिति: {{ target_date_bs.formatted_full if target_date_bs else '२०८३ साल कात्तिक २३ गते'
+                        }}</span>
                 </span>
                 <span class="text-xs text-slate-500 font-mono">(A.D.: {{ target_date }})</span>
             </div>
@@ -24,15 +27,20 @@
         <div class="flex flex-wrap items-center gap-2">
             <form method="get" action="/admin/attendance/daily" class="flex items-center gap-2">
                 <label class="text-xs font-bold text-slate-600">मिति:</label>
-                <input type="date" name="att_date" value="{{ target_date }}" max="{{ today_date }}" onchange="this.form.submit()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-bold font-mono focus:ring-2 focus:ring-instBlue focus:outline-none">
-                <button type="submit" class="px-3 py-1.5 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-bold transition">खोल्नुहोस्</button>
+                <input type="date" name="att_date" value="{{ target_date }}" max="{{ today_date }}"
+                    onchange="this.form.submit()"
+                    class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-bold font-mono focus:ring-2 focus:ring-instBlue focus:outline-none">
+                <button type="submit"
+                    class="px-3 py-1.5 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-bold transition">खोल्नुहोस्</button>
             </form>
 
-            <a href="/api/attendance/export-daily?attendance_date={{ target_date }}" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition inline-flex items-center gap-1.5">
+            <a href="/api/attendance/export-daily?attendance_date={{ target_date }}"
+                class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition inline-flex items-center gap-1.5">
                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
                 <span>दैनिक Excel</span>
             </a>
-            <button onclick="window.print()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5">
+            <button onclick="window.print()"
+                class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5">
                 <i data-lucide="printer" class="w-3.5 h-3.5"></i>
                 <span>प्रिन्ट</span>
             </button>
@@ -57,7 +65,8 @@
         <div class="bg-rose-50/70 p-4 rounded-xl border border-rose-200 shadow-xs text-center">
             <span class="text-[11px] font-bold text-rose-800 uppercase tracking-wider">अनुपस्थित (Absent)</span>
             <div class="text-2xl font-black text-rose-600 mt-1">{{ total_absent }}</div>
-            <a href="/admin/attendance/absent" class="text-[10px] text-rose-700 font-bold hover:underline">सूची हेर्नुहोस् &rarr;</a>
+            <a href="/admin/attendance/absent" class="text-[10px] text-rose-700 font-bold hover:underline">सूची
+                हेर्नुहोस् &rarr;</a>
         </div>
         <!-- Leave -->
         <div class="bg-amber-50/70 p-4 rounded-xl border border-amber-200 shadow-xs text-center">
@@ -81,7 +90,8 @@
 
     <!-- Pending Attendance List Banner (Section 4) -->
     {% if pending_classes %}
-    <div class="bg-rose-50 border border-rose-300 rounded-2xl p-4 sm:p-5 text-xs text-rose-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+    <div
+        class="bg-rose-50 border border-rose-300 rounded-2xl p-4 sm:p-5 text-xs text-rose-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-full bg-rose-200 flex items-center justify-center shrink-0">
                 <i data-lucide="alert-circle" class="w-5 h-5 text-rose-700"></i>
@@ -90,7 +100,8 @@
                 <h4 class="font-black text-sm text-rose-900">हाजिरी भर्न बाँकी कक्षाहरू (Pending Attendance):</h4>
                 <div class="flex flex-wrap items-center gap-2 mt-1">
                     {% for pc in pending_classes %}
-                    <span class="px-2.5 py-0.5 rounded-md bg-rose-200/80 text-rose-900 font-bold border border-rose-300">
+                    <span
+                        class="px-2.5 py-0.5 rounded-md bg-rose-200/80 text-rose-900 font-bold border border-rose-300">
                         {{ pc.class_name_ne }} (विद्यार्थी: {{ pc.total_students }})
                     </span>
                     {% endfor %}
@@ -114,15 +125,20 @@
             <div class="relative h-56 flex items-center justify-center">
                 <canvas id="attDonutChart"></canvas>
             </div>
-            <div class="flex items-center justify-center gap-4 text-[11px] font-semibold text-slate-600 mt-2 border-t pt-2">
-                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> उपस्थित: {{ total_present }}</span>
-                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> अनुपस्थित: {{ total_absent }}</span>
-                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> बिदा: {{ total_leave }}</span>
+            <div
+                class="flex items-center justify-center gap-4 text-[11px] font-semibold text-slate-600 mt-2 border-t pt-2">
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    उपस्थित: {{ total_present }}</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                    अनुपस्थित: {{ total_absent }}</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> बिदा:
+                    {{ total_leave }}</span>
             </div>
         </div>
 
         <!-- Class-wise Bar Chart -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2 flex flex-col justify-between">
+        <div
+            class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2 flex flex-col justify-between">
             <div class="flex items-center justify-between mb-2">
                 <h3 class="font-bold text-xs text-slate-800 flex items-center gap-1.5">
                     <i data-lucide="bar-chart" class="w-4 h-4 text-instBlue"></i>
@@ -138,17 +154,20 @@
 
     <!-- Class-wise Attendance Table (Section 5.2) -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div
+            class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
                 <h2 class="font-black text-sm text-instBlue flex items-center gap-2">
                     <i data-lucide="table" class="w-4 h-4 text-instBlue"></i>
                     <span>कक्षागत हाजिरी विवरण (Class-wise Status - मिति: {{ target_date }})</span>
                 </h2>
-                <p class="text-[11px] text-slate-500 mt-0.5">कक्षा १ देखि १२ सम्मका प्रत्येक कक्षाको हाजिरी अवस्था, दर्ता समय र शिक्षक विवरण</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">कक्षा १ देखि १२ सम्मका प्रत्येक कक्षाको हाजिरी अवस्था,
+                    दर्ता समय र शिक्षक विवरण</p>
             </div>
 
             <div class="flex items-center gap-2">
-                <a href="/admin/attendance/correction?att_date={{ target_date }}" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold shadow-xs transition inline-flex items-center gap-1">
+                <a href="/admin/attendance/correction?att_date={{ target_date }}"
+                    class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold shadow-xs transition inline-flex items-center gap-1">
                     <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                     <span>हाजिरी सच्याउनुहोस्</span>
                 </a>
@@ -181,11 +200,14 @@
                         <td class="py-3 px-4 font-bold text-slate-800">{{ c.class_name_ne }}</td>
                         <td class="py-3 px-4 text-center font-bold text-slate-700">{{ tot }}</td>
                         <td class="py-3 px-4 text-center font-bold text-emerald-600">{{ pres if is_sub else '-' }}</td>
-                        <td class="py-3 px-4 text-center font-bold text-rose-600">{{ c.absent_count if is_sub else '-' }}</td>
-                        <td class="py-3 px-4 text-center font-bold text-amber-600">{{ c.leave_count if is_sub else '-' }}</td>
+                        <td class="py-3 px-4 text-center font-bold text-rose-600">{{ c.absent_count if is_sub else '-'
+                            }}</td>
+                        <td class="py-3 px-4 text-center font-bold text-amber-600">{{ c.leave_count if is_sub else '-'
+                            }}</td>
                         <td class="py-3 px-4 text-center font-bold">
                             {% if is_sub %}
-                            <span class="px-2 py-0.5 rounded text-[11px] {% if rate >= 80 %}bg-emerald-100 text-emerald-800{% elif rate >= 60 %}bg-amber-100 text-amber-800{% else %}bg-rose-100 text-rose-800{% endif %}">
+                            <span
+                                class="px-2 py-0.5 rounded text-[11px] {% if rate >= 80 %}bg-emerald-100 text-emerald-800{% elif rate >= 60 %}bg-amber-100 text-amber-800{% else %}bg-rose-100 text-rose-800{% endif %}">
                                 {{ rate }}%
                             </span>
                             {% else %}
@@ -194,12 +216,14 @@
                         </td>
                         <td class="py-3 px-4">
                             {% if is_sub %}
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <span
+                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                                 <i data-lucide="check-circle" class="w-3 h-3 text-emerald-600"></i>
                                 <span>दर्ता भएको</span>
                             </span>
                             {% else %}
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                            <span
+                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
                                 <i data-lucide="clock" class="w-3 h-3 text-rose-600"></i>
                                 <span>बाँकी (Pending)</span>
                             </span>
@@ -213,10 +237,13 @@
                         </td>
                         <td class="py-3 px-4 text-center">
                             <div class="inline-flex items-center gap-1">
-                                <a href="/admin/attendance/class-wise?class_id={{ c.class_id }}&att_date={{ target_date }}" class="px-2.5 py-1 bg-instBlue hover:bg-instBlue-dark text-white rounded text-[11px] font-bold transition shadow-2xs">
+                                <a href="/admin/attendance/class-wise?class_id={{ c.class_id }}&att_date={{ target_date }}"
+                                    class="px-2.5 py-1 bg-instBlue hover:bg-instBlue-dark text-white rounded text-[11px] font-bold transition shadow-2xs">
                                     विस्तृत
                                 </a>
-                                <a href="/admin/attendance/correction?class_id={{ c.class_id }}&att_date={{ target_date }}" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded text-[11px] font-bold transition" title="हाजिरी सच्याउनुहोस्">
+                                <a href="/admin/attendance/correction?class_id={{ c.class_id }}&att_date={{ target_date }}"
+                                    class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded text-[11px] font-bold transition"
+                                    title="हाजिरी सच्याउनुहोस्">
                                     <i data-lucide="edit-2" class="w-3 h-3"></i>
                                 </a>
                             </div>
@@ -242,60 +269,60 @@
                 labels: ['उपस्थित (Present)', 'अनुपस्थित (Absent)', 'बिदा (Leave)'],
                 datasets: [{
                     data: [{{ total_present }}, {{ total_absent }}, {{ total_leave }}],
-                    backgroundColor: ['#10b981', '#f43f5e', '#f59e0b'],
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
+    backgroundColor: ['#10b981', '#f43f5e', '#f59e0b'],
+        borderWidth: 2,
+            borderColor: '#ffffff'
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
+    options: {
+        responsive: true,
+            maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false }
-                },
-                cutout: '70%'
-            }
+            legend: { display: false }
+        },
+        cutout: '70%'
+    }
         });
     }
 
     // Bar Chart
     const barCtx = document.getElementById('attClassBarChart');
     if (barCtx) {
-        const labels = [{% for c in classes_summary %}'{{ c.class_name_ne }}',{% endfor %}];
-        const rates = [{% for c in classes_summary %}
-            {% set tot = c.total_students or 0 %}
-            {% set pres = c.present_count or 0 %}
-            {{ ((pres / tot) * 100) | round(1) if tot > 0 else 0 }},
-        {% endfor %}];
+        const labels = [{% for c in classes_summary %} '{{ c.class_name_ne }}', {% endfor %}];
+    const rates = [{% for c in classes_summary %}
+    {% set tot = c.total_students or 0 %}
+    {% set pres = c.present_count or 0 %}
+    { { ((pres / tot) * 100) | round(1) if tot > 0 else 0 } },
+    {% endfor %}];
 
-        new Chart(barCtx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'उपस्थिति प्रतिशत (%)',
-                    data: rates,
-                    backgroundColor: '#15305b',
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: {
-                            callback: function(v) { return v + '%'; }
-                        }
+    new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'उपस्थिति प्रतिशत (%)',
+                data: rates,
+                backgroundColor: '#15305b',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function (v) { return v + '%'; }
                     }
-                },
-                plugins: {
-                    legend: { display: false }
                 }
+            },
+            plugins: {
+                legend: { display: false }
             }
-        });
+        }
+    });
     }
 </script>
 {% endblock %}

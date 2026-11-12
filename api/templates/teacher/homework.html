@@ -1,0 +1,758 @@
+{% extends "teacher/base_teacher.html" %}
+
+{% block title %}दैनिक गृहकार्य तथा प्रश्नावली व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="p-2 bg-amber-100 text-amber-800 rounded-xl">
+                    <i data-lucide="book-open" class="w-6 h-6"></i>
+                </span>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                        दैनिक गृहकार्य तथा प्रश्नावली व्यवस्थापन
+                    </h1>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                        सबै कक्षा (नर्सरी देखि १२ संकाय सम्म) का विषयहरूमा गृहकार्य तोक्ने, प्रश्नावली थप गर्ने, संसोधन र डिलिट गर्ने पोर्टल
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2.5">
+            <button type="button" onclick="openHwModal()" class="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow hover:shadow-md transition">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                <span>+ नयाँ गृहकार्य तथा प्रश्नावली तोक्नुहोस्</span>
+            </button>
+            <a href="/api/homework/export" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3.5 py-2.5 rounded-xl shadow-xs transition" title="सबै गृहकार्य विवरण Excel मा डाउनलोड गर्नुहोस्">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                <span>Excel निर्यात</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Bar: Class, Subject, Date -->
+    <div class="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">कक्षा छनोट (Class):</label>
+                <select id="tHwClass" onchange="onFilterClassChange()" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none font-semibold text-slate-800 bg-white">
+                    <option value="">-- सबै कक्षाहरू (All Classes) --</option>
+                    
+                    <optgroup label="पूर्व-प्राथमिक (Pre-Primary)">
+                        {% for c in classes if c.class_numeric <= 0 %}
+                        <option value="{{ c.id }}" data-name="{{ c.class_name_ne }}" {% if selected_class_id == c.id %}selected{% endif %}>
+                            {{ c.class_name_ne }}
+                        </option>
+                        {% endfor %}
+                    </optgroup>
+
+                    <optgroup label="आधारभूत तथा माध्यमिक (कक्षा १ देखि १०)">
+                        {% for c in classes if c.class_numeric >= 1 and c.class_numeric <= 10 %}
+                        <option value="{{ c.id }}" data-name="{{ c.class_name_ne }}" {% if selected_class_id == c.id %}selected{% endif %}>
+                            {{ c.class_name_ne }}
+                        </option>
+                        {% endfor %}
+                    </optgroup>
+
+                    <optgroup label="उच्च माध्यमिक (कक्षा ११ र १२ संकाय)">
+                        {% for c in classes if c.class_numeric >= 11 %}
+                        <option value="{{ c.id }}" data-name="{{ c.class_name_ne }}" {% if selected_class_id == c.id %}selected{% endif %}>
+                            {{ c.class_name_ne }}
+                        </option>
+                        {% endfor %}
+                    </optgroup>
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">विषय (Subject):</label>
+                <select id="tHwSubj" onchange="filterHwList()" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none font-semibold text-amber-900 bg-white">
+                    <option value="">सबै विषयहरू (All Subjects)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">तोकिएको मिति (Assigned Date):</label>
+                <input type="date" id="tHwDate" onchange="filterHwList()" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none font-mono">
+            </div>
+
+            <div class="flex items-end">
+                <button type="button" onclick="resetFilters()" class="w-full p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl border border-slate-300 transition flex items-center justify-center gap-1.5">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    <span>फिल्टर रिसेट</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Homework Records Table -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="p-4 bg-slate-50/80 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <i data-lucide="clipboard-list" class="w-4 h-4 text-amber-600"></i>
+                <h2 class="font-bold text-xs text-slate-800">
+                    तोकिएका गृहकार्यहरूको सूची (<span id="hwCountLabel">{{ homework_list | length }}</span> वटा)
+                </h2>
+            </div>
+            <span class="text-[11px] text-slate-500 font-medium">
+                शिक्षक: <b class="text-slate-800">{{ user.full_name or user.username }}</b>
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse" id="hwTable">
+                <thead class="bg-slate-100 text-slate-800 font-bold border-b border-slate-200">
+                    <tr>
+                        <th class="py-3 px-3 text-center w-12">क्र.सं.</th>
+                        <th class="py-3 px-3 text-center">कक्षा / संकाय</th>
+                        <th class="py-3 px-3.5">विषय</th>
+                        <th class="py-3 px-5">गृहकार्य शीर्षक, प्रश्नावली तथा विवरण</th>
+                        <th class="py-3 px-3.5">तोक्ने शिक्षक</th>
+                        <th class="py-3 px-3 text-center">तोकिएको मिति</th>
+                        <th class="py-3 px-3 text-center">बुझाउने मिति</th>
+                        <th class="py-3 px-4 text-right">कार्य (Actions)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100" id="hwTableBody">
+                    {% for hw in homework_list %}
+                    <tr class="teacher-hw-row hover:bg-amber-50/30 transition"
+                        data-class-id="{{ hw.class_id }}"
+                        data-class-name="{{ hw.class_name_ne }}"
+                        data-subject="{{ hw.subject_name }}"
+                        data-date="{{ hw.assigned_date }}"
+                        id="hw-row-{{ hw.id }}"
+                    >
+                        <td class="py-3.5 px-3 text-center text-slate-400 font-bold">{{ loop.index }}</td>
+                        <td class="py-3.5 px-3 text-center">
+                            <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-instBlue border border-blue-200 font-bold text-[11px] inline-block whitespace-nowrap">
+                                {{ hw.class_name_ne }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-3.5 font-bold text-amber-900 whitespace-nowrap">
+                            <span class="px-2.5 py-1 bg-amber-50 border border-amber-200 rounded-lg text-amber-950 font-bold">
+                                {{ hw.subject_name }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-5 max-w-md">
+                            <div class="space-y-1.5">
+                                <p class="font-bold text-slate-900 text-sm leading-snug">{{ hw.title }}</p>
+                                {% if hw.description %}
+                                <p class="text-slate-600 text-xs leading-relaxed">{{ hw.description }}</p>
+                                {% endif %}
+
+                                <!-- Questionnaire Preview / Trigger -->
+                                {% if hw.question_list and hw.question_list | length > 0 %}
+                                <div class="mt-2 pt-2 border-t border-slate-100">
+                                    <div class="flex items-center gap-2">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-bold text-[11px] border border-emerald-200">
+                                            <i data-lucide="check-square" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                            <span>प्रश्नावली: {{ hw.question_list | length }} वटा प्रश्न</span>
+                                        </span>
+                                        <button type="button" onclick="viewQuestionsModal({{ hw.id }})" class="text-[11px] text-instBlue hover:text-instBlue-dark font-bold hover:underline inline-flex items-center gap-0.5">
+                                            <span>प्रश्नावली हेर्नुहोस्</span>
+                                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                                        </button>
+                                    </div>
+                                    <ul class="mt-1 text-[11px] text-slate-600 space-y-0.5 pl-2 border-l-2 border-amber-300">
+                                        {% for q in hw.question_list[:2] %}
+                                        <li class="truncate"><span class="font-bold text-amber-800">प्रश्न {{ loop.index }}:</span> {{ q }}</li>
+                                        {% endfor %}
+                                        {% if hw.question_list | length > 2 %}
+                                        <li class="text-[10px] text-slate-400 font-semibold italic">+ अन्य {{ (hw.question_list | length) - 2 }} वटा प्रश्नहरू...</li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                                {% else %}
+                                <span class="inline-block mt-1 text-[10px] text-slate-400 italic">प्रश्नावली समावेश गरिएको छैन</span>
+                                {% endif %}
+
+                                {% if hw.attachment %}
+                                <div class="mt-1">
+                                    <a href="{{ hw.attachment }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:underline">
+                                        <i data-lucide="paperclip" class="w-3 h-3"></i>
+                                        <span>संलग्न फाइल हेर्नुहोस्</span>
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-3.5 text-slate-700 font-medium whitespace-nowrap">
+                            <span class="font-semibold text-slate-800">{{ hw.teacher_name }}</span>
+                        </td>
+                        <td class="py-3.5 px-3 text-center font-mono text-slate-600 whitespace-nowrap">
+                            {{ hw.assigned_date }}
+                        </td>
+                        <td class="py-3.5 px-3 text-center font-mono font-bold text-red-600 whitespace-nowrap">
+                            {{ hw.due_date }}
+                        </td>
+                        <td class="py-3.5 px-4 text-right whitespace-nowrap">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button type="button" onclick="viewQuestionsModal({{ hw.id }})" class="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 border border-blue-200 transition" title="प्रश्नावली हेर्नुहोस्">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                </button>
+                                <button type="button" onclick='openEditHw({{ hw | tojson | safe }})' class="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50 border border-amber-200 transition" title="संसोधन गर्नुहोस् (Edit)">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </button>
+                                <button type="button" onclick="deleteHomework({{ hw.id }})" class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-700 border border-red-200 transition" title="डिलिट गर्नुहोस् (Delete)">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if not homework_list %}
+        <div class="py-12 text-center text-slate-400 text-xs" id="noHwMsg">
+            <i data-lucide="book-open" class="w-10 h-10 mx-auto text-slate-300 mb-2"></i>
+            <p class="font-bold text-slate-600 text-sm">कुनै गृहकार्य फेला परेन।</p>
+            <p class="text-slate-400 mt-1">माथि रहेको "+ नयाँ गृहकार्य तथा प्रश्नावली तोक्नुहोस्" बटन क्लिक गरी गृहकार्य सिर्जना गर्नुहोस्।</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- ============================================== -->
+<!-- CREATE / EDIT HOMEWORK MODAL WITH QUESTIONNAIRE BUILDER -->
+<!-- ============================================== -->
+<div id="hwModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl relative flex flex-col max-h-[92vh] overflow-hidden text-xs">
+        
+        <!-- MODAL HEADER -->
+        <div class="p-4 sm:p-5 border-b border-slate-200 bg-white flex items-center justify-between shrink-0">
+            <div>
+                <h3 id="hwModalTitle" class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="book-plus" class="w-5 h-5 text-amber-600"></i>
+                    <span>नयाँ गृहकार्य तथा प्रश्नावली तोक्नुहोस्</span>
+                </h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">कक्षा र विषय छनोट गरी प्रश्नहरू थप वा संसोधन गर्नुहोस्</p>
+            </div>
+            <button type="button" onclick="closeHwModal()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- SCROLLABLE BODY -->
+        <div class="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
+            <form id="addHwForm" onsubmit="handleHwSave(event)" class="space-y-4">
+                <input type="hidden" id="hw_edit_id" value="">
+
+                <!-- Class and Dynamic Subject Cascading -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-slate-50/80 p-3.5 rounded-xl border border-slate-200">
+                    <div>
+                        <label class="block font-bold text-slate-800 mb-1">
+                            कक्षा छनोट गर्नुहोस् (Class) <span class="text-red-500">*</span>
+                        </label>
+                        <select id="modalHwClass" onchange="onModalClassChange()" required class="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none font-bold text-slate-900">
+                            <option value="">-- कक्षा छनोट गर्नुहोस् --</option>
+                            <optgroup label="पूर्व-प्राथमिक (Pre-Primary)">
+                                {% for c in classes if c.class_numeric <= 0 %}
+                                <option value="{{ c.id }}">{{ c.class_name_ne }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            <optgroup label="आधारभूत तथा माध्यमिक (कक्षा १ देखि १०)">
+                                {% for c in classes if c.class_numeric >= 1 and c.class_numeric <= 10 %}
+                                <option value="{{ c.id }}">{{ c.class_name_ne }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            <optgroup label="उच्च माध्यमिक (कक्षा ११ र १२ संकाय)">
+                                {% for c in classes if c.class_numeric >= 11 %}
+                                <option value="{{ c.id }}">{{ c.class_name_ne }}</option>
+                                {% endfor %}
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-800 mb-1">
+                            विषय छनोट (Subject) <span class="text-red-500">*</span>
+                        </label>
+                        <select id="modalHwSubj" onchange="onModalSubjectSelect(this.value)" required class="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none font-bold text-amber-900">
+                            <option value="">-- पहिले माथि कक्षा छनोट गर्नुहोस् --</option>
+                        </select>
+                        <div id="customSubjectBox" class="hidden mt-2">
+                            <input type="text" id="modalHwCustomSubj" placeholder="विषयको नाम यहाँ लेख्नुहोस्..." class="w-full p-2 border border-amber-300 rounded-lg text-xs bg-amber-50/50">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Title & General Instruction -->
+                <div class="space-y-3">
+                    <div>
+                        <label class="block font-bold text-slate-800 mb-1">गृहकार्यको शीर्षक (Title) <span class="text-red-500">*</span></label>
+                        <input type="text" id="modalHwTitle" required placeholder="उदाहरण: पाठ ५ - शब्दार्थ तथा प्रश्नोत्तर अभ्यास" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none text-slate-900 font-semibold">
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">गृहकार्य निर्देशन / विवरण (General Instructions)</label>
+                        <textarea id="modalHwDesc" rows="2" placeholder="विद्यार्थीहरूले ध्यान दिनुपर्ने सामान्य निर्देशनहरू यहाँ लेख्नुहोस्..." class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none text-slate-800"></textarea>
+                    </div>
+                </div>
+
+                <!-- QUESTIONNAIRE BUILDER SECTION -->
+                <div class="bg-gradient-to-br from-amber-50/40 via-blue-50/30 to-slate-50 border-2 border-amber-200 rounded-2xl p-4 space-y-3 shadow-inner">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/60 pb-2.5">
+                        <div>
+                            <h4 class="font-black text-slate-900 text-sm flex items-center gap-2">
+                                <i data-lucide="list-ordered" class="w-4 h-4 text-amber-600"></i>
+                                <span>विद्यार्थी गृहकार्य प्रश्नावली (Homework Questions)</span>
+                            </h4>
+                            <p class="text-[11px] text-slate-500 mt-0.5">विद्यार्थीका लागि प्रश्नहरू थप वा संसोधन गर्नुहोस्। आवश्यकता अनुसार थप प्रश्न थप्न सकिन्छ।</p>
+                        </div>
+                        <button type="button" onclick="addQuestionRow()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-xs shadow-xs transition">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>+ नयाँ प्रश्न थप्नुहोस्</span>
+                        </button>
+                    </div>
+
+                    <!-- Dynamic Questions Container -->
+                    <div id="questionsContainer" class="space-y-2.5">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+
+                <!-- Dates Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">तोकिएको मिति (Assigned Date)</label>
+                        <input type="date" id="modalHwAssignedDate" value="{{ today_date }}" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none font-mono">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">गृहकार्य बुझाउने अन्तिम मिति (Due Date) <span class="text-red-500">*</span></label>
+                        <input type="date" id="modalHwDueDate" required class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none font-mono font-bold text-red-600">
+                    </div>
+                </div>
+
+                <!-- Attachment URL (Optional) -->
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">संलग्न फाइल लिङ्क / फोटो (Attachment URL - ऐच्छिक)</label>
+                    <input type="text" id="modalHwAttachment" placeholder="https://... वा फाइल लिङ्क" class="w-full p-2.5 border border-slate-300 rounded-lg text-xs font-mono">
+                </div>
+
+                <!-- SUBMIT BUTTON -->
+                <div class="pt-3 border-t flex items-center justify-end gap-2.5">
+                    <button type="button" onclick="closeHwModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+                        रद्द गर्नुहोस्
+                    </button>
+                    <button type="submit" id="saveHwBtn" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow transition flex items-center gap-1.5">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>गृहकार्य तथा प्रश्नावली सेभ गर्नुहोस्</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- VIEW QUESTIONNAIRE MODAL -->
+<!-- ============================================== -->
+<div id="viewQuestionsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl relative flex flex-col max-h-[85vh] overflow-hidden text-xs">
+        <div class="p-4 sm:p-5 border-b border-slate-200 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="p-1.5 rounded-lg bg-amber-100 text-amber-800">
+                    <i data-lucide="help-circle" class="w-5 h-5"></i>
+                </span>
+                <div>
+                    <h3 id="viewQTitle" class="text-base font-bold text-slate-900">गृहकार्य प्रश्नावली</h3>
+                    <p id="viewQSubtitle" class="text-[11px] text-slate-500 mt-0.5">कक्षा तथा विषय</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeViewModal()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="p-4 sm:p-6 overflow-y-auto space-y-3" id="viewQBody">
+            <!-- Questions rendered dynamically -->
+        </div>
+
+        <div class="p-3 bg-slate-50 border-t flex justify-end">
+            <button type="button" onclick="closeViewModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl transition">
+                बन्द गर्नुहोस्
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Injected Curriculum Subjects
+    const ALL_SUBJECTS = {{ subjects | tojson | safe }};
+    const ALL_HOMEWORK = {{ homework_list | tojson | safe }};
+
+    function onFilterClassChange() {
+        const classSelect = document.getElementById('tHwClass');
+        const subjSelect = document.getElementById('tHwSubj');
+        const selectedClassId = classSelect.value ? parseInt(classSelect.value) : null;
+
+        subjSelect.innerHTML = '<option value="">सबै विषयहरू (All Subjects)</option>';
+        if (selectedClassId) {
+            const classSubjects = ALL_SUBJECTS.filter(s => s.class_id === selectedClassId);
+            classSubjects.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.subject_name_ne;
+                opt.textContent = s.subject_name_ne + (s.subject_code ? ` (${s.subject_code})` : '');
+                subjSelect.appendChild(opt);
+            });
+        }
+        filterHwList();
+    }
+
+    function filterHwList() {
+        const classVal = document.getElementById('tHwClass').value;
+        const subjVal = document.getElementById('tHwSubj').value.toLowerCase();
+        const dateVal = document.getElementById('tHwDate').value;
+
+        const rows = document.querySelectorAll('.teacher-hw-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const rowClass = row.getAttribute('data-class-id');
+            const rowSubj = (row.getAttribute('data-subject') || '').toLowerCase();
+            const rowDate = row.getAttribute('data-date');
+
+            let match = true;
+            if (classVal && rowClass !== classVal) match = false;
+            if (subjVal && !rowSubj.includes(subjVal)) match = false;
+            if (dateVal && rowDate !== dateVal) match = false;
+
+            if (match) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const countLabel = document.getElementById('hwCountLabel');
+        if (countLabel) countLabel.textContent = visibleCount;
+
+        const noMsg = document.getElementById('noHwMsg');
+        if (noMsg) {
+            noMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+    }
+
+    function resetFilters() {
+        document.getElementById('tHwClass').value = '';
+        document.getElementById('tHwSubj').innerHTML = '<option value="">सबै विषयहरू (All Subjects)</option>';
+        document.getElementById('tHwDate').value = '';
+        filterHwList();
+    }
+
+    // Modal Dynamic Cascading Subject Selection
+    function onModalClassChange(preselectedSubject = null) {
+        const classSelect = document.getElementById('modalHwClass');
+        const subjSelect = document.getElementById('modalHwSubj');
+        const customBox = document.getElementById('customSubjectBox');
+        const selectedClassId = classSelect.value ? parseInt(classSelect.value) : null;
+
+        subjSelect.innerHTML = '<option value="">-- विषय छनोट गर्नुहोस् --</option>';
+        customBox.classList.add('hidden');
+
+        if (!selectedClassId) {
+            subjSelect.innerHTML = '<option value="">-- पहिले माथि कक्षा छनोट गर्नुहोस् --</option>';
+            return;
+        }
+
+        const classSubjects = ALL_SUBJECTS.filter(s => s.class_id === selectedClassId);
+        if (classSubjects.length > 0) {
+            classSubjects.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.subject_name_ne;
+                opt.textContent = s.subject_name_ne + (s.subject_code ? ` (${s.subject_code})` : '');
+                if (preselectedSubject && s.subject_name_ne === preselectedSubject) {
+                    opt.selected = true;
+                }
+                subjSelect.appendChild(opt);
+            });
+        }
+
+        // Add custom subject option
+        const customOpt = document.createElement('option');
+        customOpt.value = "__CUSTOM__";
+        customOpt.textContent = "✏️ अन्य / नयाँ विषय यहाँ लेख्नुहोस् (Type Custom)...";
+        subjSelect.appendChild(customOpt);
+
+        if (preselectedSubject && !classSubjects.some(s => s.subject_name_ne === preselectedSubject)) {
+            subjSelect.value = "__CUSTOM__";
+            customBox.classList.remove('hidden');
+            document.getElementById('modalHwCustomSubj').value = preselectedSubject;
+        }
+    }
+
+    function onModalSubjectSelect(val) {
+        const customBox = document.getElementById('customSubjectBox');
+        if (val === '__CUSTOM__') {
+            customBox.classList.remove('hidden');
+            document.getElementById('modalHwCustomSubj').focus();
+        } else {
+            customBox.classList.add('hidden');
+        }
+    }
+
+    // Dynamic Questions Builder
+    let questionCount = 0;
+
+    function addQuestionRow(initialValue = '') {
+        questionCount++;
+        const container = document.getElementById('questionsContainer');
+        const row = document.createElement('div');
+        row.className = 'q-row flex items-start gap-2 bg-white p-2.5 rounded-xl border border-amber-200/80 shadow-2xs transition';
+        row.id = `q_row_${questionCount}`;
+
+        row.innerHTML = `
+            <span class="q-num shrink-0 w-16 text-[11px] font-bold text-amber-900 bg-amber-100 px-2 py-1 rounded text-center mt-1">
+                प्रश्न ${questionCount}
+            </span>
+            <div class="flex-1">
+                <textarea class="q-input w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none text-xs text-slate-800" rows="2" placeholder="प्रश्न यहाँ लेख्नुहोस्...">${initialValue}</textarea>
+            </div>
+            <button type="button" onclick="removeQuestionRow(${questionCount})" class="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition shrink-0 mt-1" title="यो प्रश्न मेटाउनुहोस्">
+                <i data-lucide="trash" class="w-4 h-4"></i>
+            </button>
+        `;
+        container.appendChild(row);
+        lucide.createIcons();
+        reindexQuestions();
+    }
+
+    function removeQuestionRow(rowId) {
+        const row = document.getElementById(`q_row_${rowId}`);
+        if (row) {
+            row.remove();
+            reindexQuestions();
+        }
+    }
+
+    function reindexQuestions() {
+        const rows = document.querySelectorAll('.q-row');
+        rows.forEach((r, idx) => {
+            const numSpan = r.querySelector('.q-num');
+            if (numSpan) numSpan.textContent = `प्रश्न ${idx + 1}`;
+        });
+    }
+
+    function openHwModal() {
+        document.getElementById('hwModalTitle').innerHTML = `
+            <i data-lucide="book-plus" class="w-5 h-5 text-amber-600"></i>
+            <span>नयाँ गृहकार्य तथा प्रश्नावली तोक्नुहोस्</span>
+        `;
+        document.getElementById('hw_edit_id').value = '';
+        document.getElementById('modalHwClass').value = '';
+        document.getElementById('modalHwSubj').innerHTML = '<option value="">-- पहिले माथि कक्षा छनोट गर्नुहोस् --</option>';
+        document.getElementById('customSubjectBox').classList.add('hidden');
+        document.getElementById('modalHwCustomSubj').value = '';
+        document.getElementById('modalHwTitle').value = '';
+        document.getElementById('modalHwDesc').value = '';
+        document.getElementById('modalHwAttachment').value = '';
+        document.getElementById('modalHwAssignedDate').value = '{{ today_date }}';
+
+        // Default due date: tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('modalHwDueDate').value = tomorrow.toISOString().split('T')[0];
+
+        // Seed with 3 default questions
+        document.getElementById('questionsContainer').innerHTML = '';
+        questionCount = 0;
+        addQuestionRow('');
+        addQuestionRow('');
+        addQuestionRow('');
+
+        document.getElementById('hwModal').classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function openEditHw(hw) {
+        document.getElementById('hwModalTitle').innerHTML = `
+            <i data-lucide="edit-3" class="w-5 h-5 text-amber-600"></i>
+            <span>गृहकार्य तथा प्रश्नावली संसोधन (Edit Homework)</span>
+        `;
+        document.getElementById('hw_edit_id').value = hw.id;
+        document.getElementById('modalHwClass').value = hw.class_id;
+
+        onModalClassChange(hw.subject_name);
+
+        document.getElementById('modalHwTitle').value = hw.title || '';
+        document.getElementById('modalHwDesc').value = hw.description || '';
+        document.getElementById('modalHwAssignedDate').value = hw.assigned_date || '{{ today_date }}';
+        document.getElementById('modalHwDueDate').value = hw.due_date || '';
+        document.getElementById('modalHwAttachment').value = hw.attachment || '';
+
+        // Fill questions
+        document.getElementById('questionsContainer').innerHTML = '';
+        questionCount = 0;
+        const qList = hw.question_list || [];
+        if (qList.length > 0) {
+            qList.forEach(q => addQuestionRow(q));
+        } else {
+            addQuestionRow('');
+        }
+
+        document.getElementById('hwModal').classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function closeHwModal() {
+        document.getElementById('hwModal').classList.add('hidden');
+    }
+
+    async function handleHwSave(e) {
+        e.preventDefault();
+        const editId = document.getElementById('hw_edit_id').value;
+        const classId = parseInt(document.getElementById('modalHwClass').value);
+        if (!classId) {
+            alert('कृपया कक्षा छनोट गर्नुहोस्।');
+            return;
+        }
+
+        let subjectName = document.getElementById('modalHwSubj').value;
+        if (subjectName === '__CUSTOM__') {
+            subjectName = document.getElementById('modalHwCustomSubj').value.trim();
+        }
+        if (!subjectName) {
+            alert('कृपया विषय छनोट गर्नुहोस् वा नयाँ विषयको नाम लेख्नुहोस्।');
+            return;
+        }
+
+        const title = document.getElementById('modalHwTitle').value.trim();
+        const description = document.getElementById('modalHwDesc').value.trim();
+        const assignedDate = document.getElementById('modalHwAssignedDate').value;
+        const dueDate = document.getElementById('modalHwDueDate').value;
+        const attachment = document.getElementById('modalHwAttachment').value.trim();
+
+        // Collect questions
+        const qInputs = document.querySelectorAll('.q-input');
+        const questions = [];
+        qInputs.forEach(inp => {
+            const val = inp.value.trim();
+            if (val) questions.push(val);
+        });
+
+        const payload = {
+            class_id: classId,
+            subject_name: subjectName,
+            title: title || `${subjectName} - गृहकार्य`,
+            description: description,
+            assigned_date: assignedDate,
+            due_date: dueDate,
+            attachment: attachment || null,
+            questions: questions
+        };
+
+        const saveBtn = document.getElementById('saveHwBtn');
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = 'सेभ हुँदैछ...';
+
+        try {
+            let res;
+            if (editId) {
+                res = await fetch(`/api/homework/${editId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                res = await fetch('/api/homework', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            }
+
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(editId ? 'गृहकार्य सफलतापूर्वक संसोधन गरियो!' : 'नयाँ गृहकार्य सफलतापूर्वक तोकियो!');
+                window.location.reload();
+            } else {
+                alert('त्रुटि: ' + (data.detail || data.message || 'गृहकार्य सेभ गर्न सकिएन।'));
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i><span>गृहकार्य तथा प्रश्नावली सेभ गर्नुहोस्</span>';
+                lucide.createIcons();
+            }
+        } catch (err) {
+            console.error(err);
+            alert('सर्भर त्रुटि: गृहकार्य सेभ हुन सकेन।');
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i><span>गृहकार्य तथा प्रश्नावली सेभ गर्नुहोस्</span>';
+            lucide.createIcons();
+        }
+    }
+
+    async function deleteHomework(hwId) {
+        if (!confirm('के तपाईं यो गृहकार्य तथा प्रश्नावली मेटाउन निश्चित हुनुहुन्छ?')) return;
+
+        try {
+            const res = await fetch(`/api/homework/${hwId}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                const row = document.getElementById(`hw-row-${hwId}`);
+                if (row) row.remove();
+                alert('गृहकार्य सफलतापूर्वक डिलिट गरियो!');
+                window.location.reload();
+            } else {
+                alert('त्रुटि: ' + (data.detail || 'मेटाउन सकिएन।'));
+            }
+        } catch (err) {
+            alert('सर्भर त्रुटि।');
+        }
+    }
+
+    function viewQuestionsModal(hwId) {
+        const hw = ALL_HOMEWORK.find(h => h.id === hwId);
+        if (!hw) return;
+
+        document.getElementById('viewQTitle').textContent = hw.title;
+        document.getElementById('viewQSubtitle').textContent = `${hw.class_name_ne} | विषय: ${hw.subject_name} | बुझाउने मिति: ${hw.due_date}`;
+
+        const body = document.getElementById('viewQBody');
+        body.innerHTML = '';
+
+        if (hw.description) {
+            const d = document.createElement('div');
+            d.className = 'p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 leading-relaxed';
+            d.innerHTML = `<strong>सामान्य निर्देशन:</strong><br>${hw.description}`;
+            body.appendChild(d);
+        }
+
+        const qList = hw.question_list || [];
+        if (qList.length > 0) {
+            const qBox = document.createElement('div');
+            qBox.className = 'space-y-2 mt-2';
+            qList.forEach((q, idx) => {
+                const item = document.createElement('div');
+                item.className = 'p-3 bg-amber-50/60 border border-amber-200 rounded-xl flex items-start gap-2.5';
+                item.innerHTML = `
+                    <span class="shrink-0 w-7 h-7 rounded-full bg-amber-600 text-white font-bold flex items-center justify-center text-xs">
+                        ${idx + 1}
+                    </span>
+                    <p class="text-xs font-semibold text-slate-900 leading-relaxed pt-1">${q}</p>
+                `;
+                qBox.appendChild(item);
+            });
+            body.appendChild(qBox);
+        } else {
+            body.innerHTML += '<p class="text-slate-400 italic py-4 text-center">कुनै प्रश्नहरू समावेश गरिएको छैन।</p>';
+        }
+
+        document.getElementById('viewQuestionsModal').classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function closeViewModal() {
+        document.getElementById('viewQuestionsModal').classList.add('hidden');
+    }
+</script>
+{% endblock %}
