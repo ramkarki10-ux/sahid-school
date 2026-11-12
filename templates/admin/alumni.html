@@ -1,0 +1,502 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}पूर्व विद्यार्थी अभिलेख व्यवस्थापन (Alumni) | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="p-2 bg-amber-100 text-amber-900 rounded-xl">
+                    <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+                </span>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                        पूर्व विद्यार्थी अभिलेख व्यवस्थापन (Alumni Management)
+                    </h1>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                        कक्षा १० (SEE) र कक्षा १२ का पास आउट विद्यार्थीहरूको विवरण, Excel आयात, संसोधन तथा अद्यावधिक
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="openAlumniModal()" class="inline-flex items-center gap-2 bg-instBlue hover:bg-instBlue-dark text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shadow transition">
+                <i data-lucide="user-plus" class="w-4 h-4 text-amber-300"></i>
+                <span>+ नयाँ पूर्व विद्यार्थी थप्नुहोस्</span>
+            </button>
+            <button type="button" onclick="openExcelModal()" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl shadow transition">
+                <i data-lucide="upload" class="w-4 h-4"></i>
+                <span>Excel आयात (Import)</span>
+            </button>
+            <a href="/api/alumni/template" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-3 py-2.5 rounded-xl border border-slate-300 transition" title="नमुना Excel डाउनलोड गरी भर्नुहोस्">
+                <i data-lucide="file-down" class="w-4 h-4 text-emerald-600"></i>
+                <span>नमुना ढाँचा</span>
+            </a>
+            <a href="/api/alumni/export" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-3 py-2.5 rounded-xl border border-slate-300 transition" title="सबै पूर्व विद्यार्थीहरूको सूची Excel मा डाउनलोड गर्नुहोस्">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-blue-600"></i>
+                <span>Excel निर्यात</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary KPI Counter Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+            <span class="text-xs text-slate-500 font-semibold">कुल पूर्व विद्यार्थी</span>
+            <div class="text-2xl font-black text-slate-900 mt-1 font-mono">{{ total_alumni }} जना</div>
+        </div>
+        <div class="bg-emerald-50/70 p-4 rounded-xl border border-emerald-200 shadow-sm text-center">
+            <span class="text-xs text-emerald-800 font-semibold">कक्षा १० (SEE) पास आउट</span>
+            <div class="text-2xl font-black text-emerald-600 mt-1 font-mono">{{ total_see }} जना</div>
+        </div>
+        <div class="bg-sky-50/70 p-4 rounded-xl border border-sky-200 shadow-sm text-center">
+            <span class="text-xs text-sky-800 font-semibold">कक्षा १२ (+2) पास आउट</span>
+            <div class="text-2xl font-black text-sky-600 mt-1 font-mono">{{ total_plus2 }} जना</div>
+        </div>
+        <div class="bg-amber-50/70 p-4 rounded-xl border border-amber-200 shadow-sm text-center">
+            <span class="text-xs text-amber-800 font-semibold">अभिलेख वर्षहरू</span>
+            <div class="text-2xl font-black text-amber-700 mt-1 font-mono">{{ available_years | length }} वटा</div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+        <form method="get" action="/admin/alumni" class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">पास आउट कक्षा (Class):</label>
+                <select name="passed_class" onchange="this.form.submit()" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none font-bold text-slate-800 bg-white">
+                    <option value="">सबै (कक्षा १० र १२ दुवै)</option>
+                    <option value="कक्षा १०" {% if selected_class == 'कक्षा १०' %}selected{% endif %}>कक्षा १० (SEE)</option>
+                    <option value="कक्षा १२" {% if selected_class == 'कक्षा १२' %}selected{% endif %}>कक्षा १२ (+2)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">पास आउट वर्ष (Year):</label>
+                <select name="pass_out_year" onchange="this.form.submit()" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none font-bold text-amber-900 bg-white">
+                    <option value="">सबै वर्षहरू (All Years)</option>
+                    {% for yr in available_years %}
+                    <option value="{{ yr }}" {% if selected_year == yr %}selected{% endif %}>{{ yr }} साल</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">नाम, ठेगाना वा फोन नम्बर:</label>
+                <input type="text" name="search" value="{{ search_term }}" placeholder="विद्यार्थीको नाम, फोन, ठेगाना..." class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none text-xs">
+            </div>
+
+            <div class="flex items-end gap-2">
+                <button type="submit" class="flex-1 p-2.5 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded-xl transition flex items-center justify-center gap-1 shadow-xs">
+                    <i data-lucide="filter" class="w-4 h-4"></i>
+                    <span>फिल्टर</span>
+                </button>
+                <a href="/admin/alumni" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl border border-slate-300 transition" title="रिसेट">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Alumni Data Table -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <h2 class="font-bold text-xs text-slate-800 flex items-center gap-2">
+                <i data-lucide="list" class="w-4 h-4 text-instBlue"></i>
+                <span>दर्ता भएका पूर्व विद्यार्थीहरू (कुल: {{ alumni_list | length }} जना)</span>
+            </h2>
+            <a href="/alumni" target="_blank" class="text-xs text-instBlue font-bold hover:underline flex items-center gap-1">
+                <span>पब्लिक पेज हेर्नुहोस्</span>
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            </a>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-100 text-slate-800 font-bold border-b border-slate-200">
+                    <tr>
+                        <th class="py-3 px-3 text-center w-12">क्र.सं.</th>
+                        <th class="py-3 px-4">विद्यार्थीको पूरा नाम, थर</th>
+                        <th class="py-3 px-3 text-center">पास आउट कक्षा</th>
+                        <th class="py-3 px-3 text-center">पास आउट वर्ष</th>
+                        <th class="py-3 px-4">ठेगाना</th>
+                        <th class="py-3 px-4">सम्पर्क नम्बर</th>
+                        <th class="py-3 px-3 text-center">सिम्बोल नं.</th>
+                        <th class="py-3 px-4">हालको पेशा / अध्ययन</th>
+                        <th class="py-3 px-4 text-right">कार्य (Actions)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for a in alumni_list %}
+                    <tr class="hover:bg-amber-50/20 transition" id="alumni-row-{{ a.id }}">
+                        <td class="py-3 px-3 text-center text-slate-400 font-bold">{{ loop.index }}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">
+                            {{ a.full_name }}
+                        </td>
+                        <td class="py-3 px-3 text-center">
+                            <span class="px-2.5 py-0.5 rounded-md font-bold text-[11px] {% if '१२' in a.passed_class %}bg-sky-100 text-sky-900 border border-sky-200{% else %}bg-emerald-100 text-emerald-900 border border-emerald-200{% endif %}">
+                                {{ a.passed_class }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-3 text-center font-mono font-bold text-amber-800">
+                            {{ a.pass_out_year }} साल
+                        </td>
+                        <td class="py-3 px-4 text-slate-600">
+                            {{ a.address or '—' }}
+                        </td>
+                        <td class="py-3 px-4 font-mono font-bold text-blue-700">
+                            {% if a.phone %}
+                            <a href="tel:{{ a.phone }}" class="hover:underline">{{ a.phone }}</a>
+                            {% else %}
+                            <span class="text-slate-400 font-normal">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-3 text-center font-mono text-slate-500">
+                            {{ a.symbol_no or '—' }}
+                        </td>
+                        <td class="py-3 px-4 text-slate-700 font-medium">
+                            {{ a.current_status or '—' }}
+                        </td>
+                        <td class="py-3 px-4 text-right whitespace-nowrap">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button type="button" onclick='openEditModal({{ a | tojson | safe }})' class="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50 border border-amber-200 transition" title="संसोधन गर्नुहोस् (Edit)">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </button>
+                                <button type="button" onclick="deleteAlumni({{ a.id }})" class="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 hover:text-rose-700 border border-rose-200 transition" title="हटाउनुहोस् (Delete)">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="py-12 text-center text-slate-400 text-xs">
+                            <i data-lucide="graduation-cap" class="w-10 h-10 mx-auto text-slate-300 mb-2"></i>
+                            <p class="font-bold text-slate-700 text-sm">कुनै पूर्व विद्यार्थी फेला परेन।</p>
+                            <p class="text-slate-400 mt-1">माथिको "+ नयाँ पूर्व विद्यार्थी थप्नुहोस्" वा "Excel आयात" बटन प्रयोग गरी विवरण राख्नुहोस्।</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- ============================================== -->
+<!-- ADD / EDIT ALUMNI MODAL -->
+<!-- ============================================== -->
+<div id="alumniModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl relative flex flex-col max-h-[92vh] overflow-hidden text-xs">
+        
+        <!-- Header -->
+        <div class="p-4 sm:p-5 border-b border-slate-200 bg-white flex items-center justify-between shrink-0">
+            <div>
+                <h3 id="alumniModalTitle" class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="graduation-cap" class="w-5 h-5 text-amber-600"></i>
+                    <span>नयाँ पूर्व विद्यार्थी दर्ता गर्नुहोस्</span>
+                </h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">कक्षा १० वा १२ उत्तीर्ण विद्यार्थीको विवरण भर्नुहोस्</p>
+            </div>
+            <button type="button" onclick="closeAlumniModal()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- Form Body -->
+        <div class="p-4 sm:p-6 overflow-y-auto flex-1">
+            <form id="alumniForm" onsubmit="handleAlumniSubmit(event)" class="space-y-3.5">
+                <input type="hidden" id="modal_alumni_id" value="">
+
+                <div>
+                    <label class="block font-bold text-slate-800 mb-1">
+                        विद्यार्थीको पूरा नाम, थर <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="modal_full_name" required placeholder="उदा: रोहित कार्की" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none font-semibold text-slate-900">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-800 mb-1">
+                            पास आउट कक्षा <span class="text-red-500">*</span>
+                        </label>
+                        <select id="modal_passed_class" required class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none font-bold text-slate-900 bg-white">
+                            <option value="कक्षा १०">कक्षा १० (SEE / SLC)</option>
+                            <option value="कक्षा १२">कक्षा १२ (+2 / HSEB)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-800 mb-1">
+                            पास आउट वर्ष (वि.सं.) <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="modal_pass_out_year" required placeholder="उदा: २०८०" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none font-bold text-amber-900 font-mono">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">ठेगाना</label>
+                        <input type="text" id="modal_address" placeholder="उदा: इटहरी-१९, सुनसरी" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">सम्पर्क फोन नम्बर</label>
+                        <input type="text" id="modal_phone" placeholder="उदा: ९८५२०३३१३३" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none font-mono">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">सिम्बोल / रजिस्ट्रेसन नम्बर</label>
+                    <input type="text" id="modal_symbol_no" placeholder="उदा: SEE-2080-012" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none font-mono">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">हालको पेशा वा उच्च अध्ययन</label>
+                    <input type="text" id="modal_current_status" placeholder="उदा: कक्षा ११ विज्ञान अध्ययनरत / इन्जिनियरिङ" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">कैफियत / टिप्पणी</label>
+                    <textarea id="modal_remarks" rows="2" placeholder="थप विवरण वा उपलब्धि..." class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none"></textarea>
+                </div>
+
+                <div class="pt-3 border-t flex items-center justify-end gap-2.5">
+                    <button type="button" onclick="closeAlumniModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+                        रद्द गर्नुहोस्
+                    </button>
+                    <button type="submit" id="saveAlumniBtn" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded-xl shadow transition flex items-center gap-1.5">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>विवरण सेभ गर्नुहोस्</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- EXCEL IMPORT MODAL -->
+<!-- ============================================== -->
+<div id="excelModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl relative flex flex-col overflow-hidden text-xs">
+        
+        <div class="p-4 sm:p-5 border-b border-slate-200 bg-white flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="p-1.5 bg-emerald-100 text-emerald-800 rounded-lg">
+                    <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
+                </span>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">पूर्व विद्यार्थी Excel आयात</h3>
+                    <p class="text-[11px] text-slate-500 mt-0.5">.xlsx वा .xls फाइलबाट एकैपटक धेरै विद्यार्थी अपलोड</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeExcelModal()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="p-5 space-y-4">
+            <div class="p-3 bg-blue-50/70 border border-blue-200 rounded-xl text-blue-900 text-xs space-y-1">
+                <p class="font-bold flex items-center gap-1">
+                    <i data-lucide="info" class="w-4 h-4 text-instBlue"></i>
+                    <span>निर्देशन:</span>
+                </p>
+                <p class="text-[11px] text-slate-600 leading-relaxed">
+                    पहिले तलको बटनबाट <b>नमुना Excel फाइल</b> डाउनलोड गरी विद्यार्थीको नाम, पास आउट कक्षा (कक्षा १० वा १२), वर्ष, ठेगाना र सम्पर्क नम्बर भरेर अपलोड गर्नुहोस्।
+                </p>
+                <div class="pt-1">
+                    <a href="/api/alumni/template" class="inline-flex items-center gap-1 text-[11px] font-bold text-instBlue hover:underline">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>नमुना Excel ढाँचा डाउनलोड गर्नुहोस्</span>
+                    </a>
+                </div>
+            </div>
+
+            <form id="excelUploadForm" onsubmit="handleExcelUpload(event)" class="space-y-4">
+                <div>
+                    <label class="block font-bold text-slate-800 mb-1.5">Excel फाइल छनोट गर्नुहोस् (.xlsx, .xls) *</label>
+                    <input type="file" id="alumni_excel_file" accept=".xlsx, .xls" required class="w-full p-2.5 border-2 border-dashed border-slate-300 rounded-xl text-xs bg-slate-50 hover:bg-white focus:outline-none">
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-2.5">
+                    <button type="button" onclick="closeExcelModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+                        रद्द गर्नुहोस्
+                    </button>
+                    <button type="submit" id="uploadBtn" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition flex items-center gap-1.5">
+                        <i data-lucide="upload" class="w-4 h-4"></i>
+                        <span>अपलोड तथा आयात गर्नुहोस्</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function openAlumniModal() {
+        document.getElementById('alumniModalTitle').innerHTML = `
+            <i data-lucide="graduation-cap" class="w-5 h-5 text-amber-600"></i>
+            <span>नयाँ पूर्व विद्यार्थी दर्ता गर्नुहोस्</span>
+        `;
+        document.getElementById('modal_alumni_id').value = '';
+        document.getElementById('modal_full_name').value = '';
+        document.getElementById('modal_passed_class').value = 'कक्षा १०';
+        document.getElementById('modal_pass_out_year').value = '२०८०';
+        document.getElementById('modal_address').value = '';
+        document.getElementById('modal_phone').value = '';
+        document.getElementById('modal_symbol_no').value = '';
+        document.getElementById('modal_current_status').value = '';
+        document.getElementById('modal_remarks').value = '';
+
+        document.getElementById('alumniModal').classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function openEditModal(a) {
+        document.getElementById('alumniModalTitle').innerHTML = `
+            <i data-lucide="edit-3" class="w-5 h-5 text-amber-600"></i>
+            <span>पूर्व विद्यार्थी विवरण संसोधन गर्नुहोस्</span>
+        `;
+        document.getElementById('modal_alumni_id').value = a.id;
+        document.getElementById('modal_full_name').value = a.full_name || '';
+        document.getElementById('modal_passed_class').value = a.passed_class || 'कक्षा १०';
+        document.getElementById('modal_pass_out_year').value = a.pass_out_year || '';
+        document.getElementById('modal_address').value = a.address || '';
+        document.getElementById('modal_phone').value = a.phone || '';
+        document.getElementById('modal_symbol_no').value = a.symbol_no || '';
+        document.getElementById('modal_current_status').value = a.current_status || '';
+        document.getElementById('modal_remarks').value = a.remarks || '';
+
+        document.getElementById('alumniModal').classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function closeAlumniModal() {
+        document.getElementById('alumniModal').classList.add('hidden');
+    }
+
+    function openExcelModal() {
+        document.getElementById('alumni_excel_file').value = '';
+        document.getElementById('excelModal').classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function closeExcelModal() {
+        document.getElementById('excelModal').classList.add('hidden');
+    }
+
+    async function handleAlumniSubmit(e) {
+        e.preventDefault();
+        const editId = document.getElementById('modal_alumni_id').value;
+        const payload = {
+            full_name: document.getElementById('modal_full_name').value.trim(),
+            passed_class: document.getElementById('modal_passed_class').value,
+            pass_out_year: document.getElementById('modal_pass_out_year').value.trim(),
+            address: document.getElementById('modal_address').value.trim(),
+            phone: document.getElementById('modal_phone').value.trim(),
+            symbol_no: document.getElementById('modal_symbol_no').value.trim(),
+            current_status: document.getElementById('modal_current_status').value.trim(),
+            remarks: document.getElementById('modal_remarks').value.trim()
+        };
+
+        const btn = document.getElementById('saveAlumniBtn');
+        btn.disabled = true;
+        btn.innerHTML = 'सेभ हुँदैछ...';
+
+        try {
+            let res;
+            if (editId) {
+                res = await fetch(`/api/alumni/${editId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                res = await fetch('/api/alumni', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            }
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(editId ? 'विवरण सफलतापूर्वक संसोधन गरियो!' : 'पूर्व विद्यार्थी सफलतापूर्वक थपियो!');
+                window.location.reload();
+            } else {
+                alert('त्रुटि: ' + (data.detail || data.message || 'सेभ हुन सकेन।'));
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i><span>विवरण सेभ गर्नुहोस्</span>';
+                lucide.createIcons();
+            }
+        } catch (err) {
+            alert('सर्भर त्रुटि: सेभ हुन सकेन।');
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i><span>विवरण सेभ गर्नुहोस्</span>';
+            lucide.createIcons();
+        }
+    }
+
+    async function deleteAlumni(alumniId) {
+        if (!confirm('के तपाईं यो पूर्व विद्यार्थीको विवरण मेटाउन निश्चित हुनुहुन्छ?')) return;
+        try {
+            const res = await fetch(`/api/alumni/${alumniId}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                const row = document.getElementById(`alumni-row-${alumniId}`);
+                if (row) row.remove();
+                alert('विवरण सफलतापूर्वक हटाइयो!');
+            } else {
+                alert('त्रुटि: ' + (data.detail || 'मेटाउन सकिएन।'));
+            }
+        } catch (err) {
+            alert('सर्भर त्रुटि।');
+        }
+    }
+
+    async function handleExcelUpload(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('alumni_excel_file');
+        if (!fileInput.files || fileInput.files.length === 0) {
+            alert('कृपया Excel फाइल छनोट गर्नुहोस्।');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        const btn = document.getElementById('uploadBtn');
+        btn.disabled = true;
+        btn.innerHTML = 'अपलोड तथा आयात हुँदैछ...';
+
+        try {
+            const res = await fetch('/api/alumni/upload-excel', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert('त्रुटि: ' + (data.detail || data.message || 'आयात हुन सकेन।'));
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="upload" class="w-4 h-4"></i><span>अपलोड तथा आयात गर्नुहोस्</span>';
+                lucide.createIcons();
+            }
+        } catch (err) {
+            alert('सर्भर त्रुटि: Excel अपलोड हुन सकेन।');
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="upload" class="w-4 h-4"></i><span>अपलोड तथा आयात गर्नुहोस्</span>';
+            lucide.createIcons();
+        }
+    }
+</script>
+{% endblock %}

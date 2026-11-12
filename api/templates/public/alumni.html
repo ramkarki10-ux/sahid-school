@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}हाम्रा पूर्व विद्यार्थीहरू (Our Proud Alumni) | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<!-- Page Header & Breadcrumb -->
+<div class="bg-gradient-to-r from-instBlue to-instBlue-dark text-white py-8 border-b border-white/10 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8">
+        <!-- Breadcrumbs -->
+        <div class="flex items-center gap-2 text-xs text-blue-200">
+            <a href="/" class="hover:text-amber-300 transition flex items-center gap-1">
+                <i data-lucide="home" class="w-3.5 h-3.5"></i>
+                <span>गृहपृष्ठ</span>
+            </a>
+            <i data-lucide="chevron-right" class="w-3 h-3 text-blue-300"></i>
+            <a href="/students" class="hover:text-amber-300 transition">विद्यार्थी</a>
+            <i data-lucide="chevron-right" class="w-3 h-3 text-blue-300"></i>
+            <span class="text-amber-300 font-bold">पूर्व विद्यार्थी (Alumni)</span>
+        </div>
+
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-3">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-black text-white flex items-center gap-2.5">
+                    <span class="p-2 rounded-xl bg-amber-400 text-slate-950">
+                        <i data-lucide="graduation-cap" class="w-7 h-7"></i>
+                    </span>
+                    <span>हाम्रा पूर्व विद्यार्थीहरू (Our Proud Alumni)</span>
+                </h1>
+                <p class="text-xs sm:text-sm text-blue-200 mt-1 max-w-2xl leading-relaxed">
+                    सहिद स्मृति आवासीय माध्यमिक विद्यालयबाट कक्षा १० (SEE) तथा कक्षा १२ (+2) उत्तीर्ण गरी देश तथा विदेशमा कार्यरत गौरवशाली पूर्व विद्यार्थीहरूको विवरण
+                </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="/api/alumni/export" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow transition" title="सबै पूर्व विद्यार्थीहरूको सूची Excel मा डाउनलोड गर्नुहोस्">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                    <span>Excel डाउनलोड</span>
+                </a>
+                <a href="{% if current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN'] %}/admin/alumni{% else %}/admin/login{% endif %}" class="inline-flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-xl shadow transition">
+                    <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                    <span>एडमिन व्यवस्थापन</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- KPI Stats Counter -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+            <div class="bg-white/10 backdrop-blur-xs p-3 rounded-xl border border-white/15 text-center">
+                <span class="text-[11px] text-blue-200 block font-medium">कुल पूर्व विद्यार्थी</span>
+                <span class="text-xl sm:text-2xl font-black text-amber-300 font-mono">{{ total_alumni }} जना</span>
+            </div>
+            <div class="bg-white/10 backdrop-blur-xs p-3 rounded-xl border border-white/15 text-center">
+                <span class="text-[11px] text-blue-200 block font-medium">कक्षा १० (SEE) पास आउट</span>
+                <span class="text-xl sm:text-2xl font-black text-emerald-300 font-mono">{{ total_see }} जना</span>
+            </div>
+            <div class="bg-white/10 backdrop-blur-xs p-3 rounded-xl border border-white/15 text-center">
+                <span class="text-[11px] text-blue-200 block font-medium">कक्षा १२ (+2) पास आउट</span>
+                <span class="text-xl sm:text-2xl font-black text-sky-300 font-mono">{{ total_plus2 }} जना</span>
+            </div>
+            <div class="bg-white/10 backdrop-blur-xs p-3 rounded-xl border border-white/15 text-center">
+                <span class="text-[11px] text-blue-200 block font-medium">अभिलेख वर्षहरू</span>
+                <span class="text-xl sm:text-2xl font-black text-white font-mono">{{ available_years | length }} वटा</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Body -->
+<div class="max-w-7xl mx-auto px-4 sm:px-8 py-8 space-y-6">
+
+    <!-- Filters Bar -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
+        <form method="get" action="/alumni" class="grid grid-cols-1 sm:grid-cols-4 gap-3.5 text-xs">
+            <!-- Class Filter -->
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">पास आउट कक्षा (Class):</label>
+                <select name="passed_class" onchange="this.form.submit()" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none font-bold text-slate-900 bg-white">
+                    <option value="">सबै (कक्षा १० र कक्षा १२ दुवै)</option>
+                    <option value="कक्षा १०" {% if selected_class == 'कक्षा १०' %}selected{% endif %}>🎓 कक्षा १० (SEE / SLC)</option>
+                    <option value="कक्षा १२" {% if selected_class == 'कक्षा १२' %}selected{% endif %}>🎓 कक्षा १२ (+2 / HSEB)</option>
+                </select>
+            </div>
+
+            <!-- Pass Out Year Filter -->
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">पास आउट वर्ष (Pass Out Year):</label>
+                <select name="pass_out_year" onchange="this.form.submit()" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none font-bold text-amber-900 bg-white">
+                    <option value="">सबै वर्षहरू (All Years)</option>
+                    {% for yr in available_years %}
+                    <option value="{{ yr }}" {% if selected_year == yr %}selected{% endif %}>{{ yr }} साल</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Search input -->
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">नाम, ठेगाना वा पेशा खोज्नुहोस्:</label>
+                <div class="relative">
+                    <input type="text" name="search" value="{{ search_term }}" placeholder="विद्यार्थीको नाम, ठेगाना..." class="w-full p-2.5 pl-8 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-2.5 top-3"></i>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex items-end gap-2">
+                <button type="submit" class="flex-1 p-2.5 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs">
+                    <i data-lucide="filter" class="w-4 h-4"></i>
+                    <span>फिल्टर गर्नुहोस्</span>
+                </button>
+                <a href="/alumni" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl border border-slate-300 transition flex items-center justify-center" title="फिल्टर रिसेट">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Alumni List Header & Result Count -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+        <div class="flex items-center gap-2">
+            <i data-lucide="users" class="w-5 h-5 text-instBlue"></i>
+            <h2 class="text-base font-bold text-slate-900">
+                पूर्व विद्यार्थीहरूको नामावली (<span class="font-mono text-instBlue">{{ alumni_list | length }}</span> जना फेला पर्यो)
+            </h2>
+        </div>
+        <div class="text-xs text-slate-500 font-medium">
+            {% if selected_class %}<span class="bg-blue-100 text-blue-900 px-2 py-0.5 rounded font-bold mr-1">{{ selected_class }}</span>{% endif %}
+            {% if selected_year %}<span class="bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-bold mr-1">{{ selected_year }} साल</span>{% endif %}
+        </div>
+    </div>
+
+    <!-- Alumni Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {% for a in alumni_list %}
+        <div class="bg-white rounded-2xl border border-slate-200 hover:border-instBlue shadow-xs hover:shadow-md transition p-4 flex flex-col justify-between group">
+            <div>
+                <!-- Top Badge: Class & Pass Year -->
+                <div class="flex items-center justify-between gap-1 pb-3 border-b border-slate-100">
+                    <span class="px-2.5 py-0.5 rounded-md text-[11px] font-bold {% if '१२' in a.passed_class %}bg-sky-100 text-sky-800 border border-sky-200{% else %}bg-emerald-100 text-emerald-800 border border-emerald-200{% endif %}">
+                        {{ a.passed_class }}
+                    </span>
+                    <span class="text-[11px] font-mono font-black text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                        {{ a.pass_out_year }} साल
+                    </span>
+                </div>
+
+                <!-- Avatar and Name -->
+                <div class="flex items-start gap-3 mt-3">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-instBlue to-slate-800 text-amber-400 flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition">
+                        <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-900 leading-snug group-hover:text-instBlue transition">
+                            {{ a.full_name }}
+                        </h3>
+                        {% if a.symbol_no %}
+                        <span class="text-[10px] text-slate-400 font-mono">रोल / सिम्बोल: {{ a.symbol_no }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Info list -->
+                <div class="mt-3.5 space-y-1.5 text-xs text-slate-600">
+                    {% if a.address %}
+                    <div class="flex items-center gap-1.5">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                        <span class="truncate">{{ a.address }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if a.phone %}
+                    <div class="flex items-center gap-1.5">
+                        <i data-lucide="phone" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
+                        <a href="tel:{{ a.phone }}" class="font-mono text-blue-700 hover:underline">{{ a.phone }}</a>
+                    </div>
+                    {% endif %}
+
+                    {% if a.current_status %}
+                    <div class="mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-700">
+                        <span class="font-semibold text-slate-500 block text-[10px]">हालको अध्ययन / पेशा:</span>
+                        <span class="font-medium text-slate-800">{{ a.current_status }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if a.remarks %}
+            <div class="mt-3 pt-2 border-t border-slate-100 text-[10px] text-slate-400 italic">
+                {{ a.remarks }}
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="col-span-full bg-white p-12 rounded-2xl border border-slate-200 text-center text-slate-400 text-xs">
+            <i data-lucide="graduation-cap" class="w-12 h-12 mx-auto text-slate-300 mb-2"></i>
+            <p class="font-bold text-slate-700 text-sm">कुनै पूर्व विद्यार्थी फेला परेन।</p>
+            <p class="text-slate-400 mt-1">कृपया फरक कक्षा वा पास आउट वर्ष छनोट गर्नुहोस्।</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

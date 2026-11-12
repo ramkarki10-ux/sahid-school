@@ -1191,3 +1191,275 @@ def export_annual_attendance_excel(
     output.seek(0)
     return output
 
+
+
+# ====================================================================
+# ALUMNI (पूर्व विद्यार्थी) EXCEL TEMPLATE, PARSING & EXPORT HANDLERS
+# ====================================================================
+
+def generate_alumni_template() -> io.BytesIO:
+    """
+    Generates standard Excel Template for Alumni (पुर्व विद्यार्थी) Import.
+    Columns: क्र.सं., विद्यार्थीको नाम, थर, पास आउट कक्षा (कक्षा १० वा कक्षा १२), पास आउट वर्ष (वि.सं.), ठेगाना, सम्पर्क नम्बर, सिम्बोल/रजिस्ट्रेसन नं., हालको पेशा/अध्ययन, कैफियत
+    """
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Alumni_Template"
+    
+    # Title Banner
+    ws.merge_cells("A1:I1")
+    title_cell = ws["A1"]
+    title_cell.value = "सहिद स्मृति आवासीय माध्यमिक विद्यालय — पूर्व विद्यार्थी (Alumni) विवरण आयात ढाँचा"
+    title_cell.fill = PatternFill(start_color="15305B", end_color="15305B", fill_type="solid")
+    title_cell.font = Font(name="Segoe UI", size=13, bold=True, color="FFFFFF")
+    title_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 36
+
+    # Subtitle note
+    ws.merge_cells("A2:I2")
+    sub_cell = ws["A2"]
+    sub_cell.value = "निर्देशन: कक्षा १० र कक्षा १२ का पास आउट विद्यार्थीहरूको विवरण भरी सिट अपलोड गर्नुहोस्। अनिवार्य कोलमहरू: नाम थर, पास आउट कक्षा, पास आउट वर्ष।"
+    sub_cell.fill = PatternFill(start_color="FEF3C7", end_color="FEF3C7", fill_type="solid")
+    sub_cell.font = Font(name="Segoe UI", size=10, italic=True, color="92400E")
+    sub_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[2].height = 24
+
+    headers = [
+        "क्र.सं.",
+        "विद्यार्थीको पूरा नाम, थर *",
+        "पास आउट कक्षा (कक्षा १० / कक्षा १२) *",
+        "पास आउट वर्ष (वि.सं.) *",
+        "ठेगाना",
+        "सम्पर्क नम्बर",
+        "सिम्बोल / रजिस्ट्रेसन नं.",
+        "हालको अवस्था / पेशा / अध्ययन",
+        "कैफियत"
+    ]
+    ws.append(headers)
+    ws.row_dimensions[3].height = 26
+
+    border_thin = Border(
+        left=Side(style='thin', color='CBD5E1'),
+        right=Side(style='thin', color='CBD5E1'),
+        top=Side(style='thin', color='CBD5E1'),
+        bottom=Side(style='thin', color='CBD5E1')
+    )
+
+    for col_idx in range(1, len(headers) + 1):
+        cell = ws.cell(row=3, column=col_idx)
+        cell.fill = PatternFill(start_color="1D427B", end_color="1D427B", fill_type="solid")
+        cell.font = Font(name="Segoe UI", size=10, bold=True, color="FFFFFF")
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border_thin
+
+    # Sample rows
+    samples = [
+        (1, "रोहित कार्की", "कक्षा १०", "२०७९", "इटहरी-१९, सुनसरी", "९८४२०१११२२", "SEE-2079-012", "कक्षा ११ विज्ञान अध्ययनरत", "प्रथम श्रेणी"),
+        (2, "अस्मिता अधिकारी", "कक्षा १२", "२०८०", "धरान-१२, सुनसरी", "९८५२०३३३४४", "HSEB-80-451", "बि.एस.सी. नर्सिङ अध्ययनरत", "विशिष्ट श्रेणी (GPA 3.75)"),
+        (3, "सुरेश पौडेल", "कक्षा १०", "२०७८", "खनार, सुनसरी", "९८१२३४५६७०", "SEE-2078-089", "डिप्लोमा सिभिल इन्जिनियरिङ", "प्रथम श्रेणी"),
+    ]
+    for row in samples:
+        ws.append(list(row))
+        r_num = ws.max_row
+        ws.row_dimensions[r_num].height = 22
+        for col_idx in range(1, len(row) + 1):
+            cell = ws.cell(row=r_num, column=col_idx)
+            cell.border = border_thin
+            cell.font = Font(name="Segoe UI", size=9)
+            if col_idx in (1, 3, 4, 6, 7):
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+            else:
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+
+    widths = [8, 26, 26, 18, 24, 18, 22, 28, 18]
+    for idx, w in enumerate(widths, start=1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(idx)].width = w
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output
+
+def parse_alumni_excel(file_bytes: bytes) -> Tuple[List[Dict[str, Any]], List[str]]:
+    """
+    Parses uploaded Excel sheet for alumni data.
+    Returns (valid_alumni_list, error_messages).
+    """
+    wb = openpyxl.load_workbook(filename=io.BytesIO(file_bytes), data_only=True)
+    ws = wb.active
+
+    rows = list(ws.iter_rows(values_only=True))
+    if not rows:
+        return [], ["Excel फाइल खाली छ।"]
+
+    # Locate header row (looking for row with multiple columns having 'नाम' or 'name' and 'कक्षा' or 'class')
+    header_row_idx = -1
+    for idx, row in enumerate(rows):
+        non_empty = [c for c in row if c is not None and str(c).strip() != ""]
+        if len(non_empty) < 3:
+            continue
+        row_str = " ".join([str(c) for c in non_empty]).lower()
+        if "नाम" in row_str or "name" in row_str:
+            if any(k in row_str for k in ["कक्षा", "class", "वर्ष", "year"]):
+                header_row_idx = idx
+                break
+
+    if header_row_idx == -1:
+        # Fallback to row index 2 (row 3 in 1-based) or row 0
+        header_row_idx = 2 if len(rows) > 2 else 0
+
+    headers = [str(c).strip() if c is not None else "" for c in rows[header_row_idx]]
+    
+    # Map header indices
+    col_map = {}
+    for idx, h in enumerate(headers):
+        hk = normalize_header_key(h)
+        if any(k in hk for k in ["नाम", "विद्यार्थीकोनाम", "fullname", "name", "studentname"]):
+            col_map["full_name"] = idx
+        elif any(k in hk for k in ["कक्षा", "पासआउटकक्षा", "class", "passedclass"]):
+            col_map["passed_class"] = idx
+        elif any(k in hk for k in ["वर्ष", "पासआउटवर्ष", "year", "passoutyear", "passyear"]):
+            col_map["pass_out_year"] = idx
+        elif any(k in hk for k in ["ठेगाना", "address", "location"]):
+            col_map["address"] = idx
+        elif any(k in hk for k in ["सम्पर्क", "फोन", "phone", "contact", "mobile"]):
+            col_map["phone"] = idx
+        elif any(k in hk for k in ["सिम्बोल", "रजिस्ट्रेसन", "symbol", "regno"]):
+            col_map["symbol_no"] = idx
+        elif any(k in hk for k in ["हालकोअवस्था", "पेशा", "अध्ययन", "status", "currentstatus", "profession"]):
+            col_map["current_status"] = idx
+        elif any(k in hk for k in ["कैफियत", "remarks", "note"]):
+            col_map["remarks"] = idx
+
+    # If critical columns not found by name, fallback to standard column positions
+    if "full_name" not in col_map and len(headers) > 1:
+        col_map["full_name"] = 1
+    if "passed_class" not in col_map and len(headers) > 2:
+        col_map["passed_class"] = 2
+    if "pass_out_year" not in col_map and len(headers) > 3:
+        col_map["pass_out_year"] = 3
+
+    valid_alumni = []
+    errors = []
+
+    for r_idx in range(header_row_idx + 1, len(rows)):
+        row = rows[r_idx]
+        if not row or all(c is None or str(c).strip() == "" for c in row):
+            continue
+
+        def get_val(key):
+            if key in col_map and col_map[key] < len(row):
+                v = row[col_map[key]]
+                return str(v).strip() if v is not None else ""
+            return ""
+
+        name = get_val("full_name")
+        cls_raw = get_val("passed_class")
+        yr_raw = get_val("pass_out_year")
+
+        if not name:
+            errors.append(f"पंक्ति {r_idx + 1}: विद्यार्थीको नाम खाली छ।")
+            continue
+
+        # Normalize class (१० or १२)
+        cls_clean = "कक्षा १०"
+        if "12" in cls_raw or "१२" in cls_raw or "hseb" in cls_raw.lower() or "+2" in cls_raw:
+            cls_clean = "कक्षा १२"
+        elif "10" in cls_raw or "१०" in cls_raw or "see" in cls_raw.lower() or "slc" in cls_raw.lower():
+            cls_clean = "कक्षा १०"
+        elif cls_raw:
+            cls_clean = cls_raw
+
+        # Normalize year (e.g. 2080 or २०८०)
+        yr_clean = yr_raw if yr_raw else "२०८१"
+
+        alumni_item = {
+            "full_name": name,
+            "passed_class": cls_clean,
+            "pass_out_year": yr_clean,
+            "address": get_val("address"),
+            "phone": get_val("phone"),
+            "symbol_no": get_val("symbol_no"),
+            "current_status": get_val("current_status"),
+            "remarks": get_val("remarks")
+        }
+        valid_alumni.append(alumni_item)
+
+    return valid_alumni, errors
+
+def export_alumni_to_excel(alumni_list: List[Dict[str, Any]]) -> io.BytesIO:
+    """
+    Exports alumni list to a styled Excel sheet.
+    """
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Alumni_List"
+
+    # Title Banner
+    ws.merge_cells("A1:H1")
+    title_cell = ws["A1"]
+    title_cell.value = "सहिद स्मृति आवासीय माध्यमिक विद्यालय — पूर्व विद्यार्थी (Alumni) विवरण"
+    title_cell.fill = PatternFill(start_color="15305B", end_color="15305B", fill_type="solid")
+    title_cell.font = Font(name="Segoe UI", size=13, bold=True, color="FFFFFF")
+    title_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 36
+
+    headers = [
+        "क्र.सं.",
+        "विद्यार्थीको पूरा नाम, थर",
+        "पास आउट कक्षा",
+        "पास आउट वर्ष (वि.सं.)",
+        "ठेगाना",
+        "सम्पर्क नम्बर",
+        "सिम्बोल / रजिस्ट्रेसन नं.",
+        "हालको पेशा / उच्च अध्ययन"
+    ]
+    ws.append(headers)
+    ws.row_dimensions[2].height = 24
+
+    border_thin = Border(
+        left=Side(style='thin', color='CBD5E1'),
+        right=Side(style='thin', color='CBD5E1'),
+        top=Side(style='thin', color='CBD5E1'),
+        bottom=Side(style='thin', color='CBD5E1')
+    )
+
+    for col_idx in range(1, len(headers) + 1):
+        cell = ws.cell(row=2, column=col_idx)
+        cell.fill = PatternFill(start_color="1D427B", end_color="1D427B", fill_type="solid")
+        cell.font = Font(name="Segoe UI", size=10, bold=True, color="FFFFFF")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border_thin
+
+    for idx, a in enumerate(alumni_list, start=1):
+        row_vals = [
+            idx,
+            a.get("full_name", ""),
+            a.get("passed_class", ""),
+            a.get("pass_out_year", ""),
+            a.get("address", ""),
+            a.get("phone", ""),
+            a.get("symbol_no", ""),
+            a.get("current_status", "")
+        ]
+        ws.append(row_vals)
+        r_num = ws.max_row
+        ws.row_dimensions[r_num].height = 20
+
+        for c_idx in range(1, len(row_vals) + 1):
+            cell = ws.cell(row=r_num, column=c_idx)
+            cell.border = border_thin
+            cell.font = Font(name="Segoe UI", size=9)
+            if c_idx in (1, 3, 4, 6, 7):
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+            else:
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+
+    widths = [8, 26, 18, 18, 24, 18, 22, 28]
+    for idx, w in enumerate(widths, start=1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(idx)].width = w
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output

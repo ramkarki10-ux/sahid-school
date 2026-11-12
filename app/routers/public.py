@@ -317,6 +317,61 @@ def page_students(request: Request):
         "active_menu": "students"
     })
 
+@router.get("/alumni", response_class=HTMLResponse)
+def page_alumni(
+    request: Request,
+    passed_class: Optional[str] = None,
+    pass_out_year: Optional[str] = None,
+    search: Optional[str] = None
+):
+    settings, ticker_notice = get_school_context()
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT DISTINCT pass_out_year FROM alumni ORDER BY pass_out_year DESC")
+    available_years = [r[0] for r in cursor.fetchall() if r[0]]
+
+    cursor.execute("SELECT COUNT(*) FROM alumni")
+    total_alumni = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM alumni WHERE passed_class = 'कक्षा १०'")
+    total_see = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM alumni WHERE passed_class = 'कक्षा १२'")
+    total_plus2 = cursor.fetchone()[0]
+
+    query = "SELECT * FROM alumni WHERE 1=1"
+    params = []
+    if passed_class:
+        query += " AND passed_class = ?"
+        params.append(passed_class)
+    if pass_out_year:
+        query += " AND pass_out_year = ?"
+        params.append(pass_out_year)
+    if search:
+        query += " AND (full_name LIKE ? OR address LIKE ? OR phone LIKE ? OR symbol_no LIKE ? OR current_status LIKE ?)"
+        s = f"%{search}%"
+        params.extend([s, s, s, s, s])
+
+    query += " ORDER BY pass_out_year DESC, passed_class DESC, id DESC"
+    cursor.execute(query, params)
+    alumni_list = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+
+    return templates.TemplateResponse(request, "public/alumni.html", {
+        "settings": settings,
+        "ticker_notice": ticker_notice,
+        "alumni_list": alumni_list,
+        "available_years": available_years,
+        "selected_class": passed_class or "",
+        "selected_year": pass_out_year or "",
+        "search_term": search or "",
+        "total_alumni": total_alumni,
+        "total_see": total_see,
+        "total_plus2": total_plus2,
+        "active_menu": "alumni"
+    })
+
 @router.get("/admission", response_class=HTMLResponse)
 def page_admission(request: Request):
     settings, ticker_notice = get_school_context()

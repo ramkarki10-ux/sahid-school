@@ -1362,5 +1362,68 @@ def admin_contact_messages_page(request: Request):
     ctx.update({"messages": messages})
     return templates.TemplateResponse(request, "admin/contact_messages.html", ctx)
 
+@router.get("/alumni", response_class=HTMLResponse)
+def admin_alumni(
+    request: Request,
+    passed_class: Optional[str] = None,
+    pass_out_year: Optional[str] = None,
+    search: Optional[str] = None
+):
+    user, ctx = get_admin_context(request, "alumni")
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    if not isinstance(passed_class, str):
+        passed_class = request.query_params.get("passed_class")
+    if not isinstance(pass_out_year, str):
+        pass_out_year = request.query_params.get("pass_out_year")
+    if not isinstance(search, str):
+        search = request.query_params.get("search")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT DISTINCT pass_out_year FROM alumni ORDER BY pass_out_year DESC")
+    available_years = [r[0] for r in cursor.fetchall() if r[0]]
+
+    cursor.execute("SELECT COUNT(*) FROM alumni")
+    total_alumni = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM alumni WHERE passed_class = 'कक्षा १०'")
+    total_see = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM alumni WHERE passed_class = 'कक्षा १२'")
+    total_plus2 = cursor.fetchone()[0]
+
+    query = "SELECT * FROM alumni WHERE 1=1"
+    params = []
+    if passed_class:
+        query += " AND passed_class = ?"
+        params.append(passed_class)
+    if pass_out_year:
+        query += " AND pass_out_year = ?"
+        params.append(pass_out_year)
+    if search:
+        query += " AND (full_name LIKE ? OR address LIKE ? OR phone LIKE ? OR symbol_no LIKE ? OR current_status LIKE ?)"
+        s = f"%{search}%"
+        params.extend([s, s, s, s, s])
+
+    query += " ORDER BY pass_out_year DESC, passed_class DESC, id DESC"
+    cursor.execute(query, params)
+    alumni_list = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+
+    ctx.update({
+        "alumni_list": alumni_list,
+        "available_years": available_years,
+        "selected_class": passed_class or "",
+        "selected_year": pass_out_year or "",
+        "search_term": search or "",
+        "total_alumni": total_alumni,
+        "total_see": total_see,
+        "total_plus2": total_plus2
+    })
+    return templates.TemplateResponse(request, "admin/alumni.html", ctx)
+
 
 

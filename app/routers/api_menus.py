@@ -28,7 +28,7 @@ class HeaderSettingsUpdate(BaseModel):
     email: Optional[str] = None
 
 DEFAULT_MENUS_SEED = [
-    # Top-level menus
+    # Top-level menus (भर्ना र नतिजा moved to विद्यार्थी, शिक्षक moved to विद्यालय प्रशासन)
     {"id": 1, "parent_id": None, "title_ne": "गृहपृष्ठ", "title_en": "Home", "url": "/", "icon": "home", "order_index": 1},
     {"id": 2, "parent_id": None, "title_ne": "न्युज फिड", "title_en": "News Feed", "url": "/feed", "icon": "newspaper", "order_index": 2},
     {"id": 3, "parent_id": None, "title_ne": "हाम्रो विद्यालय", "title_en": "About Us", "url": "/about", "icon": "info", "order_index": 3},
@@ -38,31 +38,29 @@ DEFAULT_MENUS_SEED = [
     {"id": 7, "parent_id": None, "title_ne": "विद्यालय प्रशासन", "title_en": "Administration", "url": "/administration", "icon": "shield-check", "order_index": 7},
     {"id": 8, "parent_id": None, "title_ne": "शैक्षिक कार्यक्रम", "title_en": "Academics", "url": "/academics", "icon": "graduation-cap", "order_index": 8},
     {"id": 9, "parent_id": None, "title_ne": "विद्यार्थी", "title_en": "Students", "url": "/students", "icon": "users", "order_index": 9},
-    {"id": 10, "parent_id": None, "title_ne": "भर्ना", "title_en": "Admission", "url": "/admission", "icon": "user-plus", "order_index": 10},
-    {"id": 11, "parent_id": None, "title_ne": "नतिजा", "title_en": "Results", "url": "/results", "icon": "award", "order_index": 11},
-    {"id": 12, "parent_id": None, "title_ne": "नागरिक वडापत्र", "title_en": "Citizen Charter", "url": "/citizen-charter", "icon": "file-badge", "order_index": 12},
-    {"id": 13, "parent_id": None, "title_ne": "शिक्षक", "title_en": "Teachers", "url": "/teachers", "icon": "briefcase", "order_index": 13},
-    {"id": 14, "parent_id": None, "title_ne": "ग्यालेरी", "title_en": "Gallery", "url": "/gallery", "icon": "image", "order_index": 14},
-    {"id": 15, "parent_id": None, "title_ne": "सम्पर्क", "title_en": "Contact", "url": "/contact", "icon": "map-pin", "order_index": 15},
+    {"id": 12, "parent_id": None, "title_ne": "नागरिक वडापत्र", "title_en": "Citizen Charter", "url": "/citizen-charter", "icon": "file-badge", "order_index": 10},
+    {"id": 14, "parent_id": None, "title_ne": "ग्यालेरी", "title_en": "Gallery", "url": "/gallery", "icon": "image", "order_index": 11},
+    {"id": 15, "parent_id": None, "title_ne": "सम्पर्क", "title_en": "Contact", "url": "/contact", "icon": "map-pin", "order_index": 12},
 
     # Submenus for विद्यालय प्रशासन (parent_id = 7)
     {"id": 16, "parent_id": 7, "title_ne": "व्यवस्थापन समिति", "title_en": "School Management Committee", "url": "/management-committee", "icon": "users", "order_index": 1},
     {"id": 17, "parent_id": 7, "title_ne": "गुठियार समिति", "title_en": "Trustee Committee", "url": "/trustee-committee", "icon": "landmark", "order_index": 2},
-    {"id": 18, "parent_id": 7, "title_ne": "शिक्षकहरु", "title_en": "Teachers", "url": "/teachers", "icon": "briefcase", "order_index": 3},
+    {"id": 18, "parent_id": 7, "title_ne": "शिक्षकहरु", "title_en": "Teachers & Faculty", "url": "/teachers", "icon": "briefcase", "order_index": 3},
     {"id": 19, "parent_id": 7, "title_ne": "प्रधानाध्यापक तथा नेतृत्व", "title_en": "Leadership", "url": "/leadership", "icon": "award", "order_index": 4},
     {"id": 20, "parent_id": 7, "title_ne": "समग्र प्रशासनिक संरचना", "title_en": "Administrative Structure", "url": "/administration", "icon": "shield-check", "order_index": 5},
 
     # Submenus for विद्यार्थी (parent_id = 9)
-    {"id": 21, "parent_id": 9, "title_ne": "विद्यार्थी विवरण", "title_en": "Student Directory", "url": "/students", "icon": "table", "order_index": 1},
-    {"id": 22, "parent_id": 9, "title_ne": "दैनिक हाजिरी पोर्टल", "title_en": "Daily Attendance Portal", "url": "/parent/login", "icon": "calendar-check", "order_index": 2},
-    {"id": 23, "parent_id": 9, "title_ne": "दैनिक गृहकार्य (Homework)", "title_en": "Homework", "url": "/homework", "icon": "book-open-check", "order_index": 3},
-    {"id": 24, "parent_id": 9, "title_ne": "परीक्षा नतिजा (Results)", "title_en": "Exam Results", "url": "/results", "icon": "file-check-2", "order_index": 4},
-    {"id": 25, "parent_id": 9, "title_ne": "कक्षागत सूचना", "title_en": "Class Notices", "url": "/notices", "icon": "bell-ring", "order_index": 5},
-    {"id": 26, "parent_id": 9, "title_ne": "अनलाइन बिदा निवेदन", "title_en": "Leave Application", "url": "/leave-application", "icon": "clipboard-pen", "order_index": 6},
+    {"id": 21, "parent_id": 9, "title_ne": "अनलाइन भर्ना (Admission)", "title_en": "Online Admission", "url": "/admission", "icon": "user-plus", "order_index": 1},
+    {"id": 22, "parent_id": 9, "title_ne": "परीक्षा नतिजा (Results)", "title_en": "Exam Results", "url": "/results", "icon": "award", "order_index": 2},
+    {"id": 23, "parent_id": 9, "title_ne": "पुर्व विद्यार्थी (Alumni)", "title_en": "Alumni / Passed Out Students", "url": "/alumni", "icon": "graduation-cap", "order_index": 3},
+    {"id": 24, "parent_id": 9, "title_ne": "अनलाइन बिदा निवेदन", "title_en": "Leave Application", "url": "/leave-application", "icon": "calendar-days", "order_index": 4},
+    {"id": 25, "parent_id": 9, "title_ne": "दैनिक हाजिरी पोर्टल", "title_en": "Daily Attendance Portal", "url": "/parent/login", "icon": "calendar-check", "order_index": 5},
+    {"id": 26, "parent_id": 9, "title_ne": "दैनिक गृहकार्य (Homework)", "title_en": "Homework", "url": "/homework", "icon": "book-open-check", "order_index": 6},
+    {"id": 27, "parent_id": 9, "title_ne": "विद्यार्थी विवरण", "title_en": "Student Directory", "url": "/students", "icon": "table", "order_index": 7},
 
     # Submenus for ग्यालेरी (parent_id = 14)
-    {"id": 27, "parent_id": 14, "title_ne": "फोटो ग्यालेरी", "title_en": "Photo Gallery", "url": "/gallery", "icon": "images", "order_index": 1},
-    {"id": 28, "parent_id": 14, "title_ne": "भिडियो ग्यालेरी", "title_en": "Video Gallery", "url": "/videos", "icon": "video", "order_index": 2},
+    {"id": 28, "parent_id": 14, "title_ne": "फोटो ग्यालेरी", "title_en": "Photo Gallery", "url": "/gallery", "icon": "images", "order_index": 1},
+    {"id": 29, "parent_id": 14, "title_ne": "भिडियो ग्यालेरी", "title_en": "Video Gallery", "url": "/videos", "icon": "video", "order_index": 2},
 ]
 
 @router.get("")
