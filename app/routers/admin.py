@@ -14,7 +14,7 @@ def check_admin_auth(request: Request):
     user = get_current_user(request)
     if not user:
         return None
-    if user["role"] not in ["SUPER_ADMIN", "PRINCIPAL", "VICE_PRINCIPAL", "ACCOUNTANT", "WARDEN", "CONTENT_EDITOR"]:
+    if user["role"] not in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL", "VICE_PRINCIPAL", "ACCOUNTANT", "WARDEN", "HOSTEL_WARDEN", "CONTENT_EDITOR"]:
         return None
     return user
 
@@ -1208,7 +1208,7 @@ class TeacherAttendanceUpdateRequest(BaseModel):
 @router.get("/teacher-attendance", response_class=HTMLResponse)
 def admin_teacher_attendance(request: Request, date_param: Optional[str] = Query(None, alias="date")):
     user, ctx = get_admin_context(request, "teacher_attendance")
-    if not user or user.get("role") not in ["SUPER_ADMIN", "PRINCIPAL"]:
+    if not user or user.get("role") not in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"]:
         return RedirectResponse(url="/login", status_code=303)
     
     target_date = date_param or date.today().isoformat()

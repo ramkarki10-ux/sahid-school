@@ -96,6 +96,12 @@
             });
             const data = await res.json();
             if (res.ok && data.success) {
+                if (data.token) {
+                    try {
+                        localStorage.setItem('auth_token', data.token);
+                        document.cookie = `session_token=${data.token}; path=/; max-age=2592000; SameSite=Lax`;
+                    } catch(e) {}
+                }
                 if (redirectParam) {
                     window.location.href = redirectParam;
                 } else if (data.redirect_url) {

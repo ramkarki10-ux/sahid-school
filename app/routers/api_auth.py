@@ -238,12 +238,14 @@ def api_login(req: LoginRequest, response: Response, request: Request):
     user_dict = dict(user)
     token = create_session(user_dict)
 
-    # Set HTTP-only cookie
+    # Set 30-day persistent cookie with universal path
     response.set_cookie(
         key="session_token",
         value=token,
         httponly=True,
-        max_age=7 * 24 * 3600,
+        max_age=30 * 24 * 3600,
+        expires=30 * 24 * 3600,
+        path="/",
         samesite="lax",
         secure=False
     )
@@ -279,8 +281,8 @@ def api_logout(request: Request, response: Response):
     if token and token in SESSIONS:
         del SESSIONS[token]
 
-    response.delete_cookie("session_token")
-    response.delete_cookie("parent_session")
+    response.delete_cookie("session_token", path="/")
+    response.delete_cookie("parent_session", path="/")
     if user:
         log_audit("LOGOUT", "AUTH", user=user, request=request)
 

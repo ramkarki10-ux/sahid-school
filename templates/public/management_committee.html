@@ -242,22 +242,39 @@
                 </div>
             </div>
 
-            <!-- Photo Upload with Live Preview -->
-            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
-                <label class="block font-semibold text-slate-700">सदस्यको तस्विर / फोटो अपलोड</label>
+            <!-- Passport Size Photo Upload (Auto-Resize <= 300 KB & Draggable Crop) -->
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                <div class="flex items-center justify-between">
+                    <label class="block font-semibold text-slate-700">सदस्यको पासपोर्ट साइज तस्विर (Photo) - अटो साइज ३०० KB सम्म</label>
+                    <span class="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded">ड्रयाग & पोजिसन</span>
+                </div>
                 <div class="flex items-center gap-3">
-                    <div class="w-14 h-14 rounded-full border-2 border-slate-300 overflow-hidden bg-white flex items-center justify-center flex-shrink-0">
+                    <div class="w-14 h-18 rounded-lg border-2 border-slate-300 overflow-hidden bg-white flex items-center justify-center flex-shrink-0 shadow-sm relative group">
                         <img id="sam_photo_preview" src="" alt="Preview" class="w-full h-full object-cover hidden">
                         <i id="sam_photo_icon" data-lucide="user" class="w-6 h-6 text-slate-400"></i>
                     </div>
-                    <div class="flex-1 space-y-1">
-                        <input type="file" id="sam_file_input" accept=".jpg,.jpeg,.png,.webp" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-instBlue file:text-white hover:file:bg-instBlue-dark cursor-pointer" onchange="uploadMemberPhotoInline(this)">
+                    <div class="flex-1 space-y-1.5">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                                <i data-lucide="upload" class="w-3.5 h-3.5 text-instGold"></i>
+                                <span>फोटो छान्नुहोस्</span>
+                                <input type="file" id="sam_file_input" accept=".jpg,.jpeg,.png,.webp" class="hidden" onchange="uploadMemberPhotoInline(this)">
+                            </label>
+                            <button type="button" onclick="window.reopenPassportCropper('sam_photo', 'sam_photo_preview', 'sam_photo_icon', 'sam_photo_status')" class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-[11px] font-semibold transition" title="फोटोको अवस्था मिलाउनुहोस्">
+                                <i data-lucide="move" class="w-3.5 h-3.5 text-blue-600"></i>
+                                <span>पोजिसन मिलाउनुहोस्</span>
+                            </button>
+                            <button type="button" onclick="window.clearPassportPhotoDirect('sam_photo', 'sam_photo_preview', 'sam_photo_icon', 'sam_photo_status')" class="inline-flex items-center gap-1 px-2 py-1.5 text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-lg text-[11px] font-semibold transition" title="फोटो हटाउनुहोस्">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                <span>हटाउनुहोस्</span>
+                            </button>
+                        </div>
                         <div id="sam_photo_status" class="text-[11px]"></div>
                     </div>
                 </div>
                 <div>
                     <label class="block text-[10px] text-slate-500 font-medium">वा फोटो URL राख्नुहोस्:</label>
-                    <input type="text" id="sam_photo" oninput="updateMemberPreviewInline(this.value)" placeholder="/static/uploads/sample.jpg" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none font-mono text-[11px]">
+                    <input type="text" id="sam_photo" oninput="updateMemberPreviewInline(this.value)" placeholder="/static/uploads/sample.jpg" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono text-[11px]">
                 </div>
             </div>
 
@@ -284,26 +301,12 @@
         }
     }
 
-    async function uploadMemberPhotoInline(input) {
+    function uploadMemberPhotoInline(input) {
         if (!input.files || !input.files[0]) return;
-        if (window.handleAutoResizedPhotoUpload) {
-            await window.handleAutoResizedPhotoUpload(input, 'sam_photo', 'sam_photo_preview', 'sam_photo_icon', 'sam_photo_status');
-        } else {
-            const statusEl = document.getElementById('sam_photo_status');
-            statusEl.innerHTML = '<span class="text-amber-600 font-semibold animate-pulse">तस्विर अपलोड हुँदैछ...</span>';
-            const fd = new FormData();
-            fd.append('file', input.files[0]);
-            try {
-                const res = await fetch('/api/upload', {method: 'POST', body: fd});
-                const data = await res.json();
-                if (res.ok && data.url) {
-                    document.getElementById('sam_photo').value = data.url;
-                    updateMemberPreviewInline(data.url);
-                    statusEl.innerHTML = '<span class="text-emerald-600 font-semibold">तस्विर सफलतापूर्वक अपलोड भयो!</span>';
-                }
-            } catch(e) {
-                statusEl.innerHTML = '<span class="text-rose-600">अपलोडमा त्रुटि भयो।</span>';
-            }
+        if (window.handlePassportFileInput) {
+            window.handlePassportFileInput(input, 'sam_photo', 'sam_photo_preview', 'sam_photo_icon', 'sam_photo_status');
+        } else if (window.handleAutoResizedPhotoUpload) {
+            window.handleAutoResizedPhotoUpload(input, 'sam_photo', 'sam_photo_preview', 'sam_photo_icon', 'sam_photo_status');
         }
     }
 

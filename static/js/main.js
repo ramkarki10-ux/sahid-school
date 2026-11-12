@@ -1,5 +1,34 @@
 // Shahid Smriti School Main Client Script
 
+// Bulletproof Auth Token Persistence (survives cross-page navigation & serverless restarts)
+(function() {
+    try {
+        const token = localStorage.getItem('auth_token');
+        if (token && !document.cookie.includes('session_token=')) {
+            document.cookie = `session_token=${token}; path=/; max-age=2592000; SameSite=Lax`;
+        }
+        // Automatically inject Bearer token into API fetches
+        const origFetch = window.fetch;
+        window.fetch = function(url, options) {
+            options = options || {};
+            const savedToken = localStorage.getItem('auth_token');
+            if (savedToken) {
+                options.headers = options.headers || {};
+                if (options.headers instanceof Headers) {
+                    if (!options.headers.has('Authorization')) {
+                        options.headers.set('Authorization', 'Bearer ' + savedToken);
+                    }
+                } else if (typeof options.headers === 'object' && !Array.isArray(options.headers)) {
+                    if (!options.headers['Authorization']) {
+                        options.headers['Authorization'] = 'Bearer ' + savedToken;
+                    }
+                }
+            }
+            return origFetch.call(this, url, options);
+        };
+    } catch(e) {}
+})();
+
 function openMobileDrawer() {
     const drawer = document.getElementById('mobileDrawer');
     const panel = document.getElementById('drawerPanel');

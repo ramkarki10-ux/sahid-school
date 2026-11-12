@@ -130,7 +130,7 @@ def list_students(
     students = [dict(row) for row in cursor.fetchall()]
     
     # For security: if viewer or unauthorized, hide private guardian contact
-    if user["role"] not in ["SUPER_ADMIN", "PRINCIPAL", "TEACHER", "HOSTEL_WARDEN"]:
+    if user["role"] not in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL", "TEACHER", "HOSTEL_WARDEN"]:
         for s in students:
             s["guardian_phone"] = "********* (गोप्य)"
             s["emergency_contact"] = None

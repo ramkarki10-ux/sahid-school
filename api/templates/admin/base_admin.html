@@ -376,6 +376,10 @@
     <script>
         function handleLogout() {
             if (confirm('के तपाईं लगआउट गर्न चाहनुहुन्छ?')) {
+                try {
+                    localStorage.removeItem('auth_token');
+                    document.cookie = "session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax";
+                } catch(e) {}
                 fetch('/api/auth/logout', {method: 'POST'})
                     .then(() => window.location.href = '/login');
             }
@@ -509,6 +513,7 @@
             });
         }
     </script>
+    <script src="/static/js/passport_cropper.js"></script>
     <script>
         lucide.createIcons();
     </script>
