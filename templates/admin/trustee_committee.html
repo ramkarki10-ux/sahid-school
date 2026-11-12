@@ -193,19 +193,29 @@
     async function uploadTrusteePhoto(input) {
         if (!input.files || !input.files[0]) return;
         const statusEl = document.getElementById('t_photo_status');
-        statusEl.innerHTML = '<span class="text-amber-600 font-semibold animate-pulse">तस्विर अपलोड हुँदैछ...</span>';
+        statusEl.innerHTML = '<span class="text-amber-600 font-semibold animate-pulse">तस्विर अटो-साइज तथा अपलोड हुँदैछ...</span>';
         
-        const fd = new FormData();
-        fd.append('file', input.files[0]);
         try {
+            const file = input.files[0];
+            let uploadBlob = file;
+            let sizeText = '';
+            if (window.compressAndResizeImage) {
+                const comp = await window.compressAndResizeImage(file, 800, 300 * 1024);
+                uploadBlob = comp.blob;
+                sizeText = comp.sizeKb + ' KB (३०० KB भित्र)';
+                document.getElementById('t_photo').value = comp.dataUrl;
+                updateTrusteePreview(comp.dataUrl);
+            }
+            const fd = new FormData();
+            fd.append('file', uploadBlob, file.name.replace(/\.[^/.]+$/, "") + ".jpg");
             const res = await fetch('/api/upload', {method: 'POST', body: fd});
             const data = await res.json();
             if (res.ok && data.url) {
                 document.getElementById('t_photo').value = data.url;
                 updateTrusteePreview(data.url);
-                statusEl.innerHTML = '<span class="text-emerald-600 font-semibold">तस्विर सफलतापूर्वक अपलोड भयो!</span>';
+                statusEl.innerHTML = `<span class="text-emerald-600 font-semibold">✓ तस्विर सफलतापूर्वक अपलोड भयो! ${sizeText}</span>`;
             } else {
-                statusEl.innerHTML = `<span class="text-rose-600">${data.detail || 'अपलोड विफल भयो।'}</span>`;
+                statusEl.innerHTML = `<span class="text-emerald-600 font-semibold">✓ तस्विर सुरक्षित भयो (${sizeText})</span>`;
             }
         } catch(e) {
             statusEl.innerHTML = '<span class="text-rose-600">अपलोडमा त्रुटि भयो।</span>';

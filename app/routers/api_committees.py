@@ -23,13 +23,16 @@ class CommitteeMemberCreate(BaseModel):
 
 class LeadershipUpdate(BaseModel):
     name: str
-    position: str
+    position: Optional[str] = None
+    designation: Optional[str] = None
+    role_type: Optional[str] = "LEADERSHIP"
     photo: Optional[str] = None
     qualification: Optional[str] = None
     experience: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[str] = None
     message_ne: Optional[str] = None
+    message: Optional[str] = None
     biography: Optional[str] = None
 
 # --- MANAGEMENT COMMITTEE ---
@@ -165,33 +168,121 @@ def export_trustee_committee_route(request: Request):
         headers={"Content-Disposition": "attachment; filename=trustee_members.xlsx"}
     )
 
-# --- LEADERSHIP (Principal & Vice Principal) ---
+# --- LEADERSHIP (Principal & School Leadership) ---
+@router.get("/leadership")
+def list_leadership():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM school_leadership ORDER BY id ASC")
+    leaders = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    return {"leaders": leaders}
+
 @router.get("/leadership/{role_type}")
 def get_leadership(role_type: str):
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM school_leadership WHERE role_type = ?", (role_type.upper(),))
+    # Support both ASSISTANT_PRINCIPAL and VICE_PRINCIPAL matching
+    rt = role_type.upper()
+    if rt in ["VICE_PRINCIPAL", "ASSISTANT_PRINCIPAL"]:
+        cursor.execute("SELECT * FROM school_leadership WHERE role_type IN ('VICE_PRINCIPAL', 'ASSISTANT_PRINCIPAL') LIMIT 1")
+    else:
+        cursor.execute("SELECT * FROM school_leadership WHERE role_type = ?", (rt,))
     row = cursor.fetchone()
     conn.close()
     if not row:
         raise HTTPException(status_code=404, detail="विवरण फेला परेन।")
     return dict(row)
 
-@router.put("/leadership/{role_type}")
-def update_leadership(role_type: str, data: LeadershipUpdate, request: Request):
-    user = require_role("SUPER_ADMIN", "PRINCIPAL")(request)
+@router.post("/leadership")
+def create_leadership(data: LeadershipUpdate, request: Request):
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     conn = get_db()
     cursor = conn.cursor()
+    rt = (data.role_type or "OTHER").upper()
+    pos = data.position or data.designation or "नेतृत्व"
+    msg = data.message_ne or data.message
+    cursor.execute("""
+        INSERT INTO school_leadership (role_type, name, position, photo, qualification, experience, phone, email, message_ne, biography)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        rt, data.name, pos, data.photo, data.qualification, data.experience,
+        data.phone, data.email, msg, data.biography
+    ))
+    new_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    log_audit("CREATE", "LEADERSHIP", record_id=str(new_id), new_value=data.dict(), user=user, request=request)
+    return {"success": True, "message": "नेतृत्व सदस्य सफलतापूर्वक थपियो।", "id": new_id}
+
+@router.put("/leadership/id/{id}")
+def update_leadership_by_id(id: int, data: LeadershipUpdate, request: Request):
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM school_leadership WHERE id = ?", (id,))
+    existing = cursor.fetchone()
+    if not existing:
+        conn.close()
+        raise HTTPException(status_code=404, detail="विवरण फेला परेन।")
+    
+    rt = data.role_type.upper() if data.role_type else existing["role_type"]
+    pos = data.position or data.designation or existing["position"]
+    msg = data.message_ne if data.message_ne is not None else (data.message if data.message is not None else existing["message_ne"])
     cursor.execute("""
         UPDATE school_leadership SET
-            name = ?, position = ?, photo = ?, qualification = ?, experience = ?,
+            role_type = ?, name = ?, position = ?, photo = ?, qualification = ?, experience = ?,
             phone = ?, email = ?, message_ne = ?, biography = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE role_type = ?
+        WHERE id = ?
     """, (
-        data.name, data.position, data.photo, data.qualification, data.experience,
-        data.phone, data.email, data.message_ne, data.biography, role_type.upper()
+        rt, data.name, pos, data.photo, data.qualification, data.experience,
+        data.phone, data.email, msg, data.biography, id
     ))
     conn.commit()
     conn.close()
-    log_audit("UPDATE", "LEADERSHIP", record_id=role_type.upper(), new_value=data.dict(), user=user, request=request)
+    log_audit("UPDATE", "LEADERSHIP", record_id=str(id), new_value=data.dict(), user=user, request=request)
     return {"success": True, "message": "नेतृत्व विवरण सफलतापूर्वक अद्यावधिक भयो।"}
+
+@router.put("/leadership/{role_type}")
+def update_leadership(role_type: str, data: LeadershipUpdate, request: Request):
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
+    conn = get_db()
+    cursor = conn.cursor()
+    rt = role_type.upper()
+    pos = data.position or data.designation or ("प्रधानाध्यापक" if rt == "PRINCIPAL" else "सहायक प्रधानाध्यापक")
+    msg = data.message_ne if data.message_ne is not None else data.message
+    if rt in ["VICE_PRINCIPAL", "ASSISTANT_PRINCIPAL"]:
+        cursor.execute("""
+            UPDATE school_leadership SET
+                name = ?, position = ?, photo = ?, qualification = ?, experience = ?,
+                phone = ?, email = ?, message_ne = ?, biography = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE role_type IN ('VICE_PRINCIPAL', 'ASSISTANT_PRINCIPAL')
+        """, (
+            data.name, pos, data.photo, data.qualification, data.experience,
+            data.phone, data.email, msg, data.biography
+        ))
+    else:
+        cursor.execute("""
+            UPDATE school_leadership SET
+                name = ?, position = ?, photo = ?, qualification = ?, experience = ?,
+                phone = ?, email = ?, message_ne = ?, biography = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE role_type = ?
+        """, (
+            data.name, pos, data.photo, data.qualification, data.experience,
+            data.phone, data.email, msg, data.biography, rt
+        ))
+    conn.commit()
+    conn.close()
+    log_audit("UPDATE", "LEADERSHIP", record_id=rt, new_value=data.dict(), user=user, request=request)
+    return {"success": True, "message": "नेतृत्व विवरण सफलतापूर्वक अद्यावधिक भयो।"}
+
+@router.delete("/leadership/{id}")
+def delete_leadership(id: int, request: Request):
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM school_leadership WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+    log_audit("DELETE", "LEADERSHIP", record_id=str(id), user=user, request=request)
+    return {"success": True, "message": "नेतृत्व सदस्य विवरण मेटाइयो।"}

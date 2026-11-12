@@ -40,8 +40,8 @@
     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
         <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span class="font-bold text-amber-300">सुपर एडमिन एक्सेस सक्रिय:</span>
-            <span>तपाईंलाई व्यवस्थापन समिति सदस्यहरू थप्न, सच्याउन (Edit), फोटो परिवर्तन गर्न र मेटाउन (Delete) पूर्ण अनुमति छ।</span>
+            <span class="font-bold text-amber-300">सुपर एडमिन / एडमिन पहुँच:</span>
+            <span>तपाईंलाई व्यवस्थापन समिति सदस्यहरू थप्न, सच्याउन (Edit), फोटो (अटो-साइज ३०० KB सम्म) परिवर्तन गर्न र मेटाउन (Delete) पूर्ण अनुमति छ।</span>
         </div>
         <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono">ROLE: {{ current_user.role if current_user else 'SUPER_ADMIN' }}</span>
     </div>
@@ -286,23 +286,24 @@
 
     async function uploadMemberPhotoInline(input) {
         if (!input.files || !input.files[0]) return;
-        const statusEl = document.getElementById('sam_photo_status');
-        statusEl.innerHTML = '<span class="text-amber-600 font-semibold animate-pulse">तस्विर अपलोड हुँदैछ...</span>';
-        
-        const fd = new FormData();
-        fd.append('file', input.files[0]);
-        try {
-            const res = await fetch('/api/upload', {method: 'POST', body: fd});
-            const data = await res.json();
-            if (res.ok && data.url) {
-                document.getElementById('sam_photo').value = data.url;
-                updateMemberPreviewInline(data.url);
-                statusEl.innerHTML = '<span class="text-emerald-600 font-semibold">तस्विर सफलतापूर्वक अपलोड भयो!</span>';
-            } else {
-                statusEl.innerHTML = `<span class="text-rose-600">${data.detail || 'अपलोड विफल भयो।'}</span>`;
+        if (window.handleAutoResizedPhotoUpload) {
+            await window.handleAutoResizedPhotoUpload(input, 'sam_photo', 'sam_photo_preview', 'sam_photo_icon', 'sam_photo_status');
+        } else {
+            const statusEl = document.getElementById('sam_photo_status');
+            statusEl.innerHTML = '<span class="text-amber-600 font-semibold animate-pulse">तस्विर अपलोड हुँदैछ...</span>';
+            const fd = new FormData();
+            fd.append('file', input.files[0]);
+            try {
+                const res = await fetch('/api/upload', {method: 'POST', body: fd});
+                const data = await res.json();
+                if (res.ok && data.url) {
+                    document.getElementById('sam_photo').value = data.url;
+                    updateMemberPreviewInline(data.url);
+                    statusEl.innerHTML = '<span class="text-emerald-600 font-semibold">तस्विर सफलतापूर्वक अपलोड भयो!</span>';
+                }
+            } catch(e) {
+                statusEl.innerHTML = '<span class="text-rose-600">अपलोडमा त्रुटि भयो।</span>';
             }
-        } catch(e) {
-            statusEl.innerHTML = '<span class="text-rose-600">अपलोडमा त्रुटि भयो।</span>';
         }
     }
 

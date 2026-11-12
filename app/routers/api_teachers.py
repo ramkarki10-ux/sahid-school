@@ -52,6 +52,11 @@ def list_teachers(
     status_filter: Optional[str] = Query(None, alias="status"),
     search: Optional[str] = Query(None)
 ):
+    subject = subject if isinstance(subject, str) and subject.strip() else None
+    level = level if isinstance(level, str) and level.strip() else None
+    status_filter = status_filter if isinstance(status_filter, str) and status_filter.strip() else None
+    search = search if isinstance(search, str) and search.strip() else None
+
     conn = get_db()
     cursor = conn.cursor()
     query = "SELECT * FROM teachers WHERE 1=1"
@@ -88,7 +93,7 @@ def download_teacher_template():
 
 @router.post("/import")
 async def import_teachers(request: Request, file: UploadFile = File(...)):
-    user = require_role("SUPER_ADMIN", "PRINCIPAL")(request)
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     content = await file.read()
     wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
     ws = wb.active
@@ -173,7 +178,7 @@ def get_teacher(id: int):
 
 @router.post("")
 def create_teacher(data: TeacherCreate, request: Request):
-    user = require_role("SUPER_ADMIN", "PRINCIPAL")(request)
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     conn = get_db()
     cursor = conn.cursor()
     
@@ -203,7 +208,7 @@ def create_teacher(data: TeacherCreate, request: Request):
 
 @router.put("/{id}")
 def update_teacher(id: int, data: TeacherCreate, request: Request):
-    user = require_role("SUPER_ADMIN", "PRINCIPAL")(request)
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM teachers WHERE id = ?", (id,))
@@ -234,7 +239,7 @@ def update_teacher(id: int, data: TeacherCreate, request: Request):
 
 @router.delete("/{id}")
 def delete_teacher(id: int, request: Request):
-    user = require_role("SUPER_ADMIN", "PRINCIPAL")(request)
+    user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM teachers WHERE id = ?", (id,))

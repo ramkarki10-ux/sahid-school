@@ -789,12 +789,15 @@ def admin_leadership(request: Request):
     p_row = cursor.fetchone()
     principal = dict(p_row) if p_row else None
 
-    cursor.execute("SELECT *, position as designation, message_ne as message FROM school_leadership WHERE role_type = 'VICE_PRINCIPAL'")
+    cursor.execute("SELECT *, position as designation, message_ne as message FROM school_leadership WHERE role_type IN ('VICE_PRINCIPAL', 'ASSISTANT_PRINCIPAL') LIMIT 1")
     vp_row = cursor.fetchone()
     vp = dict(vp_row) if vp_row else None
+
+    cursor.execute("SELECT *, position as designation, message_ne as message FROM school_leadership ORDER BY id ASC")
+    leaders = [dict(r) for r in cursor.fetchall()]
     conn.close()
 
-    ctx.update({"principal": principal, "vp": vp})
+    ctx.update({"principal": principal, "vp": vp, "leaders": leaders})
     return templates.TemplateResponse(request, "admin/leadership.html", ctx)
 
 @router.get("/hostels", response_class=HTMLResponse)

@@ -186,18 +186,53 @@ def page_trustee_committee(request: Request):
         "active_menu": "administration"
     })
 
+@router.get("/leadership", response_class=HTMLResponse)
+def page_leadership(request: Request):
+    settings, ticker_notice = get_school_context()
+    user = get_current_user(request)
+    is_admin = bool(user and user.get("role") in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"])
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM school_leadership ORDER BY id ASC")
+    leaders = [dict(r) for r in cursor.fetchall()]
+    principal = next((l for l in leaders if l.get("role_type") == "PRINCIPAL"), (leaders[0] if leaders else {}))
+    vice_principal = next((l for l in leaders if l.get("role_type") in ["VICE_PRINCIPAL", "ASSISTANT_PRINCIPAL"]), None)
+    other_leaders = [l for l in leaders if l.get("id") not in [principal.get("id"), (vice_principal.get("id") if vice_principal else None)]]
+    conn.close()
+    return templates.TemplateResponse(request, "public/leadership.html", {
+        "settings": settings,
+        "ticker_notice": ticker_notice,
+        "leaders": leaders,
+        "principal": principal,
+        "vice_principal": vice_principal,
+        "other_leaders": other_leaders,
+        "leader": principal,
+        "is_admin": is_admin,
+        "current_user": user,
+        "title": "विद्यालय नेतृत्व तथा प्रशासन",
+        "active_menu": "administration"
+    })
+
 @router.get("/principal", response_class=HTMLResponse)
 def page_principal(request: Request):
     settings, ticker_notice = get_school_context()
+    user = get_current_user(request)
+    is_admin = bool(user and user.get("role") in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"])
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM school_leadership WHERE role_type = 'PRINCIPAL'")
     leader = dict(cursor.fetchone() or {})
+    cursor.execute("SELECT * FROM school_leadership ORDER BY id ASC")
+    leaders = [dict(r) for r in cursor.fetchall()]
     conn.close()
     return templates.TemplateResponse(request, "public/leadership.html", {
         "settings": settings,
         "ticker_notice": ticker_notice,
         "leader": leader,
+        "principal": leader,
+        "leaders": leaders,
+        "is_admin": is_admin,
+        "current_user": user,
         "title": "प्रधानाध्यापकको सन्देश",
         "active_menu": "administration"
     })
@@ -205,15 +240,23 @@ def page_principal(request: Request):
 @router.get("/assistant-principal", response_class=HTMLResponse)
 def page_assistant_principal(request: Request):
     settings, ticker_notice = get_school_context()
+    user = get_current_user(request)
+    is_admin = bool(user and user.get("role") in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"])
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM school_leadership WHERE role_type = 'VICE_PRINCIPAL'")
+    cursor.execute("SELECT * FROM school_leadership WHERE role_type IN ('VICE_PRINCIPAL', 'ASSISTANT_PRINCIPAL') LIMIT 1")
     leader = dict(cursor.fetchone() or {})
+    cursor.execute("SELECT * FROM school_leadership ORDER BY id ASC")
+    leaders = [dict(r) for r in cursor.fetchall()]
     conn.close()
     return templates.TemplateResponse(request, "public/leadership.html", {
         "settings": settings,
         "ticker_notice": ticker_notice,
         "leader": leader,
+        "vice_principal": leader,
+        "leaders": leaders,
+        "is_admin": is_admin,
+        "current_user": user,
         "title": "सहायक प्रधानाध्यापकको सन्देश",
         "active_menu": "administration"
     })
@@ -222,7 +265,7 @@ def page_assistant_principal(request: Request):
 def page_teachers(request: Request):
     settings, ticker_notice = get_school_context()
     user = get_current_user(request)
-    is_admin = bool(user and user.get("role") in ["SUPER_ADMIN", "PRINCIPAL", "CONTENT_EDITOR"])
+    is_admin = bool(user and user.get("role") in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL", "CONTENT_EDITOR"])
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM teachers WHERE status = 'सक्रिय' ORDER BY id ASC")

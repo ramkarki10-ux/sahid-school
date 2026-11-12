@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}{{ leader.position }} | {{ settings.name_ne }}{% endblock %}
+{% block title %}विद्यालय नेतृत्व तथा प्रधानाध्यापक | {{ settings.name_ne }}{% endblock %}
 
 {% block content %}
+<!-- Page Header -->
 <div class="bg-slate-100 py-6 border-b border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-8">
         <div class="flex items-center gap-2 text-xs text-slate-500">
@@ -10,85 +11,550 @@
             <i data-lucide="chevron-right" class="w-3 h-3"></i>
             <a href="/administration" class="hover:text-instBlue">विद्यालय प्रशासन</a>
             <i data-lucide="chevron-right" class="w-3 h-3"></i>
-            <span class="text-slate-800 font-semibold">{{ leader.position }}</span>
+            <span class="text-slate-800 font-semibold">प्रधानाध्यापक तथा नेतृत्व</span>
         </div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-instBlue mt-2">{{ leader.position }}को सन्देश तथा प्रोफाइल</h1>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-instBlue">विद्यालय प्रशासनिक नेतृत्व तथा प्रधानाध्यापक</h1>
+                <p class="text-xs text-slate-600 mt-1">सहिद स्मृति आवासीय माध्यमिक विद्यालय, इटहरी–१९, सुनसरी • आधिकारिक नेतृत्व विवरण तथा मन्तव्य</p>
+            </div>
+            {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="openAddLeadershipModal()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow transition">
+                    <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-200"></i>
+                    <span>+ नयाँ नेतृत्व थप्नुहोस्</span>
+                </button>
+                <a href="/admin/leadership" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-bold shadow transition">
+                    <i data-lucide="settings" class="w-4 h-4 text-instGold"></i>
+                    <span>एडमिन प्यानल</span>
+                </a>
+            </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 
+<!-- Admin Notice Banner (Visible to Super Admin / Admin) -->
+{% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+<div class="bg-gradient-to-r from-instBlue to-slate-900 text-white py-2.5 px-4 sm:px-8 border-b border-amber-400">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="font-bold text-amber-300">सुपर एडमिन / एडमिन पहुँच सक्रिय:</span>
+            <span>तपाईंलाई प्रधानाध्यापक तथा विद्यालय नेतृत्वको व्यक्तिगत विवरण, मन्तव्य, योग्यता सच्याउन (Edit), नयाँ थप्न, मेटाउन र ३०० KB सम्मको अटो साइज फोटो अपलोड गर्ने पूर्ण अधिकार छ।</span>
+        </div>
+        <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono">ROLE: {{ current_user.role if current_user else 'SUPER_ADMIN' }}</span>
+    </div>
+</div>
+{% endif %}
+
 <div class="py-12 bg-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-8">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            
-            <!-- Left: Profile Card -->
-            <div class="lg:col-span-4">
-                <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center shadow-sm sticky top-20">
-                    <img 
-                        src="{{ leader.photo or ('/static/images/principal.jpg' if leader.role_type == 'PRINCIPAL' else '/static/images/vice_principal.jpg') }}" 
-                        alt="{{ leader.name }}" 
-                        class="w-48 h-56 object-cover rounded-lg shadow border-2 border-instBlue mx-auto mb-4"
-                    >
-                    <span class="bg-instBlue text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase">
-                        {{ leader.position }}
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 space-y-16">
+
+        <!-- 1. PRINCIPAL SECTION (श्री रीता फुयल) -->
+        {% if principal %}
+        <section class="bg-slate-50/70 border-2 border-instBlue/20 rounded-2xl p-6 sm:p-8 shadow-sm relative">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <span class="p-2 bg-instBlue text-white rounded-lg">
+                        <i data-lucide="award" class="w-5 h-5 text-instGold"></i>
                     </span>
-                    <h2 class="text-xl font-bold text-slate-900 mt-2">{{ leader.name }}</h2>
-                    <p class="text-xs text-slate-600 mt-1 font-medium">{{ leader.qualification }}</p>
-                    <p class="text-[11px] text-slate-500 mt-0.5">अनुभव: {{ leader.experience }}</p>
+                    <div>
+                        <span class="text-[11px] font-bold text-instBlue uppercase tracking-wider block">संस्थागत नेतृत्व</span>
+                        <h2 class="text-xl sm:text-2xl font-bold text-slate-900">{{ principal.position }} प्रोफाइल तथा मन्तव्य</h2>
+                    </div>
+                </div>
+
+                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+                <button type="button" onclick='openEditLeadershipModal({{ principal | tojson | safe }})' class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-bold shadow-sm transition">
+                    <i data-lucide="edit-3" class="w-3.5 h-3.5 text-instGold"></i>
+                    <span>प्रधानाध्यापक विवरण सच्याउनुहोस्</span>
+                </button>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <!-- Principal Photo & Details Card -->
+                <div class="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-6 text-center shadow-sm">
+                    <div class="w-44 h-52 mx-auto rounded-xl overflow-hidden shadow-md border-2 border-instBlue mb-4 bg-slate-100 flex items-center justify-center">
+                        <img 
+                            src="{{ principal.photo or '/static/images/principal.jpg' }}" 
+                            alt="{{ principal.name }}" 
+                            class="w-full h-full object-cover"
+                            onerror="this.src='/static/images/principal.jpg'"
+                        >
+                    </div>
+                    <span class="bg-instBlue text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase">
+                        {{ principal.position }}
+                    </span>
+                    <h3 class="text-xl font-bold text-slate-900 mt-2">{{ principal.name }}</h3>
+                    {% if principal.qualification %}
+                    <p class="text-xs text-slate-600 mt-1 font-semibold flex items-center justify-center gap-1">
+                        <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-instGold"></i>
+                        <span>{{ principal.qualification }}</span>
+                    </p>
+                    {% endif %}
+                    {% if principal.experience %}
+                    <p class="text-[11px] text-slate-500 mt-0.5">अध्यापन तथा प्रशासनिक अनुभव: <strong>{{ principal.experience }}</strong></p>
+                    {% endif %}
 
                     <div class="mt-4 pt-4 border-t border-slate-200 text-left text-xs space-y-2">
-                        {% if leader.phone %}
+                        {% if principal.phone %}
                         <div class="flex items-center gap-2 text-slate-700">
                             <i data-lucide="phone" class="w-4 h-4 text-instBlue"></i>
-                            <span>{{ leader.phone }}</span>
+                            <a href="tel:{{ principal.phone }}" class="font-mono hover:text-instBlue font-semibold">{{ principal.phone }}</a>
                         </div>
                         {% endif %}
-                        {% if leader.email %}
+                        {% if principal.email %}
                         <div class="flex items-center gap-2 text-slate-700">
                             <i data-lucide="mail" class="w-4 h-4 text-instBlue"></i>
-                            <span class="break-all">{{ leader.email }}</span>
+                            <a href="mailto:{{ principal.email }}" class="font-mono text-[11px] hover:text-instBlue truncate">{{ principal.email }}</a>
                         </div>
                         {% endif %}
                         <div class="flex items-center gap-2 text-slate-700">
                             <i data-lucide="map-pin" class="w-4 h-4 text-instBlue"></i>
-                            <span>सहिद स्मृति आवासीय मावि, इटहरी-१९</span>
+                            <span>सहिद स्मृति आ.मा.वि., इटहरी-१९</span>
                         </div>
                     </div>
                 </div>
+
+                <!-- Principal Message & Biography -->
+                <div class="lg:col-span-8 space-y-6">
+                    <!-- Message -->
+                    <div class="bg-blue-50/70 border border-blue-200 rounded-xl p-6 relative">
+                        <div class="text-instGold mb-2">
+                            <i data-lucide="quote" class="w-8 h-8"></i>
+                        </div>
+                        <h4 class="text-base font-bold text-slate-900 mb-2">प्रधानाध्यापकको मन्तव्य (Message from Principal)</h4>
+                        <div class="text-sm text-slate-700 leading-relaxed text-justify space-y-2">
+                            <p>{{ principal.message_ne or 'सहिद स्मृति आवासीय माध्यमिक विद्यालयमा सम्पूर्ण विद्यार्थी, अभिभावक तथा शुभचिन्तकहरूलाई हार्दिक स्वागत गर्दछौं। हामी गुणस्तरीय, संस्कारयुक्त तथा प्रविधिमैत्री शिक्षा प्रदान गर्न निरन्तर समर्पित छौं।' }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Biography -->
+                    {% if principal.biography %}
+                    <div class="space-y-2">
+                        <h4 class="text-sm font-bold text-slate-900 border-b pb-1.5 flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-4 h-4 text-instBlue"></i>
+                            <span>संक्षिप्त परिचय तथा शैक्षिक योगदान (Biography)</span>
+                        </h4>
+                        <div class="text-xs sm:text-sm text-slate-700 leading-relaxed text-justify space-y-2">
+                            <p>{{ principal.biography }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Commitments -->
+                    <div class="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-xs">
+                        <h5 class="font-bold text-xs sm:text-sm text-slate-900 mb-2 flex items-center gap-1.5">
+                            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+                            <span>शैक्षिक उत्कृष्टता तथा व्यवस्थापकीय प्रतिबद्धता</span>
+                        </h5>
+                        <ul class="text-xs space-y-1.5 list-disc pl-5 text-slate-600">
+                            <li>सहिद परिवार तथा विपन्न वर्गका बालबालिकालाई निःशुल्क गुणस्तरीय आवासीय सुविधा।</li>
+                            <li>आधुनिक विज्ञान, कम्प्युटर प्रयोगशाला तथा डिजिटल स्मार्ट कक्षाकोठा।</li>
+                            <li>विद्यार्थीहरूको चौतर्फी व्यक्तित्व विकासका लागि अतिरिक्त क्रियाकलाप तथा खेलकुद।</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- 2. VICE PRINCIPAL SECTION (श्री रमेश खड्का) -->
+        {% if vice_principal %}
+        <section class="bg-slate-50/70 border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm relative">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <span class="p-2 bg-slate-800 text-white rounded-lg">
+                        <i data-lucide="user-check" class="w-5 h-5 text-instGold"></i>
+                    </span>
+                    <div>
+                        <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">शैक्षिक तथा प्रशासनिक समन्वय</span>
+                        <h2 class="text-xl sm:text-2xl font-bold text-slate-900">{{ vice_principal.position }} प्रोफाइल तथा विवरण</h2>
+                    </div>
+                </div>
+
+                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+                <button type="button" onclick='openEditLeadershipModal({{ vice_principal | tojson | safe }})' class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold shadow-sm transition">
+                    <i data-lucide="edit-3" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>विवरण सच्याउनुहोस्</span>
+                </button>
+                {% endif %}
             </div>
 
-            <!-- Right: Message & Biography -->
-            <div class="lg:col-span-8 space-y-6">
-                <!-- Message -->
-                <div class="bg-blue-50/50 border border-blue-200/80 rounded-xl p-6 relative">
-                    <div class="text-instGold mb-2">
-                        <i data-lucide="quote" class="w-8 h-8"></i>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <!-- Vice Principal Photo Card -->
+                <div class="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-6 text-center shadow-sm">
+                    <div class="w-40 h-48 mx-auto rounded-xl overflow-hidden shadow-md border-2 border-slate-400 mb-4 bg-slate-100 flex items-center justify-center">
+                        <img 
+                            src="{{ vice_principal.photo or '/static/images/vice_principal.jpg' }}" 
+                            alt="{{ vice_principal.name }}" 
+                            class="w-full h-full object-cover"
+                            onerror="this.src='/static/images/vice_principal.jpg'"
+                        >
                     </div>
-                    <h3 class="text-lg font-bold text-slate-900 mb-3">{{ leader.position }}को भनाइ</h3>
-                    <div class="text-sm text-slate-700 leading-relaxed space-y-3 text-justify">
-                        <p>{{ leader.message_ne }}</p>
+                    <span class="bg-slate-800 text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase">
+                        {{ vice_principal.position }}
+                    </span>
+                    <h3 class="text-lg font-bold text-slate-900 mt-2">{{ vice_principal.name }}</h3>
+                    {% if vice_principal.qualification %}
+                    <p class="text-xs text-slate-600 mt-1 font-semibold flex items-center justify-center gap-1">
+                        <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-instGold"></i>
+                        <span>{{ vice_principal.qualification }}</span>
+                    </p>
+                    {% endif %}
+                    {% if vice_principal.experience %}
+                    <p class="text-[11px] text-slate-500 mt-0.5">अनुभव: <strong>{{ vice_principal.experience }}</strong></p>
+                    {% endif %}
+
+                    <div class="mt-4 pt-4 border-t border-slate-200 text-left text-xs space-y-2">
+                        {% if vice_principal.phone %}
+                        <div class="flex items-center gap-2 text-slate-700">
+                            <i data-lucide="phone" class="w-4 h-4 text-instBlue"></i>
+                            <a href="tel:{{ vice_principal.phone }}" class="font-mono hover:text-instBlue font-semibold">{{ vice_principal.phone }}</a>
+                        </div>
+                        {% endif %}
+                        {% if vice_principal.email %}
+                        <div class="flex items-center gap-2 text-slate-700">
+                            <i data-lucide="mail" class="w-4 h-4 text-instBlue"></i>
+                            <a href="mailto:{{ vice_principal.email }}" class="font-mono text-[11px] hover:text-instBlue truncate">{{ vice_principal.email }}</a>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 
-                <!-- Biography -->
-                <div class="space-y-3">
-                    <h3 class="text-lg font-bold text-slate-900 border-b pb-2">संक्षिप्त परिचय तथा शैक्षिक योगदान (Biography)</h3>
-                    <div class="text-sm text-slate-700 leading-relaxed space-y-3 text-justify">
-                        <p>{{ leader.biography }}</p>
+                <!-- Vice Principal Message / Responsibilities -->
+                <div class="lg:col-span-8 space-y-5">
+                    <div class="bg-slate-100/70 border border-slate-200 rounded-xl p-5">
+                        <h4 class="text-sm font-bold text-slate-900 mb-2">शैक्षिक समन्वय तथा अनुशासन व्यवस्थापन</h4>
+                        <p class="text-xs sm:text-sm text-slate-700 leading-relaxed text-justify">
+                            {{ vice_principal.message_ne or 'विद्यालयको दैनिक शैक्षिक तालिका, शिक्षक-विद्यार्थी अन्तरक्रिया, गृहकार्य अनुगमन तथा आन्तरिक परीक्षा सञ्चालनलाई पारदर्शी र परिणाममुखी बनाउन निरन्तर क्रियाशील छौं।' }}
+                        </p>
                     </div>
-                </div>
 
-                <!-- Commitment bullets -->
-                <div class="bg-slate-50 border border-slate-200 rounded-lg p-5">
-                    <h4 class="font-bold text-sm text-slate-900 mb-2">हाम्रो प्रतिबद्धता</h4>
-                    <ul class="text-xs space-y-1.5 list-disc pl-5 text-slate-600">
-                        <li>विद्यार्थीहरूको चौतर्फी विकास र अनुशासित संस्कारयुक्त वातावरण।</li>
-                        <li>आवासीय विद्यार्थीहरूका लागि सुरक्षित पारिवारिक संरक्षण र पोषणयुक्त भोजन।</li>
-                        <li>प्रविधिमैत्री र आधुनिक प्रयोगशालायुक्त शिक्षण सिकाइ।</li>
-                    </ul>
+                    {% if vice_principal.biography %}
+                    <div class="space-y-1.5">
+                        <h4 class="text-xs sm:text-sm font-bold text-slate-900 border-b pb-1">व्यक्तिगत परिचय तथा योगदान</h4>
+                        <p class="text-xs sm:text-sm text-slate-700 leading-relaxed text-justify">{{ vice_principal.biography }}</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
+        </section>
+        {% endif %}
 
-        </div>
+        <!-- 3. OTHER LEADERSHIP MEMBERS (If any) -->
+        {% if other_leaders %}
+        <section class="space-y-6">
+            <h3 class="text-lg font-bold text-instBlue border-b pb-2 flex items-center gap-2">
+                <i data-lucide="users" class="w-5 h-5 text-instGold"></i>
+                <span>थप विद्यालय प्रशासनिक नेतृत्व तथा विभागीय प्रमुखहरू</span>
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for ol in other_leaders %}
+                <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between relative group">
+                    {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+                    <div class="absolute top-3 right-3 flex items-center gap-1.5">
+                        <button type="button" onclick='openEditLeadershipModal({{ ol | tojson | safe }})' class="p-1.5 bg-blue-50 hover:bg-blue-100 text-instBlue rounded border border-blue-200 transition" title="सम्पादन गर्नुहोस्">
+                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <button type="button" onclick="deleteLeadershipRecord({{ ol.id }}, '{{ ol.name }}')" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded border border-rose-200 transition" title="मेटाउनुहोस्">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    {% endif %}
+
+                    <div>
+                        <div class="w-20 h-24 mx-auto rounded-lg overflow-hidden border border-slate-300 bg-slate-100 mb-3 flex items-center justify-center">
+                            {% if ol.photo %}
+                            <img src="{{ ol.photo }}" alt="{{ ol.name }}" class="w-full h-full object-cover">
+                            {% else %}
+                            <i data-lucide="user" class="w-8 h-8 text-slate-400"></i>
+                            {% endif %}
+                        </div>
+                        <span class="bg-instBlue/10 text-instBlue text-[10px] font-bold px-2 py-0.5 rounded block text-center uppercase">
+                            {{ ol.position }}
+                        </span>
+                        <h4 class="font-bold text-center text-slate-900 mt-2 text-sm">{{ ol.name }}</h4>
+                        {% if ol.qualification %}
+                        <p class="text-[11px] text-center text-slate-600 mt-0.5">{{ ol.qualification }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] space-y-1 text-slate-600">
+                        {% if ol.phone %}
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="phone" class="w-3 h-3 text-emerald-600"></i>
+                            <span class="font-mono">{{ ol.phone }}</span>
+                        </div>
+                        {% endif %}
+                        {% if ol.email %}
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="mail" class="w-3 h-3 text-instBlue"></i>
+                            <span class="truncate">{{ ol.email }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
     </div>
 </div>
+
+<!-- ========================================== -->
+<!-- LEADERSHIP ADD / EDIT MODAL (SUPER ADMIN / ADMIN) -->
+<!-- ========================================== -->
+{% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+<div id="leadershipModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 text-xs border border-slate-200 max-h-[92vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 id="leadModalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i data-lucide="award" class="w-4 h-4 text-instGold"></i>
+                <span>विद्यालय नेतृत्व विवरण सच्याउनुहोस् / थप्नुहोस्</span>
+            </h3>
+            <button type="button" onclick="closeLeadershipModal()" class="text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form id="leadershipForm" class="space-y-3">
+            <input type="hidden" id="lead_id" value="">
+            <input type="hidden" id="lead_role_type" value="OTHER">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">पूरा नाम (नेपालीमा) *</label>
+                    <input type="text" id="lead_name" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none font-semibold text-slate-800" placeholder="श्री रीता फुयल">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">पद (Position / Designation) *</label>
+                    <input type="text" id="lead_position" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="प्रधानाध्यापक / सहायक प्रधानाध्यापक">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">भूमिका प्रकार (Role Type)</label>
+                    <select id="lead_role_select" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                        <option value="PRINCIPAL">प्रधानाध्यापक (Principal)</option>
+                        <option value="VICE_PRINCIPAL">सहायक प्रधानाध्यापक (Vice Principal)</option>
+                        <option value="OTHER">अन्य नेतृत्व / संयोजक (Other Leadership)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">शैक्षिक योग्यता (Qualification)</label>
+                    <input type="text" id="lead_qualification" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="M.Ed. (शिक्षा प्रशासन) / M.A.">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">अनुभव (Experience)</label>
+                    <input type="text" id="lead_experience" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="१५+ वर्ष">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-700">सम्पर्क फोन नम्बर</label>
+                    <input type="tel" id="lead_phone" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none font-mono" placeholder="९८५२०XXXXX">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">ईमेल ठेगाना</label>
+                <input type="email" id="lead_email" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none font-mono" placeholder="principal@shahidsmriti.edu.np">
+            </div>
+
+            <!-- Auto-Resize Photo Upload (<= 300 KB) -->
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                <label class="block font-semibold text-slate-700">नेतृत्वको तस्विर (Photo) - अटो साइज (अधिकतम ३०० KB)</label>
+                <div class="flex items-center gap-3">
+                    <div class="w-14 h-16 rounded-lg border-2 border-slate-300 overflow-hidden bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <img id="lead_photo_preview" src="" alt="Preview" class="w-full h-full object-cover hidden">
+                        <i id="lead_photo_icon" data-lucide="user" class="w-6 h-6 text-slate-400"></i>
+                    </div>
+                    <div class="flex-1 space-y-1">
+                        <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                            <i data-lucide="upload" class="w-3.5 h-3.5 text-instGold"></i>
+                            <span>कम्प्युटर / मोबाइलबाट फोटो छान्नुहोस्</span>
+                            <input type="file" accept="image/*" class="hidden" onchange="uploadLeadershipPhoto(this)">
+                        </label>
+                        <div id="lead_photo_status" class="text-[11px]"></div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-500 font-medium">वा फोटो URL राख्नुहोस्:</label>
+                    <input type="text" id="lead_photo" oninput="updateLeadershipPreviewInline(this.value)" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono text-[11px]" placeholder="/static/images/principal.jpg">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">सन्देश / मन्तव्य (Message)</label>
+                <textarea id="lead_message" rows="4" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none leading-relaxed" placeholder="प्रधानाध्यापक वा नेतृत्वको सन्देश यहाँ लेख्नुहोस्..."></textarea>
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">संक्षिप्त परिचय तथा जीवनी (Biography)</label>
+                <textarea id="lead_biography" rows="3" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none leading-relaxed" placeholder="शैक्षिक पृष्ठभूमि, योगदान तथा अनुभव..."></textarea>
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeLeadershipModal()" class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" id="leadSubmitBtn" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded shadow transition">सुरक्षित गर्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function updateLeadershipPreviewInline(url) {
+        const preview = document.getElementById('lead_photo_preview');
+        const icon = document.getElementById('lead_photo_icon');
+        if (url && url.trim()) {
+            preview.src = url.trim();
+            preview.classList.remove('hidden');
+            if (icon) icon.classList.add('hidden');
+        } else {
+            preview.src = '';
+            preview.classList.add('hidden');
+            if (icon) icon.classList.remove('hidden');
+        }
+    }
+
+    async function uploadLeadershipPhoto(input) {
+        if (!input.files || !input.files[0]) return;
+        if (window.handleAutoResizedPhotoUpload) {
+            await window.handleAutoResizedPhotoUpload(input, 'lead_photo', 'lead_photo_preview', 'lead_photo_icon', 'lead_photo_status');
+        } else {
+            const file = input.files[0];
+            const statusEl = document.getElementById('lead_photo_status');
+            statusEl.innerHTML = '<span class="text-blue-600 font-semibold animate-pulse">अपलोड हुँदैछ...</span>';
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (res.ok && data.url) {
+                    document.getElementById('lead_photo').value = data.url;
+                    updateLeadershipPreviewInline(data.url);
+                    statusEl.innerHTML = `<span class="text-emerald-600 font-semibold">✓ अपलोड भयो!</span>`;
+                }
+            } catch(e) {
+                statusEl.innerHTML = '<span class="text-rose-600">अपलोड असफल भयो।</span>';
+            }
+        }
+    }
+
+    function openAddLeadershipModal() {
+        document.getElementById('leadershipForm').reset();
+        document.getElementById('lead_id').value = '';
+        document.getElementById('lead_role_type').value = 'OTHER';
+        document.getElementById('lead_role_select').value = 'OTHER';
+        document.getElementById('lead_photo_status').innerHTML = '';
+        updateLeadershipPreviewInline('');
+        document.getElementById('leadModalTitle').innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-emerald-500"></i><span>+ नयाँ विद्यालय नेतृत्व सदस्य थप्नुहोस् (Super Admin)</span>';
+        document.getElementById('leadSubmitBtn').innerText = 'सदस्य थप्नुहोस्';
+        document.getElementById('leadershipModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function openEditLeadershipModal(l) {
+        document.getElementById('lead_id').value = l.id || '';
+        document.getElementById('lead_role_type').value = l.role_type || 'OTHER';
+        document.getElementById('lead_role_select').value = l.role_type || 'OTHER';
+        document.getElementById('lead_name').value = l.name || '';
+        document.getElementById('lead_position').value = l.position || '';
+        document.getElementById('lead_qualification').value = l.qualification || '';
+        document.getElementById('lead_experience').value = l.experience || '';
+        document.getElementById('lead_phone').value = l.phone || '';
+        document.getElementById('lead_email').value = l.email || '';
+        document.getElementById('lead_photo').value = l.photo || '';
+        document.getElementById('lead_message').value = l.message_ne || '';
+        document.getElementById('lead_biography').value = l.biography || '';
+        updateLeadershipPreviewInline(l.photo || '');
+        document.getElementById('lead_photo_status').innerHTML = '';
+        document.getElementById('leadModalTitle').innerHTML = `<i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i><span>${l.position || 'नेतृत्व'} विवरण सम्पादन (Super Admin)</span>`;
+        document.getElementById('leadSubmitBtn').innerText = 'अद्यावधिक (Save) गर्नुहोस्';
+        document.getElementById('leadershipModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function closeLeadershipModal() {
+        document.getElementById('leadershipModal').classList.add('hidden');
+    }
+
+    document.getElementById('leadershipForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const id = document.getElementById('lead_id').value;
+        const roleType = document.getElementById('lead_role_select').value;
+        const btn = document.getElementById('leadSubmitBtn');
+
+        const payload = {
+            name: document.getElementById('lead_name').value.trim(),
+            position: document.getElementById('lead_position').value.trim(),
+            role_type: roleType,
+            qualification: document.getElementById('lead_qualification').value.trim() || null,
+            experience: document.getElementById('lead_experience').value.trim() || null,
+            phone: document.getElementById('lead_phone').value.trim() || null,
+            email: document.getElementById('lead_email').value.trim() || null,
+            photo: document.getElementById('lead_photo').value.trim() || null,
+            message_ne: document.getElementById('lead_message').value.trim() || null,
+            biography: document.getElementById('lead_biography').value.trim() || null
+        };
+
+        btn.disabled = true;
+        btn.innerText = 'सुरक्षित गरिँदैछ...';
+
+        let url = '/api/committees/leadership';
+        let method = 'POST';
+
+        if (id) {
+            url = `/api/committees/leadership/id/${id}`;
+            method = 'PUT';
+        } else if (roleType === 'PRINCIPAL' || roleType === 'VICE_PRINCIPAL') {
+            url = `/api/committees/leadership/${roleType}`;
+            method = 'PUT';
+        }
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message || 'सफलतापूर्वक सुरक्षित भयो!');
+                window.location.reload();
+            } else {
+                alert(data.detail || 'त्रुटि भयो। तपाईंलाई सुपर एडमिन वा एडमिन अनुमति आवश्यक छ।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि भयो।');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'सुरक्षित गर्नुहोस्';
+        }
+    });
+
+    async function deleteLeadershipRecord(id, name) {
+        if (!confirm(`के तपाईं निश्चित रूपमा '${name}' लाई विद्यालय नेतृत्व सूचीबाट हटाउन चाहनुहुन्छ?`)) return;
+        try {
+            const res = await fetch(`/api/committees/leadership/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message || 'सफलतापूर्वक हटाइयो।');
+                window.location.reload();
+            } else {
+                alert(data.detail || 'मेटाउन सकिएन।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि भयो।');
+        }
+    }
+</script>
+{% endif %}
 {% endblock %}
