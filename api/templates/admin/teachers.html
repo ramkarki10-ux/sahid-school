@@ -43,6 +43,7 @@
                 <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
                     <tr>
                         <th class="py-3 px-4">Employee ID</th>
+                        <th class="py-3 px-3 text-center">तस्विर</th>
                         <th class="py-3 px-4">शिक्षकको नाम</th>
                         <th class="py-3 px-4">पद (Position)</th>
                         <th class="py-3 px-4">विषय</th>
@@ -56,6 +57,18 @@
                     {% for t in teachers %}
                     <tr class="hover:bg-slate-50 transition" id="teacher-row-{{ t.id }}">
                         <td class="py-3 px-4 font-mono font-bold text-instBlue">{{ t.employee_id }}</td>
+                        <td class="py-3 px-3">
+                            <div class="w-10 h-10 mx-auto rounded-full border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0 relative">
+                                {% if t.photo %}
+                                <img src="{{ t.photo }}" alt="{{ t.name_nepali }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                                <div class="w-full h-full bg-slate-100 flex items-center justify-center hidden">
+                                    <i data-lucide="user" class="w-5 h-5 text-slate-400"></i>
+                                </div>
+                                {% else %}
+                                <i data-lucide="user" class="w-5 h-5 text-slate-400"></i>
+                                {% endif %}
+                            </div>
+                        </td>
                         <td class="py-3 px-4">
                             <strong class="text-slate-900 block">{{ t.name_nepali }}</strong>
                             <span class="text-[10px] text-slate-400 font-normal">{{ t.name_english }}</span>
@@ -82,7 +95,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="8" class="py-8 text-center text-slate-500">हाल कुनै शिक्षक प्रविष्टि गरिएको छैन।</td>
+                        <td colspan="9" class="py-8 text-center text-slate-500">हाल कुनै शिक्षक प्रविष्टि गरिएको छैन।</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -237,8 +250,19 @@
         document.getElementById('tea_phone').value = t.phone || '';
         document.getElementById('tea_email').value = t.email || '';
         document.getElementById('tea_photo').value = t.photo || '';
+        const teaPrev = document.getElementById('tea_photo_preview');
+        const teaIcon = document.getElementById('tea_photo_icon');
+        if (t.photo) {
+            teaPrev.src = t.photo;
+            teaPrev.classList.remove('hidden');
+            if (teaIcon) teaIcon.classList.add('hidden');
+        } else {
+            teaPrev.src = '';
+            teaPrev.classList.add('hidden');
+            if (teaIcon) teaIcon.classList.remove('hidden');
+        }
         document.getElementById('tea_photo_status').innerHTML = t.photo 
-            ? `<span class="text-blue-600 font-semibold">हालको फोटो: <a href="${t.photo}" target="_blank" class="underline font-mono">${t.photo}</a></span>` 
+            ? `<span class="text-blue-600 font-semibold text-xs">हालको फोटो चयन गरिएको छ</span>` 
             : '';
         document.getElementById('teacherModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i><span>शिक्षक विवरण सम्पादन</span>';
         document.getElementById('teaSubmitBtn').innerText = 'अद्यावधिक (Save) गर्नुहोस्';

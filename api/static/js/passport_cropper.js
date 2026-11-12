@@ -373,7 +373,7 @@
             const previewIcon = currentOptions.previewIconId ? document.getElementById(currentOptions.previewIconId) : null;
             const statusEl = currentOptions.statusElId ? document.getElementById(currentOptions.statusElId) : null;
 
-            // Set Data URL immediately so image displays anywhere
+            // Set Data URL immediately so image displays anywhere and persists reliably across serverless instances
             if (targetInput) targetInput.value = dataUrl;
             if (previewImg) {
                 previewImg.src = dataUrl;
@@ -385,13 +385,9 @@
             try {
                 const formData = new FormData();
                 formData.append('file', blob, `passport_${Date.now()}.jpg`);
-                const res = await fetch('/api/upload', { method: 'POST', body: formData });
-                const data = await res.json();
-                if (res.ok && data.url) {
-                    if (targetInput) targetInput.value = data.url;
-                }
+                fetch('/api/upload', { method: 'POST', body: formData }).catch(() => {});
             } catch (err) {
-                console.warn('Server photo upload fallback to Data URL', err);
+                // Background upload ignore
             }
 
             if (statusEl) {
@@ -474,3 +470,4 @@
         buildCropperModalHTML();
     });
 })();
+

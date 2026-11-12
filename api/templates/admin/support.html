@@ -1,0 +1,371 @@
+{% extends "admin/base_admin.html" %}
+
+{% block admin_title %}सहयोग तथा साझेदार विवरण व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6 text-xs">
+
+    <!-- Top Breadcrumb & Actions Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+            <div class="flex items-center gap-2 text-slate-400 text-[11px] mb-1">
+                <a href="/admin/dashboard" class="hover:text-instBlue">ड्यासबोर्ड</a>
+                <span>/</span>
+                <span class="text-slate-700 font-bold">सहयोग तथा साझेदार विवरण</span>
+            </div>
+            <h1 class="text-xl font-bold text-instBlue flex items-center gap-2">
+                <i data-lucide="heart-handshake" class="w-6 h-6 text-rose-500"></i>
+                <span>सहयोग तथा साझेदार विवरण व्यवस्थापन</span>
+            </h1>
+            <p class="text-slate-500 text-[11px] mt-0.5">आवासीय विद्यालयलाई सहयोग गर्न इच्छुक व्यक्ति तथा संस्थाहरूले भरेको विवरण</p>
+        </div>
+
+        <div class="flex items-center gap-2.5 flex-wrap">
+            <a href="/support" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
+                <i data-lucide="external-link" class="w-4 h-4 text-instBlue"></i>
+                <span>वेबसाइट फारम हेर्नुहोस्</span>
+            </a>
+            <a href="/api/support/export" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-200"></i>
+                <span>Excel मा डाउनलोड</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between text-slate-500 text-[11px] font-semibold">
+                <span>कुल सहयोग प्रस्ताव</span>
+                <i data-lucide="heart" class="w-4 h-4 text-rose-500"></i>
+            </div>
+            <div class="text-2xl font-black text-slate-900 mt-2">{{ pledges|length }}</div>
+            <div class="text-[10px] text-slate-400 mt-1">दर्ता भएका सबै आवेदनहरू</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between text-slate-500 text-[11px] font-semibold">
+                <span>नयाँ / सम्पर्क गर्न बाँकी</span>
+                <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>
+            </div>
+            {% set new_cnt = pledges | selectattr('status', 'equalto', 'नयाँ') | list | length %}
+            <div class="text-2xl font-black text-amber-600 mt-2">{{ new_cnt }}</div>
+            <div class="text-[10px] text-slate-400 mt-1">तुरुन्तै फलोअप आवश्यक</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between text-slate-500 text-[11px] font-semibold">
+                <span>नियमित (Recurring) दाता</span>
+                <i data-lucide="repeat" class="w-4 h-4 text-indigo-500"></i>
+            </div>
+            {% set rec_cnt = pledges | selectattr('support_type', 'equalto', 'पटक-पटक / नियमित') | list | length %}
+            <div class="text-2xl font-black text-indigo-600 mt-2">{{ rec_cnt }}</div>
+            <div class="text-[10px] text-slate-400 mt-1">मासिक/वार्षिक निरन्तर सहयोग</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between text-slate-500 text-[11px] font-semibold">
+                <span>सम्पर्क / सम्पन्न</span>
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i>
+            </div>
+            {% set comp_cnt = pledges | selectattr('status', 'equalto', 'सम्पन्न') | list | length %}
+            <div class="text-2xl font-black text-emerald-600 mt-2">{{ comp_cnt }}</div>
+            <div class="text-[10px] text-slate-400 mt-1">सम्पन्न भएका सहयोगहरू</div>
+        </div>
+    </div>
+
+    <!-- Pledges Table -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+            <span class="font-bold text-slate-800 text-sm">सहयोग विवरण नामावली</span>
+            <span class="text-slate-500 text-xs">कुल: <strong>{{ pledges|length }}</strong> जना</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-100/80 text-slate-700 font-bold uppercase text-[11px] tracking-wider border-b border-slate-200">
+                    <tr>
+                        <th class="py-3 px-3 text-center w-12">क्र.सं.</th>
+                        <th class="py-3 px-4">सहयोगी व्यक्ति / संस्था</th>
+                        <th class="py-3 px-4">सम्पर्क विवरण</th>
+                        <th class="py-3 px-4">सहयोग शीर्षकहरू</th>
+                        <th class="py-3 px-4 font-mono">अनुमानित रकम / मूल्य</th>
+                        <th class="py-3 px-4">प्रकार / तालिका</th>
+                        <th class="py-3 px-3 text-center">अवस्था</th>
+                        <th class="py-3 px-4 text-right">कार्य (Actions)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for p in pledges %}
+                    <tr class="hover:bg-slate-50 transition" id="pledge-row-{{ p.id }}">
+                        <td class="py-3.5 px-3 text-center font-bold text-slate-500">{{ loop.index }}</td>
+                        <td class="py-3.5 px-4">
+                            <strong class="text-slate-900 block text-xs">{{ p.donor_name }}</strong>
+                            <span class="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
+                                <i data-lucide="map-pin" class="w-3 h-3 text-rose-500"></i>
+                                <span>{{ p.address }}</span>
+                            </span>
+                            {% if p.website_url %}
+                            <a href="{{ p.website_url }}" target="_blank" class="text-[10px] text-blue-600 hover:underline flex items-center gap-1 mt-0.5 font-mono">
+                                <i data-lucide="globe" class="w-3 h-3"></i>
+                                <span>{{ p.website_url }}</span>
+                            </a>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <div class="font-mono text-slate-800 font-bold flex items-center gap-1.5">
+                                <i data-lucide="phone" class="w-3.5 h-3.5 text-instBlue"></i>
+                                <span>{{ p.phone }}</span>
+                            </div>
+                            <div class="text-[10px] text-slate-500 font-mono flex items-center gap-1.5 mt-0.5">
+                                <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i>
+                                <span>{{ p.email }}</span>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <div class="flex flex-wrap gap-1 max-w-xs">
+                                {% for cat in p.categories_list %}
+                                <span class="bg-blue-50 text-instBlue px-2 py-0.5 rounded text-[10px] font-semibold border border-blue-100">{{ cat }}</span>
+                                {% endfor %}
+                                {% if p.other_category_details %}
+                                <span class="bg-amber-50 text-amber-900 px-2 py-0.5 rounded text-[10px] font-bold border border-amber-200" title="{{ p.other_category_details }}">
+                                    + {{ p.other_category_details }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4 font-mono font-bold text-emerald-700">
+                            {{ p.estimated_amount or '-' }}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            {% if p.support_type == 'पटक-पटक / नियमित' %}
+                            <span class="bg-purple-100 text-purple-900 font-bold px-2 py-0.5 rounded text-[10px] block w-fit">नियमित</span>
+                            <div class="text-[10px] text-slate-600 mt-0.5 font-medium">
+                                {{ p.frequency or 'वार्षिक' }} • {{ p.duration or '-' }}
+                            </div>
+                            {% else %}
+                            <span class="bg-slate-100 text-slate-700 font-medium px-2 py-0.5 rounded text-[10px]">एक पटक</span>
+                            {% endif %}
+                            {% if p.other_schools_interest %}
+                            <div class="text-[10px] text-blue-700 mt-1 italic max-w-xs truncate" title="{{ p.other_schools_interest }}">
+                                अन्य विद्यालय: {{ p.other_schools_interest }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-3 text-center">
+                            {% if p.status == 'नयाँ' %}
+                            <span class="bg-amber-100 text-amber-900 font-bold px-2.5 py-0.5 rounded-full text-[10px]">नयाँ</span>
+                            {% elif p.status == 'सम्पर्क गरिएको' %}
+                            <span class="bg-blue-100 text-blue-900 font-bold px-2.5 py-0.5 rounded-full text-[10px]">सम्पर्क गरिएको</span>
+                            {% elif p.status == 'सम्पन्न' %}
+                            <span class="bg-emerald-100 text-emerald-900 font-bold px-2.5 py-0.5 rounded-full text-[10px]">सम्पन्न</span>
+                            {% else %}
+                            <span class="bg-slate-100 text-slate-700 font-bold px-2.5 py-0.5 rounded-full text-[10px]">{{ p.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-right whitespace-nowrap">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button onclick='openViewPledgeModal({{ p | tojson | safe }})' class="p-1.5 rounded-md text-blue-600 hover:bg-blue-50 border border-blue-200 transition" title="पुरा विवरण हेर्नुहोस्">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick='openUpdateStatusModal({{ p.id }}, "{{ p.status }}", {{ (p.admin_notes or "") | tojson | safe }})' class="p-1.5 rounded-md text-amber-600 hover:bg-amber-50 border border-amber-200 transition" title="स्थिति परिवर्तन गर्नुहोस्">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deletePledgeRecord({{ p.id }}, '{{ p.donor_name }}')" class="p-1.5 rounded-md text-rose-600 hover:bg-rose-50 border border-rose-200 transition" title="मेटाउनुहोस्">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="py-12 text-center text-slate-400">
+                            <i data-lucide="heart-handshake" class="w-10 h-10 mx-auto text-slate-300 mb-2"></i>
+                            <p class="font-semibold text-slate-600">अहिलेसम्म कुनै सहयोग प्रस्ताव दर्ता भएको छैन।</p>
+                            <p class="text-[11px] text-slate-400 mt-1">वेबसाइटको 'सहयोग / साझेदार' पृष्ठ मार्फत दाताहरूले फारम भर्न सक्नुहुन्छ।</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- VIEW DETAILS MODAL -->
+<div id="viewPledgeModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i data-lucide="file-text" class="w-4 h-4 text-instGold"></i>
+                <span>सहयोग प्रस्तावको विस्तृत विवरण</span>
+            </h3>
+            <button onclick="closeViewModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <div class="space-y-3 text-xs" id="viewModalBody">
+            <!-- Dynamic Content -->
+        </div>
+
+        <div class="pt-3 border-t text-right">
+            <button onclick="closeViewModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg">बन्द गर्नुहोस्</button>
+        </div>
+    </div>
+</div>
+
+<!-- UPDATE STATUS MODAL -->
+<div id="updateStatusModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 class="font-bold text-sm text-instBlue flex items-center gap-2">
+                <i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i>
+                <span>सहयोगको अवस्था (Status) अद्यावधिक</span>
+            </h3>
+            <button onclick="closeStatusModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <form id="updateStatusForm" onsubmit="submitStatusUpdate(event)" class="space-y-4 text-xs">
+            <input type="hidden" id="status_pledge_id">
+            
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">अवस्था (Status) *</label>
+                <select id="pledge_status_val" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <option value="नयाँ">नयाँ (New - Follow-up pending)</option>
+                    <option value="सम्पर्क गरिएको">सम्पर्क गरिएको (Contacted)</option>
+                    <option value="सम्पन्न">सम्पन्न (Completed / Pledged)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-slate-700">प्रशासनिक टिप्पणी (Admin Notes)</label>
+                <textarea id="pledge_admin_notes" rows="3" placeholder="दातासँग गरिएको संवाद, भेटघाटको मिति वा प्राप्त सहयोगको विवरण..."
+                    class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none"></textarea>
+            </div>
+
+            <div class="pt-3 border-t flex justify-end gap-2">
+                <button type="button" onclick="closeStatusModal()" class="px-4 py-2 border rounded-lg font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
+                <button type="submit" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded-lg shadow">सेभ गर्नुहोस्</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openViewPledgeModal(p) {
+        const body = document.getElementById('viewModalBody');
+        body.innerHTML = `
+            <div class="p-3 bg-blue-50/60 rounded-xl space-y-1 border border-blue-100">
+                <div class="text-[11px] text-slate-500 font-medium">सहयोगीको नाम / संस्था:</div>
+                <div class="text-base font-bold text-instBlue">${p.donor_name}</div>
+                <div class="text-slate-600">${p.address}</div>
+                ${p.website_url ? `<div class="font-mono text-blue-600"><a href="${p.website_url}" target="_blank">${p.website_url}</a></div>` : ''}
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="p-2.5 bg-slate-50 rounded-lg border">
+                    <div class="text-slate-400 text-[10px]">सम्पर्क फोन:</div>
+                    <div class="font-bold font-mono text-slate-900">${p.phone}</div>
+                </div>
+                <div class="p-2.5 bg-slate-50 rounded-lg border">
+                    <div class="text-slate-400 text-[10px]">इमेल:</div>
+                    <div class="font-mono text-slate-900 truncate" title="${p.email}">${p.email}</div>
+                </div>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl space-y-1.5 border">
+                <div class="text-slate-500 font-semibold">सहयोग शीर्षकहरू:</div>
+                <div class="flex flex-wrap gap-1.5">
+                    ${(p.categories_list || []).map(c => `<span class="bg-white border text-instBlue px-2 py-0.5 rounded font-bold">${c}</span>`).join('')}
+                </div>
+                ${p.other_category_details ? `<div class="text-amber-800 font-medium mt-1">अन्य खुलाइएको: <strong>${p.other_category_details}</strong></div>` : ''}
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="p-2.5 bg-slate-50 rounded-lg border">
+                    <div class="text-slate-400 text-[10px]">अनुमानित रकम / मूल्य:</div>
+                    <div class="font-bold text-emerald-700">${p.estimated_amount || 'उल्लेख छैन'}</div>
+                </div>
+                <div class="p-2.5 bg-slate-50 rounded-lg border">
+                    <div class="text-slate-400 text-[10px]">सहयोगको प्रकार:</div>
+                    <div class="font-bold text-slate-900">${p.support_type}</div>
+                    ${p.frequency ? `<div class="text-[10px] text-slate-500">${p.frequency} • ${p.duration || ''}</div>` : ''}
+                </div>
+            </div>
+
+            ${p.other_schools_interest ? `
+                <div class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1">
+                    <div class="font-bold text-amber-900">अन्य आवासीय विद्यालय समन्वय:</div>
+                    <div class="text-slate-700">${p.other_schools_interest}</div>
+                </div>
+            ` : ''}
+
+            ${p.admin_notes ? `
+                <div class="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-1">
+                    <div class="font-bold text-emerald-900">प्रशासनिक टिप्पणी:</div>
+                    <div class="text-slate-700">${p.admin_notes}</div>
+                </div>
+            ` : ''}
+        `;
+        document.getElementById('viewPledgeModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function closeViewModal() {
+        document.getElementById('viewPledgeModal').classList.add('hidden');
+    }
+
+    function openUpdateStatusModal(id, currentStatus, currentNotes) {
+        document.getElementById('status_pledge_id').value = id;
+        document.getElementById('pledge_status_val').value = currentStatus || 'नयाँ';
+        document.getElementById('pledge_admin_notes').value = currentNotes || '';
+        document.getElementById('updateStatusModal').classList.remove('hidden');
+    }
+
+    function closeStatusModal() {
+        document.getElementById('updateStatusModal').classList.add('hidden');
+    }
+
+    async function submitStatusUpdate(e) {
+        e.preventDefault();
+        const id = document.getElementById('status_pledge_id').value;
+        const payload = {
+            status: document.getElementById('pledge_status_val').value,
+            admin_notes: document.getElementById('pledge_admin_notes').value.trim() || null
+        };
+
+        try {
+            const res = await fetch(`/api/support/${id}/status`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'अद्यावधिक गर्न सकिएन।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि भयो।');
+        }
+    }
+
+    async function deletePledgeRecord(id, name) {
+        if (!confirm(`के तपाईं निश्चित रूपमा '${name}' को सहयोग प्रस्ताव मेटाउन चाहनुहुन्छ?`)) return;
+        try {
+            const res = await fetch(`/api/support/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.detail || 'मेटाउन सकिएन।');
+            }
+        } catch(err) {
+            alert('सर्भर त्रुटि भयो।');
+        }
+    }
+</script>
+{% endblock %}

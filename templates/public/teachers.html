@@ -109,7 +109,11 @@
                     <div class="flex gap-4 items-start">
                         <div class="w-20 h-24 rounded-xl bg-slate-100 flex-shrink-0 border border-slate-200 overflow-hidden flex items-center justify-center text-slate-400 shadow-inner relative group">
                             {% if t.photo %}
-                            <img src="{{ t.photo }}" alt="{{ t.name_nepali }}" class="w-full h-full object-cover">
+                            <img src="{{ t.photo }}" alt="{{ t.name_nepali }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                            <div class="w-full h-full bg-gradient-to-tr from-slate-200 to-slate-100 flex flex-col items-center justify-center text-instBlue hidden">
+                                <span class="font-bold text-xl">{{ t.name_nepali[3:5] if t.name_nepali|length > 4 else t.name_nepali[:2] }}</span>
+                                <span class="text-[9px] text-slate-500 font-mono mt-0.5">शिक्षक</span>
+                            </div>
                             {% else %}
                             <div class="w-full h-full bg-gradient-to-tr from-slate-200 to-slate-100 flex flex-col items-center justify-center text-instBlue">
                                 <span class="font-bold text-xl">{{ t.name_nepali[3:5] if t.name_nepali|length > 4 else t.name_nepali[:2] }}</span>

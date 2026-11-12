@@ -782,6 +782,28 @@ def init_db():
     );
     """)
 
+    # 18. Support & Partner Pledges / Donations
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS support_donations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        donor_name TEXT NOT NULL,
+        address TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        email TEXT NOT NULL,
+        website_url TEXT,
+        support_categories TEXT NOT NULL,
+        other_category_details TEXT,
+        estimated_amount TEXT,
+        support_type TEXT NOT NULL,
+        frequency TEXT,
+        duration TEXT,
+        other_schools_interest TEXT,
+        status TEXT DEFAULT 'नयाँ',
+        admin_notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
     # Ensure columns exist in committees if table was created previously
     for tbl in ["school_management_committee", "trustee_committee"]:
         cursor.execute(f"PRAGMA table_info({tbl})")

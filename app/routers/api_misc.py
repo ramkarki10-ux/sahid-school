@@ -52,12 +52,28 @@ async def universal_upload(request: Request, file: UploadFile = File(...)):
     clean_name = "".join(c for c in file.filename if c.isalnum() or c in "._-").strip()
     unique_name = f"{uuid.uuid4().hex[:10]}_{clean_name}"
     file_path = UPLOAD_DIR / unique_name
-    with open(file_path, "wb") as f:
-        f.write(contents)
+    try:
+        with open(file_path, "wb") as f:
+            f.write(contents)
+    except Exception:
+        pass
         
+    mime_map = {
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp",
+        ".gif": "image/gif"
+    }
+    # For images under 3MB, generate self-contained data URL so Vercel serverless displays it instantly
+    if ext in mime_map and len(contents) <= 3 * 1024 * 1024:
+        image_url = f"data:{mime_map[ext]};base64,{base64.b64encode(contents).decode('ascii')}"
+    else:
+        image_url = f"/static/uploads/{unique_name}"
+
     return {
         "success": True,
-        "url": f"/static/uploads/{unique_name}",
+        "url": image_url,
         "filename": file.filename,
         "size": len(contents)
     }

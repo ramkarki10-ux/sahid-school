@@ -29,7 +29,8 @@ from app.routers import (
     api_feed,
     api_mobile,
     api_menus,
-    api_alumni
+    api_alumni,
+    api_support
 )
 
 app = FastAPI(
@@ -70,6 +71,22 @@ if not static_dir.exists():
         static_dir.mkdir(parents=True, exist_ok=True)
     except Exception:
         pass
+# Uploaded file handler (handles both repo static and /tmp serverless uploads)
+from fastapi.responses import FileResponse
+@app.get("/static/uploads/{filename:path}")
+async def serve_uploaded_file(filename: str):
+    clean_fn = Path(filename).name
+    candidates = [
+        BASE_DIR / "static" / "uploads" / clean_fn,
+        Path("/tmp/static/uploads") / clean_fn,
+        Path.cwd() / "static" / "uploads" / clean_fn,
+    ]
+    for c in candidates:
+        if c.exists() and c.is_file():
+            return FileResponse(str(c))
+    raise HTTPException(status_code=404, detail="Upload file not found")
+
+# Static Files
 if static_dir.exists():
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
@@ -100,6 +117,7 @@ app.include_router(api_feed.router)
 app.include_router(api_mobile.router)
 app.include_router(api_menus.router)
 app.include_router(api_alumni.router)
+app.include_router(api_support.router)
 
 @app.on_event("startup")
 def on_startup():

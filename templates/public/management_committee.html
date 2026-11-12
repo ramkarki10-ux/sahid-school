@@ -69,9 +69,12 @@
                 </div>
                 {% endif %}
 
-                <div class="w-28 h-28 mx-auto rounded-full bg-instBlue/10 border-4 border-instBlue/30 overflow-hidden shadow-inner flex items-center justify-center text-instBlue mb-4">
+                <div class="w-28 h-28 mx-auto rounded-full bg-instBlue/10 border-4 border-instBlue/30 overflow-hidden shadow-inner flex items-center justify-center text-instBlue mb-4 relative">
                     {% if chair.photo %}
-                    <img src="{{ chair.photo }}" alt="{{ chair.name }}" class="w-full h-full object-cover">
+                    <img src="{{ chair.photo }}" alt="{{ chair.name }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                    <div class="w-full h-full bg-instBlue/10 flex items-center justify-center hidden">
+                        <i data-lucide="award" class="w-14 h-14 text-instBlue"></i>
+                    </div>
                     {% else %}
                     <i data-lucide="award" class="w-14 h-14 text-instBlue"></i>
                     {% endif %}
@@ -135,9 +138,12 @@
                 {% endif %}
 
                 <div>
-                    <div class="w-20 h-20 mx-auto rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden shadow-sm flex items-center justify-center mb-3">
+                    <div class="w-20 h-20 mx-auto rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden shadow-sm flex items-center justify-center mb-3 relative">
                         {% if m.photo %}
-                        <img src="{{ m.photo }}" alt="{{ m.name }}" class="w-full h-full object-cover">
+                        <img src="{{ m.photo }}" alt="{{ m.name }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                        <div class="w-full h-full bg-slate-100 flex items-center justify-center hidden">
+                            <i data-lucide="user" class="w-8 h-8 text-slate-400"></i>
+                        </div>
                         {% else %}
                         <i data-lucide="user" class="w-8 h-8 text-slate-400"></i>
                         {% endif %}

@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+
+{% block title %}सहयोग तथा साझेदार (Support & Partners) | {{ settings.name_ne }}{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER / HERO -->
+<div class="bg-gradient-to-r from-instBlue via-blue-900 to-slate-900 text-white py-12 px-4 sm:px-8 border-b-4 border-amber-400">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-amber-300 mb-2 font-medium">
+                <a href="/" class="hover:underline flex items-center gap-1"><i data-lucide="home" class="w-3.5 h-3.5"></i>गृहपृष्ठ</a>
+                <span>/</span>
+                <span class="text-white font-semibold">सहयोग / साझेदार</span>
+            </div>
+            <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight flex items-center gap-3">
+                <span class="p-2.5 bg-amber-400 text-slate-950 rounded-2xl shadow-lg">
+                    <i data-lucide="heart-handshake" class="w-7 h-7 sm:w-8 h-8"></i>
+                </span>
+                <span>सहयोग तथा साझेदार</span>
+            </h1>
+            <p class="text-sm sm:text-base text-slate-200 mt-2 max-w-2xl font-light leading-relaxed">
+                आवासीय विद्यालयमा अध्ययनरत सहिद तथा द्वन्द्वपीडित, जेहेन्दार तथा विपन्न बालबालिकाको उज्यालो शैक्षिक भविष्य निर्माणमा हातेमालो गर्नुहोस्।
+            </p>
+        </div>
+        <div class="hidden md:flex flex-col items-end gap-2 text-right">
+            <span class="inline-flex items-center gap-2 bg-amber-400/20 border border-amber-300/40 text-amber-300 px-3.5 py-1.5 rounded-full text-xs font-semibold">
+                <i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i>
+                <span>पवित्र शैक्षिक तथा मानवीय सेवा</span>
+            </span>
+            <span class="text-xs text-slate-300 font-mono">स्थापना: {{ settings.established_ne }} • इटहरी–१९, सुनसरी</span>
+        </div>
+    </div>
+</div>
+
+<div class="py-12 bg-slate-50 min-h-screen">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 space-y-16">
+
+        <!-- ========================================== -->
+        <!-- PART 1: ONLINE SUPPORT FORM               -->
+        <!-- ========================================== -->
+        <section class="bg-white rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden transition-all duration-300" id="support-form-section">
+            
+            <!-- Section Header Banner -->
+            <div class="bg-gradient-to-r from-blue-900 to-instBlue text-white p-6 sm:p-8 flex items-start sm:items-center justify-between gap-4 border-b border-amber-400/80">
+                <div class="space-y-1.5">
+                    <div class="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider bg-amber-400 text-slate-950 px-3 py-0.5 rounded-full shadow-sm">
+                        <i data-lucide="gift" class="w-3.5 h-3.5"></i>
+                        <span>भाग १ (Part 1): अनलाइन सहयोग फारम</span>
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-black text-white">आवासीय विद्यालयलाई सहयोग गर्नुहोस्</h2>
+                    <p class="text-xs sm:text-sm text-slate-200 font-light">
+                        सहिद स्मृति आवासीय मा.वि. तथा अन्य आवासीय विद्यालयहरूका बालबालिकालाई शिक्षा, आवास र पोषणमा सहयोग गर्न तलको विवरण भर्नुहोस्।
+                    </p>
+                </div>
+                <div class="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 hidden sm:flex items-center justify-center text-amber-300 flex-shrink-0">
+                    <i data-lucide="heart" class="w-7 h-7 text-rose-400 fill-rose-400"></i>
+                </div>
+            </div>
+
+            <!-- Form Body -->
+            <form id="onlineSupportForm" class="p-6 sm:p-10 space-y-8" onsubmit="submitSupportForm(event)">
+
+                <!-- 1. Donor Basic Info -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-bold text-instBlue flex items-center gap-2 border-b border-slate-200 pb-2">
+                        <span class="w-6 h-6 rounded-full bg-instBlue text-white flex items-center justify-center text-xs font-bold">१</span>
+                        <span>सहयोगी व्यक्ति वा संस्थाको परिचय</span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
+                        <!-- Name (Required) -->
+                        <div class="md:col-span-2">
+                            <label class="block font-bold text-slate-800 mb-1.5">
+                                इच्छुक व्यक्ति वा संस्थाको नाम (Name of Individual/Organization) <span class="text-rose-600">*</span>
+                            </label>
+                            <div class="relative">
+                                <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+                                <input type="text" id="donor_name" required placeholder="उदाहरण: राम बहादुर कार्की वा नेपाल सेवा फाउण्डेशन"
+                                    class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:border-instBlue focus:outline-none transition">
+                            </div>
+                        </div>
+
+                        <!-- Address (Required) -->
+                        <div class="md:col-span-2">
+                            <label class="block font-bold text-slate-800 mb-1.5">
+                                ठेगाना (Address) <span class="text-rose-600">*</span>
+                            </label>
+                            <div class="relative">
+                                <i data-lucide="map-pin" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+                                <input type="text" id="donor_address" required placeholder="उदाहरण: इटहरी-१९, सुनसरी / काठमाडौँ / विदेशको ठेगाना"
+                                    class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:border-instBlue focus:outline-none transition">
+                            </div>
+                        </div>
+
+                        <!-- Contact Number (Required) -->
+                        <div>
+                            <label class="block font-bold text-slate-800 mb-1.5">
+                                सम्पर्क नम्बर (Contact Number) <span class="text-rose-600">*</span>
+                            </label>
+                            <div class="relative">
+                                <i data-lucide="phone" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+                                <input type="tel" id="donor_phone" required placeholder="उदाहरण: 98XXXXXXXX"
+                                    class="w-full pl-10 pr-4 py-2.5 text-sm font-mono border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:border-instBlue focus:outline-none transition">
+                            </div>
+                        </div>
+
+                        <!-- Email (Required) -->
+                        <div>
+                            <label class="block font-bold text-slate-800 mb-1.5">
+                                इमेल (Email) <span class="text-rose-600">*</span>
+                            </label>
+                            <div class="relative">
+                                <i data-lucide="mail" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+                                <input type="email" id="donor_email" required placeholder="उदाहरण: donor@example.com"
+                                    class="w-full pl-10 pr-4 py-2.5 text-sm font-mono border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:border-instBlue focus:outline-none transition">
+                            </div>
+                        </div>
+
+                        <!-- Website URL (Optional) -->
+                        <div class="md:col-span-2">
+                            <label class="block font-bold text-slate-800 mb-1.5">
+                                वेबसाइट ठेगाना (Website URL) <span class="text-slate-400 font-normal">(ऐच्छिक / Optional)</span>
+                            </label>
+                            <div class="relative">
+                                <i data-lucide="globe" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+                                <input type="url" id="donor_website" placeholder="https://www.example.org"
+                                    class="w-full pl-10 pr-4 py-2.5 text-sm font-mono border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:border-instBlue focus:outline-none transition">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Support Categories (Multi-select Checkboxes) -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-bold text-instBlue flex items-center justify-between border-b border-slate-200 pb-2">
+                        <span class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-instBlue text-white flex items-center justify-center text-xs font-bold">२</span>
+                            <span>सहयोग गर्न चाहेको शीर्षक (Support Category) <span class="text-rose-600">*</span></span>
+                        </span>
+                        <span class="text-[11px] text-slate-500 font-normal">एउटा वा सोभन्दा बढी रोज्न सक्नुहुन्छ</span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs" id="supportCategoryGrid">
+                        <!-- Category Options -->
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-blue-50/70 border border-slate-200 hover:border-instBlue/50 rounded-xl cursor-pointer transition select-none group">
+                            <input type="checkbox" name="support_cat" value="छात्रवृत्ति" class="w-4 h-4 accent-instBlue rounded">
+                            <span class="font-semibold text-slate-800 group-hover:text-instBlue">छात्रवृत्ति</span>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-blue-50/70 border border-slate-200 hover:border-instBlue/50 rounded-xl cursor-pointer transition select-none group">
+                            <input type="checkbox" name="support_cat" value="विद्यालय पोशाक" class="w-4 h-4 accent-instBlue rounded">
+                            <span class="font-semibold text-slate-800 group-hover:text-instBlue">विद्यालय पोशाक</span>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-blue-50/70 border border-slate-200 hover:border-instBlue/50 rounded-xl cursor-pointer transition select-none group">
+                            <input type="checkbox" name="support_cat" value="खाद्यान्न" class="w-4 h-4 accent-instBlue rounded">
+                            <span class="font-semibold text-slate-800 group-hover:text-instBlue">खाद्यान्न</span>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-blue-50/70 border border-slate-200 hover:border-instBlue/50 rounded-xl cursor-pointer transition select-none group">
+                            <input type="checkbox" name="support_cat" value="विद्यालयको भौतिक संरचना मर्मत सम्भार वा निर्माण" class="w-4 h-4 accent-instBlue rounded">
+                            <span class="font-semibold text-slate-800 group-hover:text-instBlue">भौतिक संरचना मर्मत / निर्माण</span>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-blue-50/70 border border-slate-200 hover:border-instBlue/50 rounded-xl cursor-pointer transition select-none group">
+                            <input type="checkbox" name="support_cat" value="फर्निचर" class="w-4 h-4 accent-instBlue rounded">
+                            <span class="font-semibold text-slate-800 group-hover:text-instBlue">फर्निचर</span>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-blue-50/70 border border-slate-200 hover:border-instBlue/50 rounded-xl cursor-pointer transition select-none group">
+                            <input type="checkbox" name="support_cat" value="खेलकुद सामग्री" class="w-4 h-4 accent-instBlue rounded">
+                            <span class="font-semibold text-slate-800 group-hover:text-instBlue">खेलकुद सामग्री</span>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-blue-50/70 border border-slate-200 hover:border-instBlue/50 rounded-xl cursor-pointer transition select-none group">
+                            <input type="checkbox" name="support_cat" value="स्टेसनरी" class="w-4 h-4 accent-instBlue rounded">
+                            <span class="font-semibold text-slate-800 group-hover:text-instBlue">स्टेसनरी</span>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-blue-50/70 border border-slate-200 hover:border-instBlue/50 rounded-xl cursor-pointer transition select-none group">
+                            <input type="checkbox" name="support_cat" value="ल्याब सामग्री" class="w-4 h-4 accent-instBlue rounded">
+                            <span class="font-semibold text-slate-800 group-hover:text-instBlue">ल्याब सामग्री</span>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-3 bg-slate-50 hover:bg-blue-50/70 border border-slate-200 hover:border-instBlue/50 rounded-xl cursor-pointer transition select-none group">
+                            <input type="checkbox" name="support_cat" value="अतिरिक्त क्रियाकलाप" class="w-4 h-4 accent-instBlue rounded">
+                            <span class="font-semibold text-slate-800 group-hover:text-instBlue">अतिरिक्त क्रियाकलाप</span>
+                        </label>
+
+                        <!-- 'अन्य' checkbox with dynamic reveal -->
+                        <label class="flex items-center gap-3 p-3 bg-amber-50/70 hover:bg-amber-100/70 border border-amber-200 rounded-xl cursor-pointer transition select-none group sm:col-span-2 md:col-span-3">
+                            <input type="checkbox" id="cat_other_check" name="support_cat" value="अन्य" onchange="toggleOtherCategory(this.checked)" class="w-4 h-4 accent-amber-600 rounded">
+                            <span class="font-bold text-amber-900 group-hover:text-amber-950 flex items-center gap-1.5">
+                                <i data-lucide="plus-circle" class="w-4 h-4 text-amber-600"></i>
+                                <span>अन्य (Other) - अन्य कुनै शीर्षक भए खुलाउनुहोस्</span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <!-- Dynamic 'अन्य' input container (Animated reveal) -->
+                    <div id="otherCategoryBox" class="hidden transition-all duration-300 ease-in-out p-4 bg-amber-50/60 border border-amber-300 rounded-2xl space-y-2">
+                        <label class="block text-xs font-bold text-amber-950">
+                            कृपया 'अन्य' सहयोगको शीर्षक तथा विस्तृत विवरण खुलाउनुहोस्: <span class="text-rose-600">*</span>
+                        </label>
+                        <input type="text" id="other_category_details" placeholder="उदाहरण: कम्प्युटर ल्याब, संगीत वाद्यवादन, प्राथमिक उपचार किट, आदि"
+                            class="w-full px-4 py-2.5 text-sm border border-amber-300 rounded-xl bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none transition">
+                    </div>
+                </div>
+
+                <!-- 3. Donation Amount or Estimated Value -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-bold text-instBlue flex items-center gap-2 border-b border-slate-200 pb-2">
+                        <span class="w-6 h-6 rounded-full bg-instBlue text-white flex items-center justify-center text-xs font-bold">३</span>
+                        <span>सहयोग गर्न चाहेको रकम वा वस्तुको अनुमानित मूल्य</span>
+                    </h3>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-800 mb-1.5">
+                            सहयोग गर्न चाहेको रकम वा वस्तुको अनुमानित मूल्य (रु.) (Donation Amount or Estimated Value of Goods in NPR)
+                        </label>
+                        <div class="relative max-w-md">
+                            <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-600">रू.</span>
+                            <input type="text" id="estimated_amount" oninput="formatNepaliAmountPreview(this.value)" placeholder="उदाहरण: ५०,००० वा रु. १,००,००० बराबरको खाद्यान्न"
+                                class="w-full pl-12 pr-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:border-instBlue focus:outline-none transition">
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1.5">
+                            <i data-lucide="info" class="w-3.5 h-3.5 text-instBlue"></i>
+                            <span>नगद, चेक, बैंक ट्रान्सफर वा सामग्रीको बजार मूल्य उल्लेख गर्न सक्नुहुन्छ।</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 4. Type of Support (Conditional Logic: One-Time vs Recurring) -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-bold text-instBlue flex items-center gap-2 border-b border-slate-200 pb-2">
+                        <span class="w-6 h-6 rounded-full bg-instBlue text-white flex items-center justify-center text-xs font-bold">४</span>
+                        <span>सहयोगको प्रकार (Type of Support) <span class="text-rose-600">*</span></span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Option A: One-Time -->
+                        <label class="relative flex items-center gap-3 p-4 border-2 rounded-2xl cursor-pointer transition select-none bg-slate-50 border-slate-200 hover:border-instBlue group has-[:checked]:border-instBlue has-[:checked]:bg-blue-50/50">
+                            <input type="radio" name="support_type" value="एक पटक मात्र" checked onchange="toggleSupportType(this.value)"
+                                class="w-4 h-4 accent-instBlue">
+                            <div>
+                                <span class="font-bold text-sm text-slate-900 group-hover:text-instBlue block">Option A: एक पटक मात्र (One-Time)</span>
+                                <span class="text-xs text-slate-500">हाल एक पटकको लागि सहयोग गर्न चाहेको</span>
+                            </div>
+                        </label>
+
+                        <!-- Option B: Recurring -->
+                        <label class="relative flex items-center gap-3 p-4 border-2 rounded-2xl cursor-pointer transition select-none bg-slate-50 border-slate-200 hover:border-instBlue group has-[:checked]:border-instBlue has-[:checked]:bg-blue-50/50">
+                            <input type="radio" name="support_type" value="पटक-पटक / नियमित" onchange="toggleSupportType(this.value)"
+                                class="w-4 h-4 accent-instBlue">
+                            <div>
+                                <span class="font-bold text-sm text-slate-900 group-hover:text-instBlue block">Option B: पटक-पटक / नियमित (Recurring)</span>
+                                <span class="text-xs text-slate-500">नियमित रूपमा निरन्तर सहयोग पुर्‍याउन चाहेको</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Conditional Recurring Fields (Sub-fields) -->
+                    <div id="recurringFieldsContainer" class="hidden p-5 bg-gradient-to-r from-blue-50/80 to-indigo-50/60 border border-blue-200 rounded-2xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div class="flex items-center gap-2 text-instBlue font-bold text-xs">
+                            <i data-lucide="repeat" class="w-4 h-4 text-instBlue"></i>
+                            <span>नियमित सहयोगको तालिका तथा अवधि छनौट गर्नुहोस्:</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                            <!-- अन्तराल (Frequency) -->
+                            <div>
+                                <label class="block font-bold text-slate-800 mb-1.5">
+                                    अन्तराल (Frequency) <span class="text-rose-600">*</span>
+                                </label>
+                                <select id="support_frequency" class="w-full px-3 py-2.5 text-sm border border-blue-200 rounded-xl bg-white focus:ring-2 focus:ring-instBlue focus:outline-none">
+                                    <option value="मासिक (Monthly)">मासिक (Monthly) - प्रत्येक महिना</option>
+                                    <option value="त्रैमासिक (Quarterly)">त्रैमासिक (Quarterly) - प्रत्येक ३ महिनामा</option>
+                                    <option value="वार्षिक (Yearly)" selected>वार्षिक (Yearly) - प्रत्येक वर्ष</option>
+                                </select>
+                            </div>
+
+                            <!-- अवधि (Duration) -->
+                            <div>
+                                <label class="block font-bold text-slate-800 mb-1.5">
+                                    अवधि (Duration) - कति पटक वा कति वर्षसम्म? <span class="text-rose-600">*</span>
+                                </label>
+                                <input type="text" id="support_duration" placeholder="उदाहरण: १२ पटक वा ३ वर्षसम्म"
+                                    class="w-full px-4 py-2.5 text-sm border border-blue-200 rounded-xl bg-white focus:ring-2 focus:ring-instBlue focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Support to Other Residential Schools (Optional text area) -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-bold text-instBlue flex items-center gap-2 border-b border-slate-200 pb-2">
+                        <span class="w-6 h-6 rounded-full bg-instBlue text-white flex items-center justify-center text-xs font-bold">५</span>
+                        <span>अन्य आवासीय विद्यालय समन्वय</span>
+                    </h3>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-800 mb-1.5">
+                            अन्य आवासीय विद्यालयलाई सहयोग गर्न इच्छुक हुनुहुन्छ भने विवरण लेख्नुहोस् <span class="text-slate-400 font-normal">(ऐच्छिक / Optional)</span>
+                        </label>
+                        <textarea id="other_schools_interest" rows="3" placeholder="नेपालका अन्य दुर्गम वा आवासीय विद्यालयहरूमा समेत छात्रवृत्ति वा शैक्षिक सहयोग पुर्‍याउन समन्वय गर्न चाहनुहुन्छ भने यहाँ उल्लेख गर्न सक्नुहुन्छ..."
+                            class="w-full px-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:border-instBlue focus:outline-none transition"></textarea>
+                    </div>
+                </div>
+
+                <!-- Form Submit Button Area -->
+                <div class="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-2 text-xs text-slate-500">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+                        <span>तपाईंको विवरण सुरक्षित रहनेछ र विद्यालयले मात्र सम्पर्कका लागि प्रयोग गर्नेछ।</span>
+                    </div>
+
+                    <button type="submit" id="submitSupportBtn"
+                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-instBlue to-slate-900 hover:from-instBlue-dark hover:to-black text-white font-black text-sm rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95">
+                        <i data-lucide="send" class="w-4 h-4 text-amber-400"></i>
+                        <span>सहयोग विवरण पेश गर्नुहोस्</span>
+                    </button>
+                </div>
+
+            </form>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- PART 2: PARTNER ORGANIZATIONS             -->
+        <!-- ========================================== -->
+        <section class="space-y-8" id="partners-section">
+            <div class="text-center max-w-2xl mx-auto space-y-2">
+                <div class="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider bg-instGold/20 text-instGold-dark px-3 py-1 rounded-full border border-instGold/40 shadow-sm">
+                    <i data-lucide="landmark" class="w-3.5 h-3.5"></i>
+                    <span>भाग २ (Part 2): साझेदार निकायहरू</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">हाम्रा आधिकारिक साझेदार निकायहरू</h2>
+                <p class="text-xs sm:text-sm text-slate-600 font-normal leading-relaxed">
+                    सहिद स्मृति आवासीय माध्यमिक विद्यालयको स्थापना, सञ्चालन तथा संरक्षणमा प्रत्यक्ष संलग्न सरकारी तथा संस्थागत साझेदार निकायहरू:
+                </p>
+            </div>
+
+            <!-- Partner Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                <!-- 1. शिक्षा तथा खेलकुद मन्त्रालय, सिंहदरबार -->
+                <div class="bg-white border-2 border-slate-200 hover:border-instBlue/80 rounded-2xl p-6 shadow-sm hover:shadow-xl transition flex flex-col justify-between text-center relative group">
+                    <div class="space-y-4">
+                        <!-- Official Emblem / Placeholder -->
+                        <div class="w-24 h-24 mx-auto rounded-2xl bg-slate-50 border-2 border-red-200/80 p-2 shadow-inner flex items-center justify-center group-hover:scale-105 transition-transform">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Emblem_of_Nepal.svg/300px-Emblem_of_Nepal.svg.png" 
+                                 alt="नेपाल सरकार निशान छाप" 
+                                 class="max-w-full max-h-full object-contain"
+                                 onerror="this.onerror=null; this.src='/static/images/nepal_gov_logo.png';">
+                        </div>
+
+                        <span class="inline-block bg-red-100 text-red-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                            केन्द्रीय सरकार (Federal Government)
+                        </span>
+
+                        <div>
+                            <h3 class="text-base sm:text-lg font-bold text-slate-900 leading-snug">
+                                शिक्षा तथा खेलकुद मन्त्रालय
+                            </h3>
+                            <p class="text-xs font-semibold text-instBlue mt-0.5">सिंहदरबार, काठमाडौँ</p>
+                        </div>
+
+                        <p class="text-xs text-slate-600 leading-relaxed text-justify sm:text-center pt-2 border-t border-slate-100">
+                            नेपाल सरकारको आवासीय विद्यालय नीति, शैक्षिक मापदण्ड, परीक्षा नियन्त्रण, शिक्षक दरबन्दी तथा केन्द्रीय शैक्षिक मार्गदर्शन प्रदान गर्ने सर्वोच्च निकाय।
+                        </p>
+                    </div>
+
+                    <div class="mt-6 pt-3 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
+                        आधिकारिक संरक्षक तथा नियामक निकाय
+                    </div>
+                </div>
+
+                <!-- 2. इटहरी उपमहानगरपालिका -->
+                <div class="bg-white border-2 border-slate-200 hover:border-instBlue/80 rounded-2xl p-6 shadow-sm hover:shadow-xl transition flex flex-col justify-between text-center relative group">
+                    <div class="space-y-4">
+                        <!-- Official Emblem / Placeholder -->
+                        <div class="w-24 h-24 mx-auto rounded-2xl bg-slate-50 border-2 border-blue-200/80 p-2 shadow-inner flex items-center justify-center group-hover:scale-105 transition-transform">
+                            <div class="w-full h-full rounded-xl bg-gradient-to-tr from-blue-700 to-instBlue text-white flex flex-col items-center justify-center p-1.5 shadow">
+                                <i data-lucide="building-2" class="w-8 h-8 text-amber-300 mb-1"></i>
+                                <span class="text-[9px] font-black uppercase tracking-tight leading-none text-center">इटहरी<br>उपमहानगर</span>
+                            </div>
+                        </div>
+
+                        <span class="inline-block bg-blue-100 text-instBlue text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                            स्थानीय सरकार (Local Government)
+                        </span>
+
+                        <div>
+                            <h3 class="text-base sm:text-lg font-bold text-slate-900 leading-snug">
+                                इटहरी उपमहानगरपालिका
+                            </h3>
+                            <p class="text-xs font-semibold text-instBlue mt-0.5">सुनसरी, कोशी प्रदेश, नेपाल</p>
+                        </div>
+
+                        <p class="text-xs text-slate-600 leading-relaxed text-justify sm:text-center pt-2 border-t border-slate-100">
+                            विद्यालय रहेको स्थानीय तहको सरकारका रूपमा स्थानीय स्रोत व्यवस्थापन, भौतिक पूर्वाधार, स्वास्थ्य-सरसफाइ समन्वय तथा स्थानीय अनुगमन।
+                        </p>
+                    </div>
+
+                    <div class="mt-6 pt-3 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
+                        स्थानीय अभिभावक तथा विकास साझेदार
+                    </div>
+                </div>
+
+                <!-- 3. सहिद प्रतिष्ठान नेपाल -->
+                <div class="bg-white border-2 border-slate-200 hover:border-instBlue/80 rounded-2xl p-6 shadow-sm hover:shadow-xl transition flex flex-col justify-between text-center relative group">
+                    <div class="space-y-4">
+                        <!-- Official Emblem / Placeholder -->
+                        <div class="w-24 h-24 mx-auto rounded-2xl bg-slate-50 border-2 border-amber-200/80 p-2 shadow-inner flex items-center justify-center group-hover:scale-105 transition-transform">
+                            <div class="w-full h-full rounded-xl bg-gradient-to-tr from-amber-500 via-amber-600 to-yellow-600 text-white flex flex-col items-center justify-center p-1.5 shadow">
+                                <i data-lucide="award" class="w-8 h-8 text-white mb-1"></i>
+                                <span class="text-[9px] font-black uppercase tracking-tight leading-none text-center">सहिद<br>प्रतिष्ठान</span>
+                            </div>
+                        </div>
+
+                        <span class="inline-block bg-amber-100 text-amber-900 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                            गुठी तथा संरक्षक संस्था (Patron Trust)
+                        </span>
+
+                        <div>
+                            <h3 class="text-base sm:text-lg font-bold text-slate-900 leading-snug">
+                                सहिद प्रतिष्ठान नेपाल
+                            </h3>
+                            <p class="text-xs font-semibold text-instGold-dark mt-0.5">केन्द्रीय कार्यालय, काठमाडौँ</p>
+                        </div>
+
+                        <p class="text-xs text-slate-600 leading-relaxed text-justify sm:text-center pt-2 border-t border-slate-100">
+                            सहिदहरूका सपना साकार पार्न, सहिद तथा द्वन्द्वपीडित सन्ततिहरूको लालनपालन, संरक्षण तथा सार्वजनिक शैक्षिक गुठी मार्फत विद्यालय सञ्चालन।
+                        </p>
+                    </div>
+
+                    <div class="mt-6 pt-3 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
+                        संस्थापक गुठियार तथा संरक्षक
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<!-- SUCCESS CONFIRMATION MODAL -->
+<div id="supportSuccessModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 text-center space-y-4 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-inner">
+            <i data-lucide="check-circle" class="w-9 h-9"></i>
+        </div>
+        <h3 class="text-xl font-black text-slate-900">सहयोग प्रस्ताव प्राप्त भयो!</h3>
+        <p id="supportSuccessMsg" class="text-xs text-slate-600 leading-relaxed">
+            तपाईंको सहयोग विवरण सफलतापूर्वक दर्ता भएको छ। आवासीय विद्यालयका विद्यार्थीहरूको उज्यालो भविष्य निर्माणमा तपाईंको यो पवित्र सोचप्रति हामी हार्दिक आभार प्रकट गर्दछौं।
+        </p>
+        <div class="pt-2">
+            <button type="button" onclick="closeSuccessModal()"
+                class="w-full py-2.5 px-6 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded-xl text-sm transition shadow">
+                धन्यवाद, स्वीकार गरियो
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Toggle Other Category details input
+    function toggleOtherCategory(isChecked) {
+        const box = document.getElementById('otherCategoryBox');
+        const input = document.getElementById('other_category_details');
+        if (isChecked) {
+            box.classList.remove('hidden');
+            input.focus();
+        } else {
+            box.classList.add('hidden');
+            input.value = '';
+        }
+    }
+
+    // Toggle Recurring Conditional Fields
+    function toggleSupportType(typeVal) {
+        const container = document.getElementById('recurringFieldsContainer');
+        if (typeVal === 'पटक-पटक / नियमित') {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
+    }
+
+    // Format Amount Preview
+    function formatNepaliAmountPreview(val) {
+        // Simple numeric clean or keep freeform
+    }
+
+    // Handle Form Submit
+    async function submitSupportForm(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitSupportBtn');
+        const origText = btn.innerHTML;
+
+        // Gather categories
+        const checkedCats = [];
+        document.querySelectorAll('input[name="support_cat"]:checked').forEach(c => checkedCats.push(c.value));
+        if (checkedCats.length === 0) {
+            alert('कृपया कम्तीमा एउटा सहयोग गर्न चाहेको शीर्षक छनौट गर्नुहोस्।');
+            return;
+        }
+
+        const isOther = document.getElementById('cat_other_check').checked;
+        const otherDetails = document.getElementById('other_category_details').value.trim();
+        if (isOther && !otherDetails) {
+            alert("कृपया 'अन्य' शीर्षकको विवरण खुलाउनुहोस्।");
+            document.getElementById('other_category_details').focus();
+            return;
+        }
+
+        const supportType = document.querySelector('input[name="support_type"]:checked').value;
+        const frequency = supportType === 'पटक-पटक / नियमित' ? document.getElementById('support_frequency').value : null;
+        const duration = supportType === 'पटक-पटक / नियमित' ? document.getElementById('support_duration').value.trim() : null;
+
+        if (supportType === 'पटक-पटक / नियमित' && !duration) {
+            alert('कृपया सहयोगको अवधि (कति पटक वा कति वर्षसम्म) खुलाउनुहोस्।');
+            document.getElementById('support_duration').focus();
+            return;
+        }
+
+        const payload = {
+            donor_name: document.getElementById('donor_name').value.trim(),
+            address: document.getElementById('donor_address').value.trim(),
+            phone: document.getElementById('donor_phone').value.trim(),
+            email: document.getElementById('donor_email').value.trim(),
+            website_url: document.getElementById('donor_website').value.trim() || null,
+            support_categories: checkedCats,
+            other_category_details: otherDetails || null,
+            estimated_amount: document.getElementById('estimated_amount').value.trim() || null,
+            support_type: supportType,
+            frequency: frequency,
+            duration: duration,
+            other_schools_interest: document.getElementById('other_schools_interest').value.trim() || null
+        };
+
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin text-amber-300"></i><span>पठाउँदैछ...</span>';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+            const res = await fetch('/api/support/donate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                document.getElementById('supportSuccessMsg').innerText = data.message;
+                document.getElementById('supportSuccessModal').classList.remove('hidden');
+                document.getElementById('onlineSupportForm').reset();
+                toggleOtherCategory(false);
+                toggleSupportType('एक पटक मात्र');
+                if (window.lucide) lucide.createIcons();
+            } else {
+                alert(data.detail || 'फारम पेश गर्न सकिएन।');
+            }
+        } catch (err) {
+            alert('सर्भरसँग सम्पर्क हुन सकेन। कृपया इन्टरनेट जाँच्नुहोस्।');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = origText;
+            if (window.lucide) lucide.createIcons();
+        }
+    }
+
+    function closeSuccessModal() {
+        document.getElementById('supportSuccessModal').classList.add('hidden');
+    }
+</script>
+{% endblock %}

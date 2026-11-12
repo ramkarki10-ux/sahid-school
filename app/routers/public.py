@@ -563,6 +563,20 @@ def page_contact(request: Request):
         "active_menu": "contact"
     })
 
+@router.get("/support", response_class=HTMLResponse)
+@router.get("/partners", response_class=HTMLResponse)
+def page_support(request: Request):
+    settings, ticker_notice = get_school_context()
+    user = get_current_user(request)
+    is_admin = bool(user and user.get("role") in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"])
+    return templates.TemplateResponse(request, "public/support.html", {
+        "settings": settings,
+        "ticker_notice": ticker_notice,
+        "active_menu": "support",
+        "current_user": user,
+        "is_admin": is_admin
+    })
+
 @router.get("/signup", response_class=HTMLResponse)
 def page_signup(request: Request):
     settings, ticker_notice = get_school_context()

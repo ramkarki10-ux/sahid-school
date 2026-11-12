@@ -99,6 +99,7 @@
 
                     <a href="/citizen-charter" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="file-badge" class="w-3.5 h-3.5"></i><span>नागरिक वडापत्र</span></a>
                     <a href="/gallery" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5"></i><span>ग्यालेरी</span></a>
+                    <a href="/support" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1.5 {% if active_menu == 'support' %}bg-instBlue-dark text-amber-400 border-b-2 border-amber-400 font-semibold{% endif %}"><i data-lucide="heart-handshake" class="w-3.5 h-3.5 text-amber-300"></i><span>सहयोग / साझेदार</span></a>
                     <a href="/contact" class="px-2.5 py-1.5 rounded transition hover:bg-instBlue-dark/90 hover:text-amber-300 flex items-center gap-1.5"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i><span>सम्पर्क</span></a>
                 {% endif %}
 
@@ -128,6 +129,7 @@
                 <a href="/notices" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'notices' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">सूचना</a>
                 <a href="/admission" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'admission' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">भर्ना</a>
                 <a href="/results" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'results' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">नतिजा</a>
+                <a href="/support" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'support' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">सहयोग/साझेदार</a>
                 <a href="/contact" class="px-2.5 py-1 rounded hover:bg-instBlue-dark {% if active_menu == 'contact' %}bg-instBlue-dark text-amber-300 font-bold{% endif %}">सम्पर्क</a>
             </div>
         </div>
@@ -193,6 +195,7 @@
                 <a href="/trustee-committee" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="landmark" class="w-4 h-4 text-amber-400"></i><span>गुठियार समिति</span></a>
                 <a href="/teachers" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="briefcase" class="w-4 h-4 text-amber-400"></i><span>शिक्षकहरु</span></a>
                 <a href="/notices" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="bell" class="w-4 h-4 text-amber-400"></i><span>सूचना</span></a>
+                <a href="/support" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="heart-handshake" class="w-4 h-4 text-amber-400"></i><span>सहयोग / साझेदार</span></a>
                 <a href="/contact" onclick="closeMobileDrawer()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-instBlue text-slate-100"><i data-lucide="map-pin" class="w-4 h-4 text-amber-400"></i><span>सम्पर्क</span></a>
             {% endif %}
         </div>

@@ -818,6 +818,31 @@ def admin_hostels(request: Request):
     ctx.update({"hostels": hostels})
     return templates.TemplateResponse(request, "admin/hostels.html", ctx)
 
+@router.get("/support", response_class=HTMLResponse)
+def admin_support(request: Request):
+    user, ctx = get_admin_context(request, "support")
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+        
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM support_donations ORDER BY id DESC")
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+
+    import json
+    for r in rows:
+        try:
+            r["categories_list"] = json.loads(r.get("support_categories") or "[]")
+        except Exception:
+            r["categories_list"] = [r.get("support_categories") or ""]
+
+    ctx.update({
+        "pledges": rows,
+        "admin_active": "support"
+    })
+    return templates.TemplateResponse(request, "admin/support.html", ctx)
+
 @router.get("/transport", response_class=HTMLResponse)
 def admin_transport(request: Request):
     user, ctx = get_admin_context(request, "transport")

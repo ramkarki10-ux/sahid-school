@@ -52,9 +52,12 @@
                     <tr class="hover:bg-slate-50 transition" id="smc-row-{{ m.id }}">
                         <td class="py-3 px-3 text-center font-bold text-slate-500">{{ m.order_index or loop.index }}</td>
                         <td class="py-3 px-3">
-                            <div class="w-10 h-10 rounded-full border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0">
+                            <div class="w-10 h-10 rounded-full border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0 relative">
                                 {% if m.photo %}
-                                <img src="{{ m.photo }}" alt="{{ m.name }}" class="w-full h-full object-cover">
+                                <img src="{{ m.photo }}" alt="{{ m.name }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                                <div class="w-full h-full bg-slate-100 flex items-center justify-center hidden">
+                                    <i data-lucide="user" class="w-5 h-5 text-slate-400"></i>
+                                </div>
                                 {% else %}
                                 <i data-lucide="user" class="w-5 h-5 text-slate-400"></i>
                                 {% endif %}
@@ -235,8 +238,10 @@
             const res = await fetch('/api/upload', {method: 'POST', body: fd});
             const data = await res.json();
             if (res.ok && data.url) {
-                document.getElementById('mem_photo').value = data.url;
-                updateMemberPreview(data.url);
+                if (data.url.startsWith('data:')) {
+                    document.getElementById('mem_photo').value = data.url;
+                    updateMemberPreview(data.url);
+                }
                 statusEl.innerHTML = `<span class="text-emerald-600 font-semibold">✓ तस्विर सफलतापूर्वक अपलोड भयो! ${sizeText}</span>`;
             } else {
                 statusEl.innerHTML = `<span class="text-emerald-600 font-semibold">✓ तस्विर सुरक्षित भयो (${sizeText})</span>`;
