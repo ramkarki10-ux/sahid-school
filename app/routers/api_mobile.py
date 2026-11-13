@@ -2,7 +2,7 @@ import os
 import json
 from datetime import datetime, date
 from typing import Optional, List
-from fastapi import APIRouter, Request, HTTPException, status, Query, Header
+from fastapi import APIRouter, Request, Response, HTTPException, status, Query, Header
 from pydantic import BaseModel
 
 from app.database import get_db
@@ -290,3 +290,154 @@ def mobile_classes():
     classes = [dict(r) for r in cursor.fetchall()]
     conn.close()
     return {"success": True, "classes": classes}
+
+# 8. Mobile Administration (SMC, Guthiyar Committee, Teachers & Leadership)
+DEFAULT_AVATAR = "https://sahid-school.vercel.app/static/images/default_avatar.png"
+API_BASE_PROD = "https://sahid-school.vercel.app"
+
+def resolve_mobile_photo(photo: Optional[str], request: Optional[Request] = None) -> Optional[str]:
+    """Resolves relative database photo paths to absolute URLs for native mobile clients."""
+    if not photo or not str(photo).strip():
+        return None
+    photo = str(photo).strip()
+    if photo.startswith("data:image/") or photo.startswith("http://") or photo.startswith("https://"):
+        return photo
+    
+    clean_path = "/" + photo.lstrip("/")
+    base = API_BASE_PROD
+    if request:
+        try:
+            req_base = str(request.base_url).rstrip("/")
+            if "localhost" not in req_base and "127.0.0.1" not in req_base:
+                base = req_base
+        except Exception:
+            pass
+    return f"{base}{clean_path}"
+
+def normalize_committee_member(m: dict, request: Optional[Request] = None) -> dict:
+    item = dict(m)
+    resolved_photo = resolve_mobile_photo(item.get("photo"), request)
+    item["photo"] = resolved_photo
+    item["avatar_url"] = resolved_photo or DEFAULT_AVATAR
+    pos = item.get("position") or item.get("designation") or "सदस्य"
+    item["position"] = pos
+    item["designation"] = pos
+    item["qualification"] = item.get("qualification") or ""
+    item["phone"] = item.get("phone") or ""
+    item["email"] = item.get("email") or ""
+    item["address"] = item.get("address") or ""
+    item["term"] = item.get("term") or "२०८०-२०८३"
+    item["status"] = item.get("status") or "सक्रिय"
+    return item
+
+def normalize_teacher_profile(t: dict, request: Optional[Request] = None) -> dict:
+    item = dict(t)
+    resolved_photo = resolve_mobile_photo(item.get("photo"), request)
+    item["photo"] = resolved_photo
+    item["avatar_url"] = resolved_photo or DEFAULT_AVATAR
+    pos = item.get("position") or item.get("designation") or "शिक्षक"
+    item["position"] = pos
+    item["designation"] = pos
+    item["qualification"] = item.get("qualification") or ""
+    item["experience"] = item.get("experience") or ""
+    item["subject"] = item.get("subject") or ""
+    item["level"] = item.get("level") or ""
+    item["phone"] = item.get("phone") or ""
+    item["email"] = item.get("email") or ""
+    item["employment_type"] = item.get("employment_type") or "स्थायी"
+    item["status"] = item.get("status") or "सक्रिय"
+    item["remarks"] = item.get("remarks") or ""
+    return item
+
+def set_no_cache_headers(res: Response):
+    res.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    res.headers["Pragma"] = "no-cache"
+    res.headers["Expires"] = "0"
+
+@router.get("/administration")
+def mobile_administration(request: Request, response: Response):
+    """Unified school administration endpoint returning SMC, Guthiyar, Teachers and Leadership with absolute image URLs."""
+    set_no_cache_headers(response)
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # 1. School Management Committee (SMC)
+    cursor.execute("SELECT * FROM school_management_committee WHERE status != 'निष्क्रिय' OR status IS NULL ORDER BY order_index ASC, id ASC")
+    smc = [normalize_committee_member(dict(r), request) for r in cursor.fetchall()]
+
+    # 2. Guthiyar Committee (Trustee)
+    cursor.execute("SELECT * FROM trustee_committee WHERE status != 'निष्क्रिय' OR status IS NULL ORDER BY order_index ASC, id ASC")
+    guthiyar = [normalize_committee_member(dict(r), request) for r in cursor.fetchall()]
+
+    # 3. Faculty & Educators (Teachers)
+    cursor.execute("SELECT * FROM teachers WHERE status != 'निष्क्रिय' OR status IS NULL ORDER BY id ASC")
+    teachers = [normalize_teacher_profile(dict(r), request) for r in cursor.fetchall()]
+
+    # 4. School Leadership
+    cursor.execute("SELECT * FROM school_leadership ORDER BY id ASC")
+    leadership = [normalize_teacher_profile(dict(r), request) for r in cursor.fetchall()]
+
+    conn.close()
+
+    return {
+        "success": True,
+        "server_time": datetime.now().isoformat(),
+        "stats": {
+            "total_smc": len(smc),
+            "total_guthiyar": len(guthiyar),
+            "total_teachers": len(teachers),
+            "total_leadership": len(leadership)
+        },
+        "smc": smc,
+        "guthiyar": guthiyar,
+        "teachers": teachers,
+        "leadership": leadership
+    }
+
+@router.get("/administration/smc")
+@router.get("/smc")
+def mobile_smc(request: Request, response: Response):
+    """Fetch School Management Committee (SMC) members for mobile app."""
+    set_no_cache_headers(response)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM school_management_committee WHERE status != 'निष्क्रिय' OR status IS NULL ORDER BY order_index ASC, id ASC")
+    members = [normalize_committee_member(dict(r), request) for r in cursor.fetchall()]
+    conn.close()
+    return {"success": True, "members": members, "count": len(members)}
+
+@router.get("/administration/guthiyar")
+@router.get("/guthiyar")
+def mobile_guthiyar(request: Request, response: Response):
+    """Fetch Guthiyar Committee (Trustee) members for mobile app."""
+    set_no_cache_headers(response)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM trustee_committee WHERE status != 'निष्क्रिय' OR status IS NULL ORDER BY order_index ASC, id ASC")
+    members = [normalize_committee_member(dict(r), request) for r in cursor.fetchall()]
+    conn.close()
+    return {"success": True, "members": members, "count": len(members)}
+
+@router.get("/administration/teachers")
+@router.get("/teachers")
+def mobile_teachers(request: Request, response: Response):
+    """Fetch all active Faculty & Educators for mobile app."""
+    set_no_cache_headers(response)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM teachers WHERE status != 'निष्क्रिय' OR status IS NULL ORDER BY id ASC")
+    teachers = [normalize_teacher_profile(dict(r), request) for r in cursor.fetchall()]
+    conn.close()
+    return {"success": True, "teachers": teachers, "count": len(teachers)}
+
+@router.get("/administration/leadership")
+@router.get("/leadership")
+def mobile_leadership(request: Request, response: Response):
+    """Fetch School Leadership for mobile app."""
+    set_no_cache_headers(response)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM school_leadership ORDER BY id ASC")
+    leadership = [normalize_teacher_profile(dict(r), request) for r in cursor.fetchall()]
+    conn.close()
+    return {"success": True, "leadership": leadership, "count": len(leadership)}

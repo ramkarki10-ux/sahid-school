@@ -78,8 +78,21 @@ def list_teachers(
         
     query += " ORDER BY id ASC"
     cursor.execute(query, params)
-    teachers = [dict(r) for r in cursor.fetchall()]
+    raw_teachers = [dict(r) for r in cursor.fetchall()]
     conn.close()
+
+    teachers = []
+    for t in raw_teachers:
+        item = dict(t)
+        photo = item.get("photo")
+        if photo and not str(photo).startswith("data:image/") and not str(photo).startswith("http://") and not str(photo).startswith("https://"):
+            item["photo"] = f"https://sahid-school.vercel.app/{str(photo).lstrip('/')}"
+        item["avatar_url"] = item.get("photo") or "https://sahid-school.vercel.app/static/images/default_avatar.png"
+        pos = item.get("position") or item.get("designation") or "शिक्षक"
+        item["position"] = pos
+        item["designation"] = pos
+        teachers.append(item)
+
     return {"teachers": teachers, "total": len(teachers)}
 
 @router.get("/template")

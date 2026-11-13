@@ -36,13 +36,24 @@ class LeadershipUpdate(BaseModel):
     biography: Optional[str] = None
 
 # --- MANAGEMENT COMMITTEE ---
+def _normalize_member_row(r: dict):
+    item = dict(r)
+    photo = item.get("photo")
+    if photo and not str(photo).startswith("data:image/") and not str(photo).startswith("http://") and not str(photo).startswith("https://"):
+        item["photo"] = f"https://sahid-school.vercel.app/{str(photo).lstrip('/')}"
+    pos = item.get("position") or item.get("designation") or "सदस्य"
+    item["position"] = pos
+    item["designation"] = pos
+    item["avatar_url"] = item.get("photo") or "https://sahid-school.vercel.app/static/images/default_avatar.png"
+    return item
+
 @router.get("/management")
 @router.get("/smc")
 def list_management_committee():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM school_management_committee ORDER BY order_index ASC, id ASC")
-    members = [dict(r) for r in cursor.fetchall()]
+    members = [_normalize_member_row(dict(r)) for r in cursor.fetchall()]
     conn.close()
     return {"members": members}
 
@@ -108,7 +119,7 @@ def list_trustee_committee():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM trustee_committee ORDER BY order_index ASC, id ASC")
-    members = [dict(r) for r in cursor.fetchall()]
+    members = [_normalize_member_row(dict(r)) for r in cursor.fetchall()]
     conn.close()
     return {"members": members}
 
@@ -174,7 +185,7 @@ def list_leadership():
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM school_leadership ORDER BY id ASC")
-    leaders = [dict(r) for r in cursor.fetchall()]
+    leaders = [_normalize_member_row(dict(r)) for r in cursor.fetchall()]
     conn.close()
     return {"leaders": leaders}
 

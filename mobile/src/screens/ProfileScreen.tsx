@@ -95,6 +95,15 @@ export default function ProfileScreen() {
 
         {/* Menu Options */}
         <View style={styles.menuCard}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => (navigation as any).navigate('Administration')}
+          >
+            <Ionicons name="business-outline" size={20} color={Colors.primary} />
+            <Text style={styles.menuText}>विद्यालय प्रशासन (व्यवस्थापन, गुठियार र शिक्षकहरू)</Text>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="shield-checkmark-outline" size={20} color={Colors.primary} />
             <Text style={styles.menuText}>खाता सुरक्षा तथा पासवर्ड</Text>

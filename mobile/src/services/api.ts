@@ -3,6 +3,23 @@ import * as SecureStore from 'expo-secure-store';
 
 // Default to live production Vercel backend
 export const API_BASE_URL = 'https://sahid-school.vercel.app';
+export const DEFAULT_AVATAR = 'https://sahid-school.vercel.app/static/images/default_avatar.png';
+
+/**
+ * Universal Image Path Resolver for Mobile App:
+ * Automatically resolves relative URLs (/static/...), Base64 data URLs, and external URLs.
+ */
+export function resolveImageUrl(photo?: string | null): string {
+  if (!photo || !photo.trim()) {
+    return DEFAULT_AVATAR;
+  }
+  const clean = photo.trim();
+  if (clean.startsWith('data:image/') || clean.startsWith('http://') || clean.startsWith('https://')) {
+    return clean;
+  }
+  const path = clean.startsWith('/') ? clean : `/${clean}`;
+  return `${API_BASE_URL}${path}`;
+}
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -127,6 +144,37 @@ export const ApiService = {
   getClasses: async () => {
     const res = await api.get('/api/mobile/classes');
     return res.data.classes || [];
+  },
+
+  // 8. School Administration (विद्यालय प्रशासन: SMC, Guthiyar, Teachers & Leadership)
+  getAdministration: async (forceRefresh = false) => {
+    const params = forceRefresh ? { _t: Date.now() } : {};
+    const res = await api.get('/api/mobile/administration', { params });
+    return res.data;
+  },
+
+  getSMC: async (forceRefresh = false) => {
+    const params = forceRefresh ? { _t: Date.now() } : {};
+    const res = await api.get('/api/mobile/administration/smc', { params });
+    return res.data.members || [];
+  },
+
+  getGuthiyar: async (forceRefresh = false) => {
+    const params = forceRefresh ? { _t: Date.now() } : {};
+    const res = await api.get('/api/mobile/administration/guthiyar', { params });
+    return res.data.members || [];
+  },
+
+  getTeachers: async (forceRefresh = false) => {
+    const params = forceRefresh ? { _t: Date.now() } : {};
+    const res = await api.get('/api/mobile/administration/teachers', { params });
+    return res.data.teachers || [];
+  },
+
+  getLeadership: async (forceRefresh = false) => {
+    const params = forceRefresh ? { _t: Date.now() } : {};
+    const res = await api.get('/api/mobile/administration/leadership', { params });
+    return res.data.leadership || [];
   },
 };
 

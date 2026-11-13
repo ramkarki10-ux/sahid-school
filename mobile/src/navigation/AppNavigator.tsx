@@ -12,6 +12,7 @@ import CalendarScreen from '../screens/CalendarScreen';
 import GalleryScreen from '../screens/GalleryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import LoginScreen from '../screens/LoginScreen';
+import AdministrationScreen from '../screens/AdministrationScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -46,6 +47,8 @@ function MainTabs() {
             iconName = focused ? 'notifications' : 'notifications-outline';
           } else if (route.name === 'CalendarTab') {
             iconName = focused ? 'calendar' : 'calendar-outline';
+          } else if (route.name === 'AdminTab') {
+            iconName = focused ? 'business' : 'business-outline';
           } else if (route.name === 'GalleryTab') {
             iconName = focused ? 'images' : 'images-outline';
           } else if (route.name === 'ProfileTab') {
@@ -76,6 +79,11 @@ function MainTabs() {
         options={{ tabBarLabel: 'क्यालेन्डर' }}
       />
       <Tab.Screen
+        name="AdminTab"
+        component={AdministrationScreen}
+        options={{ tabBarLabel: 'प्रशासन' }}
+      />
+      <Tab.Screen
         name="GalleryTab"
         component={GalleryScreen}
         options={{ tabBarLabel: 'ग्यालरी' }}
@@ -95,6 +103,7 @@ export default function AppNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Main" component={MainTabs} />
+      <Stack.Screen name="Administration" component={AdministrationScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
     </Stack.Navigator>
   );
