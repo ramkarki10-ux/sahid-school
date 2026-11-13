@@ -199,6 +199,8 @@ def create_teacher(data: TeacherCreate, request: Request):
     if cursor.fetchone():
         conn.close()
         raise HTTPException(status_code=400, detail="यो Employee ID पहिले नै दर्ता छ।")
+    
+    photo_to_save = data.photo.strip() if (data.photo and data.photo.strip()) else None
         
     cursor.execute("""
         INSERT INTO teachers (
@@ -207,7 +209,7 @@ def create_teacher(data: TeacherCreate, request: Request):
             academic_year_id, status, remarks
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        data.employee_id, data.name_nepali, data.name_english, data.photo, data.position,
+        data.employee_id, data.name_nepali, data.name_english, photo_to_save, data.position,
         data.subject, data.level, data.qualification, data.experience, data.phone,
         data.email, data.appointment_date, data.employment_type, data.academic_year_id,
         data.status, data.remarks
@@ -231,6 +233,16 @@ def update_teacher(id: int, data: TeacherCreate, request: Request):
         raise HTTPException(status_code=404, detail="शिक्षक फेला परेन।")
         
     old_val = dict(existing)
+
+    # Isolated photo persistence: Keep existing photo if not explicitly replaced or deleted
+    photo_to_save = existing["photo"]
+    if data.photo is not None:
+        p_clean = data.photo.strip()
+        if p_clean in ["REMOVE", "__DELETE__", "null", "none"]:
+            photo_to_save = None
+        elif p_clean:
+            photo_to_save = p_clean
+
     cursor.execute("""
         UPDATE teachers SET
             employee_id = ?, name_nepali = ?, name_english = ?, photo = ?, position = ?,
@@ -239,7 +251,7 @@ def update_teacher(id: int, data: TeacherCreate, request: Request):
             remarks = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
     """, (
-        data.employee_id, data.name_nepali, data.name_english, data.photo, data.position,
+        data.employee_id, data.name_nepali, data.name_english, photo_to_save, data.position,
         data.subject, data.level, data.qualification, data.experience, data.phone,
         data.email, data.appointment_date, data.employment_type, data.status,
         data.remarks, id

@@ -509,6 +509,7 @@ function openAddTeacherModal() {
     document.getElementById('teacherSaveForm').reset();
     document.getElementById('t_emp_id').readOnly = false;
     document.getElementById('t_emp_id').value = 'EMP-' + Math.floor(100 + Math.random() * 900);
+    document.getElementById('t_photo').value = '';
     document.getElementById('t_photo_status').innerText = '';
     updateTeacherPreviewInline('');
     document.getElementById('teacherModal').classList.remove('hidden');
@@ -540,6 +541,11 @@ function openEditTeacherModal(t) {
 
 function closeTeacherModal() {
     document.getElementById('teacherModal').classList.add('hidden');
+    document.getElementById('teacherSaveForm').reset();
+    document.getElementById('modal_teacher_id').value = '';
+    document.getElementById('t_photo').value = '';
+    document.getElementById('t_photo_status').innerText = '';
+    updateTeacherPreviewInline('');
 }
 
 function uploadTeacherPhoto(input) {
@@ -599,14 +605,6 @@ function syncStoredTeacherStateWithDOM() {
             if (h3 && t.name_nepali) h3.innerText = t.name_nepali;
             const posP = card.querySelector('p.text-instBlue.font-bold');
             if (posP && t.position) posP.innerText = t.position;
-            const phoneA = card.querySelector('a[href^="tel:"]');
-            if (phoneA && t.phone) {
-                phoneA.href = `tel:${t.phone}`;
-                phoneA.innerText = t.phone;
-            }
-        }
-    });
-            if (posP) posP.innerText = t.position;
             const phoneA = card.querySelector('a[href^="tel:"]');
             if (phoneA && t.phone) {
                 phoneA.href = `tel:${t.phone}`;

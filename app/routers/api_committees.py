@@ -77,11 +77,25 @@ def update_management_member(id: int, data: CommitteeMemberCreate, request: Requ
     user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     conn = get_db()
     cursor = conn.cursor()
+    cursor.execute("SELECT * FROM school_management_committee WHERE id = ?", (id,))
+    existing = cursor.fetchone()
+    if not existing:
+        conn.close()
+        raise HTTPException(status_code=404, detail="सदस्य फेला परेन।")
+        
+    photo_to_save = existing["photo"]
+    if data.photo is not None:
+        p_clean = data.photo.strip()
+        if p_clean in ["REMOVE", "__DELETE__", "null", "none"]:
+            photo_to_save = None
+        elif p_clean:
+            photo_to_save = p_clean
+
     cursor.execute("""
         UPDATE school_management_committee SET
             name = ?, position = ?, phone = ?, photo = ?, qualification = ?, email = ?, address = ?, term = ?, order_index = ?, status = ?
         WHERE id = ?
-    """, (data.name, data.position, data.phone, data.photo, data.qualification, data.email, data.address, data.term, data.order_index, data.status, id))
+    """, (data.name, data.position, data.phone, photo_to_save, data.qualification, data.email, data.address, data.term, data.order_index, data.status, id))
     conn.commit()
     conn.close()
     log_audit("UPDATE", "MANAGEMENT_COMMITTEE", record_id=str(id), new_value=data.dict(), user=user, request=request)
@@ -143,11 +157,25 @@ def update_trustee_member(id: int, data: CommitteeMemberCreate, request: Request
     user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     conn = get_db()
     cursor = conn.cursor()
+    cursor.execute("SELECT * FROM trustee_committee WHERE id = ?", (id,))
+    existing = cursor.fetchone()
+    if not existing:
+        conn.close()
+        raise HTTPException(status_code=404, detail="सदस्य फेला परेन।")
+        
+    photo_to_save = existing["photo"]
+    if data.photo is not None:
+        p_clean = data.photo.strip()
+        if p_clean in ["REMOVE", "__DELETE__", "null", "none"]:
+            photo_to_save = None
+        elif p_clean:
+            photo_to_save = p_clean
+
     cursor.execute("""
         UPDATE trustee_committee SET
             name = ?, position = ?, phone = ?, photo = ?, qualification = ?, email = ?, address = ?, order_index = ?, status = ?
         WHERE id = ?
-    """, (data.name, data.position, data.phone, data.photo, data.qualification, data.email, data.address, data.order_index, data.status, id))
+    """, (data.name, data.position, data.phone, photo_to_save, data.qualification, data.email, data.address, data.order_index, data.status, id))
     conn.commit()
     conn.close()
     log_audit("UPDATE", "TRUSTEE_COMMITTEE", record_id=str(id), new_value=data.dict(), user=user, request=request)
@@ -240,13 +268,22 @@ def update_leadership_by_id(id: int, data: LeadershipUpdate, request: Request):
     rt = data.role_type.upper() if data.role_type else existing["role_type"]
     pos = data.position or data.designation or existing["position"]
     msg = data.message_ne if data.message_ne is not None else (data.message if data.message is not None else existing["message_ne"])
+    
+    photo_to_save = existing["photo"]
+    if data.photo is not None:
+        p_clean = data.photo.strip()
+        if p_clean in ["REMOVE", "__DELETE__", "null", "none"]:
+            photo_to_save = None
+        elif p_clean:
+            photo_to_save = p_clean
+
     cursor.execute("""
         UPDATE school_leadership SET
             role_type = ?, name = ?, position = ?, photo = ?, qualification = ?, experience = ?,
             phone = ?, email = ?, message_ne = ?, biography = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
     """, (
-        rt, data.name, pos, data.photo, data.qualification, data.experience,
+        rt, data.name, pos, photo_to_save, data.qualification, data.experience,
         data.phone, data.email, msg, data.biography, id
     ))
     conn.commit()

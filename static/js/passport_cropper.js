@@ -307,14 +307,14 @@
             const previewIcon = currentOptions.previewIconId ? document.getElementById(currentOptions.previewIconId) : null;
             const statusEl = currentOptions.statusElId ? document.getElementById(currentOptions.statusElId) : null;
 
-            if (targetInput) targetInput.value = '';
+            if (targetInput) targetInput.value = 'REMOVE';
             if (previewImg) {
                 previewImg.src = '';
                 previewImg.classList.add('hidden');
             }
             if (previewIcon) previewIcon.classList.remove('hidden');
             if (statusEl) {
-                statusEl.innerHTML = '<span class="text-rose-600 font-semibold text-[11px]">फोटो हटाइयो।</span>';
+                statusEl.innerHTML = '<span class="text-rose-600 font-semibold text-[11px]">फोटो हटाइयो। सुरक्षित गर्न सेभ गर्नुहोस्।</span>';
             }
 
             if (currentOptions.onDelete) {
@@ -456,13 +456,13 @@
         const icon = document.getElementById(previewIconId);
         const status = document.getElementById(statusElId);
 
-        if (input) input.value = '';
+        if (input) input.value = 'REMOVE';
         if (preview) {
             preview.src = '';
             preview.classList.add('hidden');
         }
         if (icon) icon.classList.remove('hidden');
-        if (status) status.innerHTML = '<span class="text-rose-600 font-semibold text-[11px]">फोटो हटाइयो।</span>';
+        if (status) status.innerHTML = '<span class="text-rose-600 font-semibold text-[11px]">फोटो हटाइयो। सुरक्षित गर्न सेभ गर्नुहोस्।</span>';
     };
 
     // Auto-initialize on DOMContentLoaded
