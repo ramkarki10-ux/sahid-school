@@ -72,12 +72,12 @@
                     <input id="teacherSearch" type="text" placeholder="शिक्षक, विषय वा योग्यता खोज्नुहोस्..." class="pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none w-full">
                 </div>
                 
-                <select id="levelFilter" class="px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                <select id="levelFilter" class="px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none bg-white font-medium">
                     <option value="">सबै तह (All Levels)</option>
-                    <option value="माध्यामिक">माध्यामिक तह (Secondary)</option>
-                    <option value="नि.मा.वि.">नि.मा.वि. तह (Lower Secondary)</option>
-                    <option value="प्राथमिक">प्राथमिक तह (Primary)</option>
-                    <option value="प्रारम्भिक">प्रारम्भिक बालविकास (ECD)</option>
+                    <option value="माध्यमिक">माध्यमिक तह (Secondary Level)</option>
+                    <option value="आधारभूत">आधारभूत तह (Basic Level)</option>
+                    <option value="प्राथमिक">प्राथमिक तह (Primary Level)</option>
+                    <option value="प्रारम्भिक">प्रारम्भिक बालविकास (ECCD / Pre-Primary)</option>
                 </select>
             </div>
             
@@ -320,19 +320,18 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
                 <div>
-                    <label class="block font-semibold mb-1 text-slate-700">तह (Level) *</label>
-                    <select id="t_level" required class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
-                        <option value="माध्यामिक तह">माध्यामिक तह (Secondary)</option>
-                        <option value="नि.मा.वि. तह">नि.मा.वि. तह (Lower Secondary)</option>
-                        <option value="प्राथमिक तह">प्राथमिक तह (Primary)</option>
-                        <option value="प्रारम्भिक बालविकास">प्रारम्भिक बालविकास (ECD)</option>
+                    <label class="block font-semibold mb-1 text-slate-700">तह (Educational Level) *</label>
+                    <select id="t_level" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none bg-white font-medium text-xs">
+                        <option value="माध्यमिक तह">माध्यमिक तह (Secondary Level)</option>
+                        <option value="आधारभूत तह">आधारभूत तह (Basic Level)</option>
+                        <option value="प्राथमिक तह">प्राथमिक तह (Primary Level)</option>
+                        <option value="प्रारम्भिक बालविकास">प्रारम्भिक बालविकास (ECCD / Pre-Primary)</option>
                     </select>
                 </div>
-                <div>
-                    <label class="block font-semibold mb-1 text-slate-700">अध्यापन विषय (Subject) *</label>
-                    <input type="text" id="t_subject" required class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="गणित, विज्ञान, नेपाली...">
+                <div id="public_t_subject_picker_mount" class="relative">
+                    <input type="hidden" id="t_subject" required value="">
                 </div>
             </div>
 
@@ -421,9 +420,21 @@
 </div>
 {% endif %}
 
+<script src="/static/js/teacher_subject_picker.js"></script>
 <script>
+let publicSubjectPicker = null;
+
 // Filter teachers function
 document.addEventListener('DOMContentLoaded', function() {
+    if (window.TeacherSubjectPicker && document.getElementById('public_t_subject_picker_mount')) {
+        publicSubjectPicker = window.TeacherSubjectPicker.init({
+            id: 'public_t_subj_picker',
+            levelSelectId: 't_level',
+            hiddenInputId: 't_subject',
+            containerId: 'public_t_subject_picker_mount'
+        });
+    }
+
     const searchInput = document.getElementById('teacherSearch');
     const levelFilter = document.getElementById('levelFilter');
     const cards = document.querySelectorAll('.teacher-card');
@@ -512,6 +523,12 @@ function openAddTeacherModal() {
     document.getElementById('t_photo').value = '';
     document.getElementById('t_photo_status').innerText = '';
     updateTeacherPreviewInline('');
+
+    if (publicSubjectPicker) {
+        publicSubjectPicker.clear();
+        publicSubjectPicker.updateLevel(document.getElementById('t_level').value || 'माध्यमिक तह');
+    }
+
     document.getElementById('teacherModal').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
 }
@@ -524,8 +541,6 @@ function openEditTeacherModal(t) {
     document.getElementById('t_name_ne').value = t.name_nepali || '';
     document.getElementById('t_name_en').value = t.name_english || '';
     document.getElementById('t_position').value = t.position || '';
-    document.getElementById('t_subject').value = t.subject || '';
-    document.getElementById('t_level').value = t.level || 'माध्यामिक तह';
     document.getElementById('t_qual').value = t.qualification || '';
     document.getElementById('t_exp').value = t.experience || '';
     document.getElementById('t_phone').value = t.phone || '';
@@ -535,6 +550,15 @@ function openEditTeacherModal(t) {
     document.getElementById('t_emp_type').value = t.employment_type || 'स्थायी';
     document.getElementById('t_status').value = t.status || 'सक्रिय';
     document.getElementById('t_photo_status').innerText = '';
+
+    // Dynamic Cascading Multi-Select Subject Setup
+    if (publicSubjectPicker) {
+        publicSubjectPicker.setValues(t.level, t.subject);
+    } else {
+        document.getElementById('t_subject').value = t.subject || '';
+        document.getElementById('t_level').value = t.level || 'माध्यमिक तह';
+    }
+
     document.getElementById('teacherModal').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
 }
@@ -546,6 +570,7 @@ function closeTeacherModal() {
     document.getElementById('t_photo').value = '';
     document.getElementById('t_photo_status').innerText = '';
     updateTeacherPreviewInline('');
+    if (publicSubjectPicker) publicSubjectPicker.clear();
 }
 
 function uploadTeacherPhoto(input) {
@@ -711,13 +736,20 @@ async function handleTeacherSubmit(e) {
     e.preventDefault();
     const id = document.getElementById('modal_teacher_id').value;
     const btn = document.getElementById('teacherSubmitBtn');
+    const subjectVal = document.getElementById('t_subject').value.trim();
+
+    if (!subjectVal) {
+        alert('कृपया कम्तीमा एउटा अध्यापन विषय छान्नुहोस् वा थप्नुहोस्।');
+        if (publicSubjectPicker) publicSubjectPicker.openDropdown();
+        return;
+    }
 
     const payload = {
         employee_id: document.getElementById('t_emp_id').value.trim(),
         name_nepali: document.getElementById('t_name_ne').value.trim(),
         name_english: document.getElementById('t_name_en').value.trim(),
         position: document.getElementById('t_position').value.trim(),
-        subject: document.getElementById('t_subject').value.trim(),
+        subject: subjectVal,
         level: document.getElementById('t_level').value,
         qualification: document.getElementById('t_qual').value.trim(),
         experience: document.getElementById('t_exp').value.trim(),

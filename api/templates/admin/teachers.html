@@ -143,18 +143,18 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
                 <div>
-                    <label class="block font-semibold mb-1 text-slate-700">अध्यापन विषय *</label>
-                    <input type="text" id="tea_subject" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="गणित / विज्ञान">
-                </div>
-                <div>
-                    <label class="block font-semibold mb-1 text-slate-700">तह *</label>
-                    <select id="tea_level" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
-                        <option value="माध्यमिक">माध्यमिक</option>
-                        <option value="निम्न माध्यमिक">निम्न माध्यमिक</option>
-                        <option value="प्राथमिक">प्राथमिक</option>
+                    <label class="block font-semibold mb-1 text-slate-700">तह (Educational Level) *</label>
+                    <select id="tea_level" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none bg-white font-medium text-xs">
+                        <option value="माध्यमिक तह">माध्यमिक तह (Secondary Level)</option>
+                        <option value="आधारभूत तह">आधारभूत तह (Basic Level)</option>
+                        <option value="प्राथमिक तह">प्राथमिक तह (Primary Level)</option>
+                        <option value="प्रारम्भिक बालविकास">प्रारम्भिक बालविकास (ECCD / Pre-Primary)</option>
                     </select>
+                </div>
+                <div id="tea_subject_picker_mount" class="relative">
+                    <input type="hidden" id="tea_subject" required value="">
                 </div>
             </div>
 
@@ -224,7 +224,21 @@
     </div>
 </div>
 
+<script src="/static/js/teacher_subject_picker.js"></script>
 <script>
+    let adminSubjectPicker = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.TeacherSubjectPicker) {
+            adminSubjectPicker = window.TeacherSubjectPicker.init({
+                id: 'tea_subj_picker',
+                levelSelectId: 'tea_level',
+                hiddenInputId: 'tea_subject',
+                containerId: 'tea_subject_picker_mount'
+            });
+        }
+    });
+
     function openTeacherModal() {
         document.getElementById('teacherSaveForm').reset();
         document.getElementById('tea_edit_id').value = '';
@@ -237,6 +251,12 @@
         document.getElementById('tea_employee_id').removeAttribute('readonly');
         document.getElementById('teacherModalTitle').innerHTML = '<i data-lucide="graduation-cap" class="w-4 h-4 text-instGold"></i><span>शिक्षक थप्नुहोस् (Add Teacher)</span>';
         document.getElementById('teaSubmitBtn').innerText = 'शिक्षक थप्नुहोस्';
+
+        if (adminSubjectPicker) {
+            adminSubjectPicker.clear();
+            adminSubjectPicker.updateLevel(document.getElementById('tea_level').value || 'माध्यमिक तह');
+        }
+
         document.getElementById('teacherModal').classList.remove('hidden');
         if (window.lucide) lucide.createIcons();
     }
@@ -248,13 +268,20 @@
         document.getElementById('tea_name_nepali').value = t.name_nepali || '';
         document.getElementById('tea_name_english').value = t.name_english || '';
         document.getElementById('tea_position').value = t.position || '';
-        document.getElementById('tea_subject').value = t.subject || '';
-        document.getElementById('tea_level').value = t.level || 'माध्यमिक';
         document.getElementById('tea_qualification').value = t.qualification || '';
         document.getElementById('tea_experience').value = t.experience || '';
         document.getElementById('tea_phone').value = t.phone || '';
         document.getElementById('tea_email').value = t.email || '';
         document.getElementById('tea_photo').value = t.photo || '';
+
+        // Dynamic Cascading Multi-Select Subject Setup
+        if (adminSubjectPicker) {
+            adminSubjectPicker.setValues(t.level, t.subject);
+        } else {
+            document.getElementById('tea_subject').value = t.subject || '';
+            document.getElementById('tea_level').value = t.level || 'माध्यमिक तह';
+        }
+
         const teaPrev = document.getElementById('tea_photo_preview');
         const teaIcon = document.getElementById('tea_photo_icon');
         if (t.photo) {
@@ -285,17 +312,26 @@
         if (teaPrev) { teaPrev.src = ''; teaPrev.classList.add('hidden'); }
         if (teaIcon) { teaIcon.classList.remove('hidden'); }
         document.getElementById('tea_photo_status').innerHTML = '';
+        if (adminSubjectPicker) adminSubjectPicker.clear();
     }
 
     document.getElementById('teacherSaveForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const editId = document.getElementById('tea_edit_id').value;
+        const subjectVal = document.getElementById('tea_subject').value.trim();
+
+        if (!subjectVal) {
+            alert('कृपया कम्तीमा एउटा अध्यापन विषय छान्नुहोस् वा थप्नुहोस्।');
+            if (adminSubjectPicker) adminSubjectPicker.openDropdown();
+            return;
+        }
+
         const payload = {
             employee_id: document.getElementById('tea_employee_id').value.trim(),
             name_nepali: document.getElementById('tea_name_nepali').value.trim(),
             name_english: document.getElementById('tea_name_english').value.trim(),
             position: document.getElementById('tea_position').value.trim(),
-            subject: document.getElementById('tea_subject').value.trim(),
+            subject: subjectVal,
             level: document.getElementById('tea_level').value,
             qualification: document.getElementById('tea_qualification').value.trim() || null,
             experience: document.getElementById('tea_experience').value.trim() || null,

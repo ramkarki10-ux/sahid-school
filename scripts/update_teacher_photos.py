@@ -24,6 +24,11 @@ for db_file in db_files:
         WHERE id = 105 OR employee_id = 'TCH-83003'
     """)
     c.execute("""
+        UPDATE teachers 
+        SET photo = '/static/images/teachers/teacher_106_yubaraj_neupane.jpg' 
+        WHERE id = 106 OR employee_id = 'TCH-83004'
+    """)
+    c.execute("""
         UPDATE school_leadership 
         SET photo = '/static/images/teachers/teacher_103_rita_phuyal.jpg' 
         WHERE role_type = 'PRINCIPAL'
