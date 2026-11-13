@@ -230,22 +230,27 @@
 
             <!-- विद्यालय प्रशासन तथा समितिहरू -->
             <div class="pt-2">
-                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">प्रशासन तथा समिति</p>
+                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">विद्यालय प्रशासन तथा समिति</p>
                 <div class="mt-1 space-y-0.5">
                     <a href="/admin/management-committee"
-                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'mgmt_comm' %}bg-instBlue text-white font-bold{% endif %}">
-                        <i data-lucide="shield" class="w-4 h-4"></i>
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'mgmt_comm' %}bg-instBlue text-white font-bold border-l-2 border-amber-400{% endif %}">
+                        <i data-lucide="shield" class="w-4 h-4 text-amber-400"></i>
                         <span>व्यवस्थापन समिति</span>
                     </a>
                     <a href="/admin/trustee-committee"
-                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'trustee_comm' %}bg-instBlue text-white font-bold{% endif %}">
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'trustee_comm' %}bg-instBlue text-white font-bold border-l-2 border-amber-400{% endif %}">
                         <i data-lucide="landmark" class="w-4 h-4 text-amber-400"></i>
                         <span>गुठियार समिति</span>
                     </a>
+                    <a href="/admin/teachers"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'teachers' %}bg-instBlue text-white font-bold border-l-2 border-sky-400{% endif %}">
+                        <i data-lucide="graduation-cap" class="w-4 h-4 text-sky-400"></i>
+                        <span>शिक्षक शिक्षिका विवरण (हाम्रा शिक्षक)</span>
+                    </a>
                     <a href="/admin/leadership"
-                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'leadership' %}bg-instBlue text-white font-bold{% endif %}">
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'leadership' %}bg-instBlue text-white font-bold border-l-2 border-instGold{% endif %}">
                         <i data-lucide="award" class="w-4 h-4 text-instGold"></i>
-                        <span>प्रधानाध्यापक / सहायक प्र.अ.</span>
+                        <span>प्रधानाध्यापक तथा नेतृत्व</span>
                     </a>
                 </div>
             </div>

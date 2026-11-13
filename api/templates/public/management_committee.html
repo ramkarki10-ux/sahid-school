@@ -57,7 +57,7 @@
         <div class="max-w-lg mx-auto mb-12">
             <div class="bg-gradient-to-b from-blue-50 to-white border-2 border-instBlue/80 rounded-2xl p-7 text-center shadow-lg hover:shadow-xl transition relative group">
                 
-                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL']) %}
                 <!-- Super Admin Action Buttons for Chairperson -->
                 <div class="absolute top-4 right-4 flex items-center gap-1.5">
                     <button type="button" onclick='openEditMemberModal({{ chair | tojson | safe }})' class="p-1.5 bg-blue-50 hover:bg-blue-100 text-instBlue border border-blue-200 rounded-md transition" title="अध्यक्षको विवरण सम्पादन गर्नुहोस्">
@@ -70,8 +70,8 @@
                 {% endif %}
 
                 <div class="w-28 h-28 mx-auto rounded-full bg-instBlue/10 border-4 border-instBlue/30 overflow-hidden shadow-inner flex items-center justify-center text-instBlue mb-4 relative">
-                    {% if chair.photo %}
-                    <img src="{{ chair.photo }}" alt="{{ chair.name }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                    {% if chair.photo and chair.photo.strip() %}
+                    <img src="{{ chair.photo }}" alt="{{ chair.name }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.classList.add('hidden'); if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
                     <div class="w-full h-full bg-instBlue/10 flex items-center justify-center hidden">
                         <i data-lucide="award" class="w-14 h-14 text-instBlue"></i>
                     </div>
@@ -125,7 +125,7 @@
             {% for m in members[1:] %}
             <div class="bg-white border border-slate-200 rounded-xl p-5 text-center shadow-sm hover:shadow-md hover:border-instBlue/50 transition flex flex-col justify-between relative group">
                 
-                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL']) %}
                 <!-- Super Admin Action Buttons for Member -->
                 <div class="absolute top-3 right-3 flex items-center gap-1">
                     <button type="button" onclick='openEditMemberModal({{ m | tojson | safe }})' class="p-1 bg-blue-50 hover:bg-blue-100 text-instBlue border border-blue-200 rounded transition" title="सम्पादन गर्नुहोस्">
@@ -139,8 +139,8 @@
 
                 <div>
                     <div class="w-20 h-20 mx-auto rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden shadow-sm flex items-center justify-center mb-3 relative">
-                        {% if m.photo %}
-                        <img src="{{ m.photo }}" alt="{{ m.name }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                        {% if m.photo and m.photo.strip() %}
+                        <img src="{{ m.photo }}" alt="{{ m.name }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.classList.add('hidden'); if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
                         <div class="w-full h-full bg-slate-100 flex items-center justify-center hidden">
                             <i data-lucide="user" class="w-8 h-8 text-slate-400"></i>
                         </div>
@@ -373,6 +373,7 @@
             const res = await fetch(url, {
                 method: method,
                 headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
@@ -390,7 +391,10 @@
     async function deleteMemberRecord(id, name) {
         if (!confirm(`के तपाईं निश्चित रूपमा '${name}' लाई व्यवस्थापन समितिबाट मेटाउन चाहनुहुन्छ?`)) return;
         try {
-            const res = await fetch(`/api/committees/management/${id}`, {method: 'DELETE'});
+            const res = await fetch(`/api/committees/management/${id}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
             const data = await res.json();
             if (res.ok && data.success) {
                 alert(data.message);

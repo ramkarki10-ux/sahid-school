@@ -18,7 +18,7 @@
                 <h1 class="text-2xl sm:text-3xl font-bold text-instBlue">विद्यालय प्रशासनिक नेतृत्व तथा प्रधानाध्यापक</h1>
                 <p class="text-xs text-slate-600 mt-1">सहिद स्मृति आवासीय माध्यमिक विद्यालय, इटहरी–१९, सुनसरी • आधिकारिक नेतृत्व विवरण तथा मन्तव्य</p>
             </div>
-            {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+            {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL']) %}
             <div class="flex items-center gap-2">
                 <button type="button" onclick="openAddLeadershipModal()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow transition">
                     <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-200"></i>
@@ -35,7 +35,7 @@
 </div>
 
 <!-- Admin Notice Banner (Visible to Super Admin / Admin) -->
-{% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+{% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL']) %}
 <div class="bg-gradient-to-r from-instBlue to-slate-900 text-white py-2.5 px-4 sm:px-8 border-b border-amber-400">
     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
         <div class="flex items-center gap-2">
@@ -65,7 +65,7 @@
                     </div>
                 </div>
 
-                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL']) %}
                 <button type="button" onclick='openEditLeadershipModal({{ principal | tojson | safe }})' class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-bold shadow-sm transition">
                     <i data-lucide="edit-3" class="w-3.5 h-3.5 text-instGold"></i>
                     <span>प्रधानाध्यापक विवरण सच्याउनुहोस्</span>
@@ -175,7 +175,7 @@
                     </div>
                 </div>
 
-                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL']) %}
                 <button type="button" onclick='openEditLeadershipModal({{ vice_principal | tojson | safe }})' class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold shadow-sm transition">
                     <i data-lucide="edit-3" class="w-3.5 h-3.5 text-amber-400"></i>
                     <span>विवरण सच्याउनुहोस्</span>
@@ -255,7 +255,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for ol in other_leaders %}
                 <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between relative group">
-                    {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+                    {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL']) %}
                     <div class="absolute top-3 right-3 flex items-center gap-1.5">
                         <button type="button" onclick='openEditLeadershipModal({{ ol | tojson | safe }})' class="p-1.5 bg-blue-50 hover:bg-blue-100 text-instBlue rounded border border-blue-200 transition" title="सम्पादन गर्नुहोस्">
                             <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
@@ -309,7 +309,7 @@
 <!-- ========================================== -->
 <!-- LEADERSHIP ADD / EDIT MODAL (SUPER ADMIN / ADMIN) -->
 <!-- ========================================== -->
-{% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+{% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL']) %}
 <div id="leadershipModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 text-xs border border-slate-200 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b pb-3">
@@ -521,6 +521,7 @@
             const res = await fetch(url, {
                 method: method,
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
@@ -541,7 +542,10 @@
     async function deleteLeadershipRecord(id, name) {
         if (!confirm(`के तपाईं निश्चित रूपमा '${name}' लाई विद्यालय नेतृत्व सूचीबाट हटाउन चाहनुहुन्छ?`)) return;
         try {
-            const res = await fetch(`/api/committees/leadership/${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/committees/leadership/${id}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
             const data = await res.json();
             if (res.ok && data.success) {
                 alert(data.message || 'सफलतापूर्वक हटाइयो।');

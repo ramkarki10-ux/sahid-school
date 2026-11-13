@@ -59,8 +59,8 @@
                         <td class="py-3 px-4 font-mono font-bold text-instBlue">{{ t.employee_id }}</td>
                         <td class="py-3 px-3">
                             <div class="w-10 h-10 mx-auto rounded-full border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0 relative">
-                                {% if t.photo %}
-                                <img src="{{ t.photo }}" alt="{{ t.name_nepali }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                                {% if t.photo and t.photo.strip() %}
+                                <img src="{{ t.photo }}" alt="{{ t.name_nepali }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.classList.add('hidden'); if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
                                 <div class="w-full h-full bg-slate-100 flex items-center justify-center hidden">
                                     <i data-lucide="user" class="w-5 h-5 text-slate-400"></i>
                                 </div>
@@ -303,6 +303,7 @@
             const res = await fetch(url, {
                 method: method,
                 headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
@@ -320,7 +321,10 @@
     async function deleteTeacher(id, name) {
         if (!confirm(`के तपाईं शिक्षक '${name}' लाई मेटाउन चाहनुहुन्छ?`)) return;
         try {
-            const res = await fetch(`/api/teachers/${id}`, {method: 'DELETE'});
+            const res = await fetch(`/api/teachers/${id}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
             const data = await res.json();
             if (data.success) {
                 alert(data.message);

@@ -53,8 +53,8 @@
                         <td class="py-3 px-3 text-center font-bold text-slate-500">{{ m.order_index or loop.index }}</td>
                         <td class="py-3 px-3">
                             <div class="w-10 h-10 rounded-full border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0 relative">
-                                {% if m.photo %}
-                                <img src="{{ m.photo }}" alt="{{ m.name }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                                {% if m.photo and m.photo.strip() %}
+                                <img src="{{ m.photo }}" alt="{{ m.name }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.classList.add('hidden'); if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
                                 <div class="w-full h-full bg-slate-100 flex items-center justify-center hidden">
                                     <i data-lucide="user" class="w-5 h-5 text-slate-400"></i>
                                 </div>
@@ -301,6 +301,7 @@
             const res = await fetch(url, {
                 method: method,
                 headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
@@ -318,7 +319,10 @@
     async function deleteTrustee(id, name) {
         if (!confirm(`के तपाईं निश्चित रूपमा '${name}' लाई मेटाउन चाहनुहुन्छ?`)) return;
         try {
-            const res = await fetch(`/api/committees/trustee/${id}`, {method: 'DELETE'});
+            const res = await fetch(`/api/committees/trustee/${id}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
             const data = await res.json();
             if (data.success) {
                 alert(data.message);

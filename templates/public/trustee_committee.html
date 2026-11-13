@@ -56,7 +56,7 @@
         <div class="max-w-lg mx-auto mb-12">
             <div class="bg-gradient-to-b from-amber-50 to-white border-2 border-instGold/80 rounded-2xl p-7 text-center shadow-lg hover:shadow-xl transition relative group">
                 
-                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL']) %}
                 <!-- Super Admin Action Buttons for Chief -->
                 <div class="absolute top-4 right-4 flex items-center gap-1.5">
                     <button type="button" onclick='openEditTrusteeModal({{ chief | tojson | safe }})' class="p-1.5 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 rounded-md transition" title="प्रमुखको विवरण सम्पादन गर्नुहोस्">
@@ -69,8 +69,8 @@
                 {% endif %}
 
                 <div class="w-28 h-28 mx-auto rounded-full bg-amber-100 border-4 border-instGold/40 overflow-hidden shadow-inner flex items-center justify-center text-amber-900 mb-4 relative">
-                    {% if chief.photo %}
-                    <img src="{{ chief.photo }}" alt="{{ chief.name }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                    {% if chief.photo and chief.photo.strip() %}
+                    <img src="{{ chief.photo }}" alt="{{ chief.name }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.classList.add('hidden'); if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
                     <div class="w-full h-full bg-amber-100 flex items-center justify-center hidden">
                         <i data-lucide="landmark" class="w-14 h-14 text-amber-800"></i>
                     </div>
@@ -124,7 +124,7 @@
             {% for m in members[1:] %}
             <div class="bg-white border border-slate-200 rounded-xl p-5 text-center shadow-sm hover:shadow-md hover:border-instGold/50 transition flex flex-col justify-between relative group">
                 
-                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+                {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL']) %}
                 <!-- Super Admin Action Buttons for Member -->
                 <div class="absolute top-3 right-3 flex items-center gap-1">
                     <button type="button" onclick='openEditTrusteeModal({{ m | tojson | safe }})' class="p-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded transition" title="सम्पादन गर्नुहोस्">
@@ -138,8 +138,8 @@
 
                 <div>
                     <div class="w-20 h-20 mx-auto rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden shadow-sm flex items-center justify-center mb-3 relative">
-                        {% if m.photo %}
-                        <img src="{{ m.photo }}" alt="{{ m.name }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                        {% if m.photo and m.photo.strip() %}
+                        <img src="{{ m.photo }}" alt="{{ m.name }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.classList.add('hidden'); if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
                         <div class="w-full h-full bg-slate-100 flex items-center justify-center hidden">
                             <i data-lucide="user" class="w-8 h-8 text-slate-400"></i>
                         </div>
@@ -374,6 +374,7 @@
             const res = await fetch(url, {
                 method: method,
                 headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
@@ -391,7 +392,10 @@
     async function deleteTrusteeRecord(id, name) {
         if (!confirm(`के तपाईं निश्चित रूपमा '${name}' लाई गुठियार समितिबाट मेटाउन चाहनुहुन्छ?`)) return;
         try {
-            const res = await fetch(`/api/committees/trustee/${id}`, {method: 'DELETE'});
+            const res = await fetch(`/api/committees/trustee/${id}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
             const data = await res.json();
             if (res.ok && data.success) {
                 alert(data.message);

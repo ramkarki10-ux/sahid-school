@@ -108,8 +108,8 @@
                     <!-- Card Header: Badges & Photo -->
                     <div class="flex gap-4 items-start">
                         <div class="w-20 h-24 rounded-xl bg-slate-100 flex-shrink-0 border border-slate-200 overflow-hidden flex items-center justify-center text-slate-400 shadow-inner relative group">
-                            {% if t.photo %}
-                            <img src="{{ t.photo }}" alt="{{ t.name_nepali }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                            {% if t.photo and t.photo.strip() %}
+                            <img src="{{ t.photo }}" alt="{{ t.name_nepali }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.classList.add('hidden'); if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
                             <div class="w-full h-full bg-gradient-to-tr from-slate-200 to-slate-100 flex flex-col items-center justify-center text-instBlue hidden">
                                 <span class="font-bold text-xl">{{ t.name_nepali[3:5] if t.name_nepali|length > 4 else t.name_nepali[:2] }}</span>
                                 <span class="text-[9px] text-slate-500 font-mono mt-0.5">शिक्षक</span>
@@ -574,18 +574,18 @@ function saveStoredTeacherState(state) {
 function syncStoredTeacherStateWithDOM() {
     const state = getStoredTeacherState();
     
-    // 1. Remove deleted teachers
-    (state.deleted || []).forEach(delId => {
-        const card = document.getElementById(`teacher-card-${delId}`);
-        if (card) card.remove();
-    });
+    // 1. Reset any stale client-side deletion arrays to ensure all 16 official teachers render fully
+    if (state.deleted && state.deleted.length > 0) {
+        state.deleted = [];
+        saveStoredTeacherState(state);
+    }
 
-    // 2. Apply updates to existing teacher cards
+    // 2. Apply updates (such as newly uploaded photos or edited phone numbers) to existing teacher cards
     Object.keys(state.updated || {}).forEach(tid => {
         const t = state.updated[tid];
         const card = document.getElementById(`teacher-card-${tid}`);
-        if (card) {
-            // Update photo
+        if (card && t) {
+            // Update photo preview if updated
             if (t.photo) {
                 const imgWrap = card.querySelector('.w-20.h-24');
                 if (imgWrap) {
@@ -596,8 +596,16 @@ function syncStoredTeacherStateWithDOM() {
             }
             // Update name & details
             const h3 = card.querySelector('h3');
-            if (h3) h3.innerText = t.name_nepali;
+            if (h3 && t.name_nepali) h3.innerText = t.name_nepali;
             const posP = card.querySelector('p.text-instBlue.font-bold');
+            if (posP && t.position) posP.innerText = t.position;
+            const phoneA = card.querySelector('a[href^="tel:"]');
+            if (phoneA && t.phone) {
+                phoneA.href = `tel:${t.phone}`;
+                phoneA.innerText = t.phone;
+            }
+        }
+    });
             if (posP) posP.innerText = t.position;
             const phoneA = card.querySelector('a[href^="tel:"]');
             if (phoneA && t.phone) {
@@ -743,6 +751,7 @@ async function handleTeacherSubmit(e) {
         const res = await fetch(url, {
             method: method,
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -790,7 +799,7 @@ async function deleteTeacherRecord(id, name) {
     }
 
     try {
-        await fetch(`/api/teachers/${id}`, { method: 'DELETE' });
+        await fetch(`/api/teachers/${id}`, { method: 'DELETE', credentials: 'include' });
     } catch(err) {
         // Silently handled
     }
