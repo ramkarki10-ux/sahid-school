@@ -187,12 +187,14 @@ def run_tests():
     assert "विद्यालय व्यवस्थापन समिति" in html_about
     print("✓ Public About page rendered with committee members.")
 
-    # Cleanup test photos from DB so production DB stays clean
+    # Restore committee photos so production DB stays populated with valid avatars
     import sqlite3
     for p in ['school.db', 'api/school.db']:
         conn = sqlite3.connect(p)
-        conn.execute("UPDATE school_management_committee SET photo = NULL WHERE id IN (?, ?)", (m1["id"], m2["id"]))
-        conn.execute("UPDATE trustee_committee SET photo = NULL WHERE id IN (?, ?)", (t1["id"], t2["id"]))
+        conn.execute("UPDATE school_management_committee SET photo = '/static/images/committees/smc_28.svg' WHERE id = ?", (m1["id"],))
+        conn.execute("UPDATE school_management_committee SET photo = '/static/images/smc_ram_kumari.jpg' WHERE id = ?", (m2["id"],))
+        conn.execute("UPDATE trustee_committee SET photo = '/static/images/committees/trustee_1.svg' WHERE id = ?", (t1["id"],))
+        conn.execute("UPDATE trustee_committee SET photo = '/static/images/committees/trustee_2.svg' WHERE id = ?", (t2["id"],))
         conn.commit()
         conn.close()
 
