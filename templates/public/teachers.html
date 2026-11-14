@@ -107,19 +107,12 @@
                 <div>
                     <!-- Card Header: Badges & Photo -->
                     <div class="flex gap-4 items-start">
-                        <div class="w-20 h-24 rounded-xl bg-slate-100 flex-shrink-0 border border-slate-200 overflow-hidden flex items-center justify-center text-slate-400 shadow-inner relative group">
-                            {% if t.photo and t.photo.strip() %}
-                            <img src="{{ t.photo }}" alt="{{ t.name_nepali }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.classList.add('hidden'); if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
-                            <div class="w-full h-full bg-gradient-to-tr from-slate-200 to-slate-100 flex flex-col items-center justify-center text-instBlue hidden">
-                                <span class="font-bold text-xl">{{ t.name_nepali[3:5] if t.name_nepali|length > 4 else t.name_nepali[:2] }}</span>
-                                <span class="text-[9px] text-slate-500 font-mono mt-0.5">शिक्षक</span>
-                            </div>
-                            {% else %}
-                            <div class="w-full h-full bg-gradient-to-tr from-slate-200 to-slate-100 flex flex-col items-center justify-center text-instBlue">
-                                <span class="font-bold text-xl">{{ t.name_nepali[3:5] if t.name_nepali|length > 4 else t.name_nepali[:2] }}</span>
-                                <span class="text-[9px] text-slate-500 font-mono mt-0.5">शिक्षक</span>
-                            </div>
-                            {% endif %}
+                        <div class="w-20 h-24 rounded-xl bg-slate-100 flex-shrink-0 border border-slate-200 overflow-hidden flex items-center justify-center text-slate-400 shadow-inner relative group teacher-photo-wrap">
+                            <img src="{{ t.photo or ('/static/images/teachers/teacher_' ~ t.id ~ '.svg') }}" 
+                                 alt="{{ t.name_nepali }}" 
+                                 data-fallback="/static/images/teachers/teacher_{{ t.id }}.svg"
+                                 class="w-full h-full object-cover teacher-photo-img" 
+                                 onerror="window.handleTeacherPhotoError(this, '{{ t.id }}')">
                         </div>
 
                         <div class="flex-grow space-y-1">
@@ -176,7 +169,7 @@
 
                 <!-- Footer: Actions & Details -->
                 <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <button type="button" onclick='viewTeacherProfile({{ t | tojson | safe }})' class="text-instBlue hover:text-instBlue-dark font-semibold inline-flex items-center gap-1 text-[11px]">
+                    <button type="button" onclick="viewTeacherProfile('{{ t.id }}')" class="text-instBlue hover:text-instBlue-dark font-semibold inline-flex items-center gap-1 text-[11px] touch-manipulation">
                         <i data-lucide="info" class="w-3.5 h-3.5"></i>
                         <span>विस्तृत प्रोफाइल</span>
                     </button>
@@ -185,8 +178,8 @@
                     <!-- Admin Edit & Delete Actions -->
                     <div class="flex items-center gap-1.5">
                         <button type="button" 
-                                onclick='openEditTeacherModal({{ t | tojson | safe }})' 
-                                class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md font-bold text-xs transition"
+                                onclick="openEditTeacherModal('{{ t.id }}')" 
+                                class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md font-bold text-xs transition touch-manipulation"
                                 title="विवरण सम्पादन गर्नुहोस्">
                             <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                             <span>सम्पादन</span>
@@ -468,12 +461,61 @@ document.addEventListener('DOMContentLoaded', function() {
     if (levelFilter) levelFilter.addEventListener('change', filterTeachers);
 });
 
-// View Full Profile Modal
-function viewTeacherProfile(t) {
+window.handleTeacherPhotoError = function(img, teacherId) {
+    if (!img) return;
+    img.onerror = null;
+    try {
+        const raw = localStorage.getItem('sahid_school_teachers_v3');
+        if (raw) {
+            const state = JSON.parse(raw);
+            const upd = (state.updated || {})[teacherId];
+            if (upd && upd.photo && upd.photo !== img.src) {
+                img.src = upd.photo;
+                img.classList.remove('hidden');
+                return;
+            }
+        }
+    } catch(e) {}
+    const fallback = img.getAttribute('data-fallback') || `/static/images/teachers/teacher_${teacherId}.svg`;
+    img.src = fallback;
+    img.classList.remove('hidden');
+};
+
+window.teachersServerData = {
+    {% for t in teachers %}
+    "{{ t.id }}": {
+        id: {{ t.id }},
+        employee_id: {{ t.employee_id | tojson }},
+        name_nepali: {{ t.name_nepali | tojson }},
+        name_english: {{ (t.name_english or '') | tojson }},
+        position: {{ t.position | tojson }},
+        subject: {{ t.subject | tojson }},
+        level: {{ t.level | tojson }},
+        qualification: {{ (t.qualification or '') | tojson }},
+        experience: {{ (t.experience or '') | tojson }},
+        employment_type: {{ (t.employment_type or 'स्थायी') | tojson }},
+        phone: {{ (t.phone or '') | tojson }},
+        email: {{ (t.email or '') | tojson }},
+        appointment_date: {{ (t.appointment_date or '२०७८-०४-०१') | tojson }},
+        status: {{ (t.status or 'सक्रिय') | tojson }},
+        photo: {{ (t.photo or ('/static/images/teachers/teacher_' ~ t.id ~ '.svg')) | tojson }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+};
+
+function getTeacherRecord(id) {
     const state = getStoredTeacherState();
-    if (t.id && state.updated && state.updated[t.id]) {
-        t = Object.assign({}, t, state.updated[t.id]);
-    }
+    const idStr = String(id);
+    const added = (state.added || []).find(x => String(x.id) === idStr || String(x.employee_id) === idStr);
+    const base = added || window.teachersServerData[idStr] || {};
+    const upd = (state.updated || {})[idStr] || {};
+    const photo = upd.photo !== undefined ? upd.photo : base.photo;
+    return { ...base, ...upd, photo: photo || `/static/images/teachers/teacher_${idStr}.svg` };
+}
+
+// View Full Profile Modal
+function viewTeacherProfile(id) {
+    const t = getTeacherRecord(id);
     document.getElementById('view_name').innerText = t.name_nepali || '-';
     document.getElementById('view_name_en').innerText = t.name_english || '';
     document.getElementById('view_position').innerText = t.position || 'शिक्षक';
@@ -488,7 +530,10 @@ function viewTeacherProfile(t) {
     document.getElementById('view_status').innerText = t.status || 'सक्रिय';
 
     const photoEl = document.getElementById('view_photo');
-    photoEl.src = t.photo || '/static/images/logo_header.png';
+    photoEl.src = t.photo || `/static/images/teachers/teacher_${id}.svg`;
+    photoEl.onerror = function() {
+        this.src = `/static/images/teachers/teacher_${id}.svg`;
+    };
 
     document.getElementById('teacherViewModal').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
@@ -533,7 +578,8 @@ function openAddTeacherModal() {
     if (window.lucide) lucide.createIcons();
 }
 
-function openEditTeacherModal(t) {
+function openEditTeacherModal(id) {
+    const t = getTeacherRecord(id);
     document.getElementById('modal_teacher_id').value = t.id;
     document.getElementById('modalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-blue-500"></i><span>शिक्षक विवरण सम्पादन गर्नुहोस् (Edit Teacher)</span>';
     document.getElementById('t_emp_id').value = t.employee_id || '';
@@ -618,10 +664,10 @@ function syncStoredTeacherStateWithDOM() {
         if (card && t) {
             // Update photo preview if updated
             if (t.photo) {
-                const imgWrap = card.querySelector('.w-20.h-24');
+                const imgWrap = card.querySelector('.w-20.h-24') || card.querySelector('.teacher-photo-wrap');
                 if (imgWrap) {
                     imgWrap.innerHTML = `
-                        <img src="${t.photo}" alt="${t.name_nepali}" class="w-full h-full object-cover">
+                        <img src="${t.photo}" alt="${t.name_nepali || ''}" data-fallback="/static/images/teachers/teacher_${tid}.svg" class="w-full h-full object-cover teacher-photo-img" onerror="window.handleTeacherPhotoError(this, '${tid}')">
                     `;
                 }
             }
@@ -652,16 +698,13 @@ function syncStoredTeacherStateWithDOM() {
                 cardDiv.setAttribute('data-subject', t.subject || '');
                 cardDiv.setAttribute('data-qual', t.qualification || '');
                 
-                const photoHtml = t.photo 
-                    ? `<img src="${t.photo}" alt="${t.name_nepali}" class="w-full h-full object-cover">`
-                    : `<div class="w-full h-full bg-gradient-to-tr from-slate-200 to-slate-100 flex flex-col items-center justify-center text-instBlue">
-                        <span class="font-bold text-xl">${t.name_nepali.substring(0, 2)}</span>
-                        <span class="text-[9px] text-slate-500 font-mono mt-0.5">शिक्षक</span>
-                       </div>`;
+                const fallbackSvg = `/static/images/teachers/teacher_${tempId}.svg`;
+                const photoSrc = t.photo || fallbackSvg;
+                const photoHtml = `<img src="${photoSrc}" alt="${t.name_nepali}" data-fallback="${fallbackSvg}" class="w-full h-full object-cover teacher-photo-img" onerror="window.handleTeacherPhotoError(this, '${tempId}')">`;
 
                 const adminBtns = {% if is_admin %}true{% else %}false{% endif %} ? `
                     <div class="flex items-center gap-1.5">
-                        <button type="button" onclick='openEditTeacherModal(${JSON.stringify(t)})' class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md font-bold text-xs transition" title="सम्पादन">
+                        <button type="button" onclick="openEditTeacherModal('${tempId}')" class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md font-bold text-xs transition" title="सम्पादन">
                             <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                             <span>सम्पादन</span>
                         </button>

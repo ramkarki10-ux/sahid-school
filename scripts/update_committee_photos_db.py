@@ -63,3 +63,4 @@ def update_db(db_path):
 if __name__ == "__main__":
     update_db("school.db")
     update_db("api/school.db")
+

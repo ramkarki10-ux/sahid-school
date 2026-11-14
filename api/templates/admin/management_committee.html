@@ -31,9 +31,10 @@
         </div>
     </div>
 
-    <!-- Table -->
+    <!-- Table & Mobile Cards -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
+        <!-- Desktop Table (md: and above) -->
+        <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
                     <tr>
@@ -76,10 +77,10 @@
                         </td>
                         <td class="py-3 px-4 text-right whitespace-nowrap">
                             <div class="inline-flex items-center gap-1.5">
-                                <button type="button" onclick="openEditMember('{{ m.id }}')" class="p-1.5 rounded-md text-amber-600 hover:bg-amber-50 border border-amber-200 transition" title="सम्पादन गर्नुहोस्">
+                                <button type="button" onclick="openEditMember('{{ m.id }}')" class="p-1.5 rounded-md text-amber-600 hover:bg-amber-50 border border-amber-200 transition touch-manipulation" title="सम्पादन गर्नुहोस्">
                                     <i data-lucide="edit-3" class="w-4 h-4"></i>
                                 </button>
-                                <button type="button" onclick="deleteMember('{{ m.id }}', '{{ m.name|e }}')" class="p-1.5 rounded-md text-red-600 hover:bg-red-50 border border-red-200 transition" title="मेटाउनुहोस्">
+                                <button type="button" onclick="deleteMember('{{ m.id }}', '{{ m.name|e }}')" class="p-1.5 rounded-md text-red-600 hover:bg-red-50 border border-red-200 transition touch-manipulation" title="मेटाउनुहोस्">
                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                 </button>
                             </div>
@@ -92,6 +93,44 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile Card List View (Visible on mobile screens < 768px) -->
+        <div class="block md:hidden divide-y divide-slate-200" id="smcMembersMobileList">
+            {% for m in members %}
+            <div class="p-3.5 bg-white flex items-center justify-between gap-3 smc-member-mobile-card hover:bg-slate-50 transition" id="smc-mobile-card-{{ m.id }}" data-id="{{ m.id }}">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-14 h-14 rounded-full border-2 border-slate-200 overflow-hidden bg-slate-100 flex-shrink-0 relative col-photo-wrap shadow-sm">
+                        <img src="{{ m.photo or ('/static/images/committees/smc_' ~ m.id ~ '.svg') }}" 
+                             alt="{{ m.name }}" 
+                             data-fallback="/static/images/committees/smc_{{ m.id }}.svg"
+                             class="w-full h-full object-cover col-photo-img" 
+                             onerror="window.handleCommitteePhotoError(this, '{{ m.id }}', 'smc')">
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="text-[10px] font-bold text-slate-400 font-mono">#<span class="col-order">{{ m.order_index or loop.index }}</span></span>
+                            <span class="bg-blue-50 text-instBlue text-[10px] font-bold px-2 py-0.5 rounded-full col-position">{{ m.position }}</span>
+                        </div>
+                        <h4 class="font-bold text-sm text-slate-900 truncate col-name mt-0.5">{{ m.name }}</h4>
+                        {% if m.phone %}
+                        <a href="tel:{{ m.phone }}" class="text-[11px] text-blue-600 font-mono col-phone flex items-center gap-1 mt-0.5 hover:underline">
+                            <i data-lucide="phone" class="w-3 h-3 text-emerald-600"></i>
+                            <span>{{ m.phone }}</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center gap-1.5 flex-shrink-0">
+                    <button type="button" onclick="openEditMember('{{ m.id }}')" class="p-2.5 rounded-lg text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition touch-manipulation" title="सम्पादन गर्नुहोस्">
+                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                    </button>
+                    <button type="button" onclick="deleteMember('{{ m.id }}', '{{ m.name|e }}')" class="p-2.5 rounded-lg text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition touch-manipulation" title="मेटाउनुहोस्">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
 
@@ -343,16 +382,18 @@
         document.getElementById('memberModal').classList.add('hidden');
     }
 
-    // Synchronize Client-side Stored State with Admin Table DOM
+    // Synchronize Client-side Stored State with Admin Table & Mobile Cards DOM
     function syncStoredSMCStateWithDOM() {
         const state = getStoredSMCState();
         const tbody = document.getElementById('smcMembersTableBody');
-        if (!tbody) return;
+        const mobileList = document.getElementById('smcMembersMobileList');
 
-        // 1. Remove deleted rows
+        // 1. Remove deleted rows & mobile cards
         (state.deleted || []).forEach(delId => {
             const row = document.getElementById(`smc-row-${delId}`);
             if (row) row.remove();
+            const card = document.getElementById(`smc-mobile-card-${delId}`);
+            if (card) card.remove();
         });
 
         // 2. Apply photos and field updates
@@ -364,9 +405,11 @@
 
         allIds.forEach(id => {
             const m = getSMCRecord(id);
+            if (!m) return;
+
+            // Desktop Row Update
             const row = document.getElementById(`smc-row-${id}`);
-            if (row && m) {
-                // Update Photo
+            if (row) {
                 const photoWrap = row.querySelector('.col-photo-wrap');
                 if (photoWrap) {
                     const fallbackSvg = `/static/images/committees/smc_${id}.svg`;
@@ -375,18 +418,14 @@
                         <img src="${photoSrc}" alt="${m.name || ''}" data-fallback="${fallbackSvg}" class="w-full h-full object-cover col-photo-img" onerror="window.handleCommitteePhotoError(this, '${id}', 'smc')">
                     `;
                 }
-                // Update Name & Address
                 const nameEl = row.querySelector('.col-name');
                 if (nameEl && m.name) nameEl.innerText = m.name;
                 const addrEl = row.querySelector('.col-address');
                 if (addrEl) addrEl.innerText = m.address || '';
-                // Update Position
                 const posEl = row.querySelector('.col-position');
                 if (posEl && m.position) posEl.innerText = m.position;
-                // Update Qualification
                 const qualEl = row.querySelector('.col-qualification');
                 if (qualEl) qualEl.innerText = m.qualification || '-';
-                // Update Phone & Email
                 const phoneEl = row.querySelector('.col-phone');
                 if (phoneEl) phoneEl.innerText = m.phone || '';
                 const emailEl = row.querySelector('.col-email');
@@ -396,11 +435,40 @@
                     if (m.phone || m.email) dashEl.classList.add('hidden');
                     else dashEl.classList.remove('hidden');
                 }
-                // Update Order
                 const ordEl = row.querySelector('.col-order');
                 if (ordEl && m.order_index) ordEl.innerText = m.order_index;
-                // Update Status
                 const statusEl = row.querySelector('.col-status');
+                if (statusEl && m.status) statusEl.innerText = m.status;
+            }
+
+            // Mobile Card Update
+            const card = document.getElementById(`smc-mobile-card-${id}`);
+            if (card) {
+                const photoWrap = card.querySelector('.col-photo-wrap');
+                if (photoWrap) {
+                    const fallbackSvg = `/static/images/committees/smc_${id}.svg`;
+                    const photoSrc = (m.photo && m.photo.trim() && m.photo !== 'REMOVE') ? m.photo : fallbackSvg;
+                    photoWrap.innerHTML = `
+                        <img src="${photoSrc}" alt="${m.name || ''}" data-fallback="${fallbackSvg}" class="w-full h-full object-cover col-photo-img" onerror="window.handleCommitteePhotoError(this, '${id}', 'smc')">
+                    `;
+                }
+                const nameEl = card.querySelector('.col-name');
+                if (nameEl && m.name) nameEl.innerText = m.name;
+                const posEl = card.querySelector('.col-position');
+                if (posEl && m.position) posEl.innerText = m.position;
+                const phoneEl = card.querySelector('.col-phone');
+                if (phoneEl) {
+                    if (m.phone) {
+                        phoneEl.href = `tel:${m.phone}`;
+                        phoneEl.innerHTML = `<i data-lucide="phone" class="w-3 h-3 text-slate-400"></i><span>${m.phone}</span>`;
+                        phoneEl.classList.remove('hidden');
+                    } else {
+                        phoneEl.classList.add('hidden');
+                    }
+                }
+                const ordEl = card.querySelector('.col-order');
+                if (ordEl && m.order_index) ordEl.innerText = `#${m.order_index}`;
+                const statusEl = card.querySelector('.col-status');
                 if (statusEl && m.status) statusEl.innerText = m.status;
             }
         });
@@ -408,17 +476,18 @@
         // 3. Append added members if not already rendered
         (state.added || []).forEach(m => {
             const rowId = `smc-row-${m.id}`;
-            if (!document.getElementById(rowId)) {
+            const cardId = `smc-mobile-card-${m.id}`;
+            const photo = (state.photos || {})[m.id] || m.photo || '';
+            const fallbackSvg = `/static/images/committees/smc_${m.id}.svg`;
+            const photoSrc = (photo && photo.trim() && photo !== 'REMOVE') ? photo : fallbackSvg;
+            const photoMarkup = `<img src="${photoSrc}" alt="${m.name || ''}" data-fallback="${fallbackSvg}" class="w-full h-full object-cover col-photo-img" onerror="window.handleCommitteePhotoError(this, '${m.id}', 'smc')">`;
+
+            // Append to desktop table
+            if (tbody && !document.getElementById(rowId)) {
                 const tr = document.createElement('tr');
                 tr.id = rowId;
                 tr.className = 'hover:bg-slate-50 transition smc-member-row';
                 tr.setAttribute('data-id', m.id);
-
-                const photo = (state.photos || {})[m.id] || m.photo || '';
-                const fallbackSvg = `/static/images/committees/smc_${m.id}.svg`;
-                const photoSrc = (photo && photo.trim() && photo !== 'REMOVE') ? photo : fallbackSvg;
-                const photoMarkup = `<img src="${photoSrc}" alt="${m.name || ''}" data-fallback="${fallbackSvg}" class="w-full h-full object-cover col-photo-img" onerror="window.handleCommitteePhotoError(this, '${m.id}', 'smc')">`;
-
                 tr.innerHTML = `
                     <td class="py-3 px-3 text-center font-bold text-slate-500 col-order">${m.order_index || 10}</td>
                     <td class="py-3 px-3">
@@ -452,6 +521,43 @@
                     </td>
                 `;
                 tbody.appendChild(tr);
+            }
+
+            // Append to mobile list
+            if (mobileList && !document.getElementById(cardId)) {
+                const card = document.createElement('div');
+                card.id = cardId;
+                card.className = 'p-4 flex items-center justify-between gap-3 bg-white hover:bg-slate-50 transition smc-mobile-card';
+                card.setAttribute('data-id', m.id);
+                card.innerHTML = `
+                    <div class="flex items-center gap-3 min-w-0 flex-1">
+                        <div class="w-14 h-14 rounded-full border-2 border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0 shadow-sm relative col-photo-wrap">
+                            ${photoMarkup}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 col-order">#${m.order_index || 10}</span>
+                                <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 col-status">${m.status || 'सक्रिय'}</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-sm truncate mt-0.5 col-name">${m.name}</h4>
+                            <p class="text-xs font-semibold text-instBlue truncate col-position">${m.position}</p>
+                            ${m.phone ? `
+                            <a href="tel:${m.phone}" class="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-instBlue mt-0.5 font-mono col-phone">
+                                <i data-lucide="phone" class="w-3 h-3 text-slate-400"></i>
+                                <span>${m.phone}</span>
+                            </a>` : ''}
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-center gap-1.5 flex-shrink-0">
+                        <button type="button" onclick="openEditMember('${m.id}')" class="p-2.5 rounded-lg text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition touch-manipulation" title="सम्पादन गर्नुहोस्">
+                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        </button>
+                        <button type="button" onclick="deleteMember('${m.id}', '${m.name}')" class="p-2.5 rounded-lg text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition touch-manipulation" title="मेटाउनुहोस्">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                mobileList.appendChild(card);
             }
         });
 
@@ -562,9 +668,11 @@
         state.added = (state.added || []).filter(item => String(item.id) !== idStr);
         saveStoredSMCState(state);
 
-        // Remove row immediately from DOM
+        // Remove row & mobile card immediately from DOM
         const row = document.getElementById(`smc-row-${id}`);
         if (row) row.remove();
+        const card = document.getElementById(`smc-mobile-card-${id}`);
+        if (card) card.remove();
 
         // 2. Call server API
         try {

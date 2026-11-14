@@ -88,7 +88,7 @@ def make_svg(m):
         <polygon points="260,250 230,250 215,340 250,330" fill="{jacket}" stroke="#0f172a" stroke-width="1"/>
         '''
 
-    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
   <defs>
     <linearGradient id="grad_{m['id']}" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="{bg1}" />
@@ -154,3 +154,4 @@ def run():
 
 if __name__ == '__main__':
     run()
+

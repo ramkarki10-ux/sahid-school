@@ -3,8 +3,18 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>{% block title %}प्रशासनिक ड्यासबोर्ड | {{ settings.name_ne }}{% endblock %}</title>
+
+    <!-- PWA & Mobile Web App Meta Tags (All Versions of iPhone & Android) -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#15305b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="सहिद स्मृति मा.वि.">
+    <link rel="apple-touch-icon" href="/static/images/logo_header.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/images/logo_header.png">
 
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -599,6 +609,11 @@
     <script src="/static/js/passport_cropper.js"></script>
     <script>
         lucide.createIcons();
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+        }
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>

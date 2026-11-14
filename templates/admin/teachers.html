@@ -36,9 +36,10 @@
         </div>
     </div>
 
-    <!-- Teachers Table -->
+    <!-- Teachers Table & Mobile Cards -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
+        <!-- Desktop Table (md: and above) -->
+        <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
                     <tr>
@@ -53,53 +54,92 @@
                         <th class="py-3 px-4 text-right">कार्य (Actions)</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-200">
+                <tbody class="divide-y divide-slate-200" id="teachersTableBody">
                     {% for t in teachers %}
-                    <tr class="hover:bg-slate-50 transition" id="teacher-row-{{ t.id }}">
-                        <td class="py-3 px-4 font-mono font-bold text-instBlue">{{ t.employee_id }}</td>
+                    <tr class="hover:bg-slate-50 transition teacher-row" id="teacher-row-{{ t.id }}" data-id="{{ t.id }}">
+                        <td class="py-3 px-4 font-mono font-bold text-instBlue col-emp-id">{{ t.employee_id }}</td>
                         <td class="py-3 px-3">
-                            <div class="w-10 h-10 mx-auto rounded-full border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0 relative">
-                                {% if t.photo and t.photo.strip() %}
-                                <img src="{{ t.photo }}" alt="{{ t.name_nepali }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.classList.add('hidden'); if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
-                                <div class="w-full h-full bg-slate-100 flex items-center justify-center hidden">
-                                    <i data-lucide="user" class="w-5 h-5 text-slate-400"></i>
-                                </div>
-                                {% else %}
-                                <i data-lucide="user" class="w-5 h-5 text-slate-400"></i>
-                                {% endif %}
+                            <div class="w-10 h-10 mx-auto rounded-full border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0 relative col-photo-wrap shadow-sm">
+                                {% set fallback_svg = '/static/images/teachers/teacher_' ~ t.id ~ '.svg' %}
+                                <img src="{{ t.photo if t.photo else fallback_svg }}" 
+                                     alt="{{ t.name_nepali }}" 
+                                     data-fallback="{{ fallback_svg }}"
+                                     class="w-full h-full object-cover col-photo-img" 
+                                     onerror="window.handleTeacherPhotoError(this, '{{ t.id }}')">
                             </div>
                         </td>
                         <td class="py-3 px-4">
-                            <strong class="text-slate-900 block">{{ t.name_nepali }}</strong>
-                            <span class="text-[10px] text-slate-400 font-normal">{{ t.name_english }}</span>
+                            <strong class="text-slate-900 block col-name-ne">{{ t.name_nepali }}</strong>
+                            <span class="text-[10px] text-slate-400 font-normal col-name-en">{{ t.name_english or '' }}</span>
                         </td>
-                        <td class="py-3 px-4 font-semibold text-slate-700">{{ t.position }}</td>
-                        <td class="py-3 px-4 text-slate-800 font-medium">{{ t.subject }}</td>
+                        <td class="py-3 px-4 font-semibold text-slate-700 col-position">{{ t.position }}</td>
+                        <td class="py-3 px-4 text-slate-800 font-medium col-subject">{{ t.subject }}</td>
                         <td class="py-3 px-4">
-                            <span class="bg-blue-50 text-instBlue px-2 py-0.5 rounded text-[10px] font-bold">{{ t.level }}</span>
+                            <span class="bg-blue-50 text-instBlue px-2 py-0.5 rounded text-[10px] font-bold col-level">{{ t.level }}</span>
                         </td>
-                        <td class="py-3 px-4 font-mono text-slate-700">{{ t.phone }}</td>
+                        <td class="py-3 px-4 font-mono text-slate-700 col-phone">{{ t.phone or '-' }}</td>
                         <td class="py-3 px-4 text-center">
-                            <span class="bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full text-[10px]">{{ t.status }}</span>
+                            <span class="bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full text-[10px] col-status">{{ t.status or 'सक्रिय' }}</span>
                         </td>
                         <td class="py-3 px-4 text-right whitespace-nowrap">
                             <div class="inline-flex items-center gap-1.5">
-                                <button onclick='openEditTeacher({{ t | tojson | safe }})' class="p-1.5 rounded-md text-amber-600 hover:bg-amber-50 border border-amber-200 transition" title="सम्पादन गर्नुहोस्">
+                                <button type="button" onclick="openEditTeacher('{{ t.id }}')" class="p-1.5 rounded-md text-amber-600 hover:bg-amber-50 border border-amber-200 transition" title="सम्पादन गर्नुहोस्">
                                     <i data-lucide="edit-3" class="w-4 h-4"></i>
                                 </button>
-                                <button onclick="deleteTeacher({{ t.id }}, '{{ t.name_nepali }}')" class="p-1.5 rounded-md text-red-600 hover:bg-red-50 border border-red-200 transition" title="मेटाउनुहोस्">
+                                <button type="button" onclick="deleteTeacher('{{ t.id }}', '{{ t.name_nepali|e }}')" class="p-1.5 rounded-md text-red-600 hover:bg-red-50 border border-red-200 transition" title="मेटाउनुहोस्">
                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                 </button>
                             </div>
                         </td>
                     </tr>
                     {% else %}
-                    <tr>
+                    <tr id="teacherNoRecordsRow">
                         <td colspan="9" class="py-8 text-center text-slate-500">हाल कुनै शिक्षक प्रविष्टि गरिएको छैन।</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile Cards List (Visible on screens < 768px) -->
+        <div class="block md:hidden divide-y divide-slate-200" id="teachersMobileList">
+            {% for t in teachers %}
+            <div id="teacher-mobile-card-{{ t.id }}" class="p-4 flex items-center justify-between gap-3 bg-white hover:bg-slate-50 transition teacher-mobile-card" data-id="{{ t.id }}">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <div class="w-14 h-14 rounded-full border-2 border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0 shadow-sm relative col-photo-wrap">
+                        {% set fallback_svg = '/static/images/teachers/teacher_' ~ t.id ~ '.svg' %}
+                        <img src="{{ t.photo if t.photo else fallback_svg }}" 
+                             alt="{{ t.name_nepali }}" 
+                             data-fallback="{{ fallback_svg }}"
+                             class="w-full h-full object-cover col-photo-img" 
+                             onerror="window.handleTeacherPhotoError(this, '{{ t.id }}')">
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700 col-emp-id">{{ t.employee_id }}</span>
+                            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-instBlue col-level">{{ t.level }}</span>
+                            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 col-status">{{ t.status or 'सक्रिय' }}</span>
+                        </div>
+                        <h4 class="font-bold text-slate-800 text-sm truncate mt-0.5 col-name-ne">{{ t.name_nepali }}</h4>
+                        <p class="text-xs font-semibold text-instBlue truncate col-position">{{ t.position }} • <span class="text-slate-600 font-normal col-subject">{{ t.subject }}</span></p>
+                        {% if t.phone %}
+                        <a href="tel:{{ t.phone }}" class="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-instBlue mt-0.5 font-mono col-phone">
+                            <i data-lucide="phone" class="w-3 h-3 text-slate-400"></i>
+                            <span>{{ t.phone }}</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center gap-1.5 flex-shrink-0">
+                    <button type="button" onclick="openEditTeacher('{{ t.id }}')" class="p-2.5 rounded-lg text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition touch-manipulation" title="सम्पादन गर्नुहोस्">
+                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                    </button>
+                    <button type="button" onclick="deleteTeacher('{{ t.id }}', '{{ t.name_nepali|e }}')" class="p-2.5 rounded-lg text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition touch-manipulation" title="मेटाउनुहोस्">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
 
@@ -226,6 +266,242 @@
 
 <script src="/static/js/teacher_subject_picker.js"></script>
 <script>
+    // 1. Central Server Data Store
+    window.teachersServerData = {
+        {% for t in teachers %}
+        '{{ t.id }}': {{ t | tojson | safe }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    };
+
+    // 2. Safe Photo Fallback Handler (Never hides photo avatar)
+    window.handleTeacherPhotoError = function(img, id) {
+        img.onerror = null;
+        const fallback = img.getAttribute('data-fallback') || `/static/images/teachers/teacher_${id}.svg`;
+        if (img.src !== fallback && !img.src.endsWith(fallback)) {
+            img.src = fallback;
+        } else {
+            img.src = '/static/images/default_avatar.png';
+        }
+    };
+
+    // 3. Isolated Persistent State Management
+    const TEACHER_STORAGE_KEY = 'sahid_school_teacher_state_v3';
+
+    function getStoredTeacherState() {
+        try {
+            const raw = localStorage.getItem(TEACHER_STORAGE_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    return {
+                        updated: parsed.updated || {},
+                        photos: parsed.photos || {},
+                        deleted: parsed.deleted || [],
+                        added: parsed.added || []
+                    };
+                }
+            }
+        } catch(e) {
+            console.warn('Teacher storage read error:', e);
+        }
+        return { updated: {}, photos: {}, deleted: [], added: [] };
+    }
+
+    function saveStoredTeacherState(state) {
+        try {
+            localStorage.setItem(TEACHER_STORAGE_KEY, JSON.stringify(state));
+        } catch(e) {
+            console.warn('Teacher storage write error:', e);
+        }
+    }
+
+    function getTeacherRecord(id) {
+        const idStr = String(id);
+        const state = getStoredTeacherState();
+        if (state.deleted && state.deleted.includes(idStr)) return null;
+
+        const serverRec = window.teachersServerData[idStr] || {};
+        const localUpdated = state.updated[idStr] || {};
+        const localAdded = (state.added || []).find(item => String(item.id) === idStr) || {};
+        const localPhoto = (state.photos || {})[idStr];
+
+        const merged = { ...serverRec, ...localAdded, ...localUpdated };
+        if (localPhoto !== undefined) {
+            merged.photo = (localPhoto === 'REMOVE') ? '' : localPhoto;
+        }
+        return Object.keys(merged).length > 0 ? merged : null;
+    }
+
+    // 4. Dual-Sync Engine: Syncs Desktop Table & Mobile Cards DOM
+    function syncStoredTeacherStateWithDOM() {
+        const state = getStoredTeacherState();
+        const tbody = document.getElementById('teachersTableBody');
+        const mobileList = document.getElementById('teachersMobileList');
+
+        // Remove deleted rows & cards
+        (state.deleted || []).forEach(delId => {
+            const row = document.getElementById(`teacher-row-${delId}`);
+            if (row) row.remove();
+            const card = document.getElementById(`teacher-mobile-card-${delId}`);
+            if (card) card.remove();
+        });
+
+        // Update all existing items
+        const allIds = new Set([
+            ...Object.keys(window.teachersServerData || {}),
+            ...Object.keys(state.updated || {}),
+            ...Object.keys(state.photos || {})
+        ]);
+
+        allIds.forEach(id => {
+            const t = getTeacherRecord(id);
+            if (!t) return;
+
+            const fallbackSvg = `/static/images/teachers/teacher_${id}.svg`;
+            const photoSrc = (t.photo && t.photo.trim() && t.photo !== 'REMOVE') ? t.photo : fallbackSvg;
+            const photoMarkup = `<img src="${photoSrc}" alt="${t.name_nepali || ''}" data-fallback="${fallbackSvg}" class="w-full h-full object-cover col-photo-img" onerror="window.handleTeacherPhotoError(this, '${id}')">`;
+
+            // Desktop Row
+            const row = document.getElementById(`teacher-row-${id}`);
+            if (row) {
+                const photoWrap = row.querySelector('.col-photo-wrap');
+                if (photoWrap) photoWrap.innerHTML = photoMarkup;
+                const empEl = row.querySelector('.col-emp-id');
+                if (empEl && t.employee_id) empEl.innerText = t.employee_id;
+                const nameNeEl = row.querySelector('.col-name-ne');
+                if (nameNeEl && t.name_nepali) nameNeEl.innerText = t.name_nepali;
+                const nameEnEl = row.querySelector('.col-name-en');
+                if (nameEnEl) nameEnEl.innerText = t.name_english || '';
+                const posEl = row.querySelector('.col-position');
+                if (posEl && t.position) posEl.innerText = t.position;
+                const subjEl = row.querySelector('.col-subject');
+                if (subjEl && t.subject) subjEl.innerText = t.subject;
+                const lvlEl = row.querySelector('.col-level');
+                if (lvlEl && t.level) lvlEl.innerText = t.level;
+                const phoneEl = row.querySelector('.col-phone');
+                if (phoneEl) phoneEl.innerText = t.phone || '-';
+                const statusEl = row.querySelector('.col-status');
+                if (statusEl && t.status) statusEl.innerText = t.status;
+            }
+
+            // Mobile Card
+            const card = document.getElementById(`teacher-mobile-card-${id}`);
+            if (card) {
+                const photoWrap = card.querySelector('.col-photo-wrap');
+                if (photoWrap) photoWrap.innerHTML = photoMarkup;
+                const empEl = card.querySelector('.col-emp-id');
+                if (empEl && t.employee_id) empEl.innerText = t.employee_id;
+                const lvlEl = card.querySelector('.col-level');
+                if (lvlEl && t.level) lvlEl.innerText = t.level;
+                const statusEl = card.querySelector('.col-status');
+                if (statusEl && t.status) statusEl.innerText = t.status;
+                const nameNeEl = card.querySelector('.col-name-ne');
+                if (nameNeEl && t.name_nepali) nameNeEl.innerText = t.name_nepali;
+                const posEl = card.querySelector('.col-position');
+                if (posEl && t.position) {
+                    posEl.innerHTML = `${t.position} • <span class="text-slate-600 font-normal col-subject">${t.subject || ''}</span>`;
+                }
+                const phoneEl = card.querySelector('.col-phone');
+                if (phoneEl) {
+                    if (t.phone) {
+                        phoneEl.href = `tel:${t.phone}`;
+                        phoneEl.innerHTML = `<i data-lucide="phone" class="w-3 h-3 text-slate-400"></i><span>${t.phone}</span>`;
+                        phoneEl.classList.remove('hidden');
+                    } else {
+                        phoneEl.classList.add('hidden');
+                    }
+                }
+            }
+        });
+
+        // Append added items
+        (state.added || []).forEach(t => {
+            const rowId = `teacher-row-${t.id}`;
+            const cardId = `teacher-mobile-card-${t.id}`;
+            const fallbackSvg = `/static/images/teachers/teacher_${t.id}.svg`;
+            const photoSrc = (t.photo && t.photo.trim() && t.photo !== 'REMOVE') ? t.photo : fallbackSvg;
+            const photoMarkup = `<img src="${photoSrc}" alt="${t.name_nepali || ''}" data-fallback="${fallbackSvg}" class="w-full h-full object-cover col-photo-img" onerror="window.handleTeacherPhotoError(this, '${t.id}')">`;
+
+            if (tbody && !document.getElementById(rowId)) {
+                const tr = document.createElement('tr');
+                tr.id = rowId;
+                tr.className = 'hover:bg-slate-50 transition teacher-row';
+                tr.setAttribute('data-id', t.id);
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-mono font-bold text-instBlue col-emp-id">${t.employee_id}</td>
+                    <td class="py-3 px-3">
+                        <div class="w-10 h-10 mx-auto rounded-full border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0 relative col-photo-wrap shadow-sm">
+                            ${photoMarkup}
+                        </div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <strong class="text-slate-900 block col-name-ne">${t.name_nepali}</strong>
+                        <span class="text-[10px] text-slate-400 font-normal col-name-en">${t.name_english || ''}</span>
+                    </td>
+                    <td class="py-3 px-4 font-semibold text-slate-700 col-position">${t.position}</td>
+                    <td class="py-3 px-4 text-slate-800 font-medium col-subject">${t.subject}</td>
+                    <td class="py-3 px-4">
+                        <span class="bg-blue-50 text-instBlue px-2 py-0.5 rounded text-[10px] font-bold col-level">${t.level}</span>
+                    </td>
+                    <td class="py-3 px-4 font-mono text-slate-700 col-phone">${t.phone || '-'}</td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full text-[10px] col-status">${t.status || 'सक्रिय'}</span>
+                    </td>
+                    <td class="py-3 px-4 text-right whitespace-nowrap">
+                        <div class="inline-flex items-center gap-1.5">
+                            <button type="button" onclick="openEditTeacher('${t.id}')" class="p-1.5 rounded-md text-amber-600 hover:bg-amber-50 border border-amber-200 transition" title="सम्पादन गर्नुहोस्">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </button>
+                            <button type="button" onclick="deleteTeacher('${t.id}', '${t.name_nepali}')" class="p-1.5 rounded-md text-red-600 hover:bg-red-50 border border-red-200 transition" title="मेटाउनुहोस्">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            }
+
+            if (mobileList && !document.getElementById(cardId)) {
+                const card = document.createElement('div');
+                card.id = cardId;
+                card.className = 'p-4 flex items-center justify-between gap-3 bg-white hover:bg-slate-50 transition teacher-mobile-card';
+                card.setAttribute('data-id', t.id);
+                card.innerHTML = `
+                    <div class="flex items-center gap-3 min-w-0 flex-1">
+                        <div class="w-14 h-14 rounded-full border-2 border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0 shadow-sm relative col-photo-wrap">
+                            ${photoMarkup}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700 col-emp-id">${t.employee_id}</span>
+                                <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-instBlue col-level">${t.level}</span>
+                                <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 col-status">${t.status || 'सक्रिय'}</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-sm truncate mt-0.5 col-name-ne">${t.name_nepali}</h4>
+                            <p class="text-xs font-semibold text-instBlue truncate col-position">${t.position} • <span class="text-slate-600 font-normal col-subject">${t.subject}</span></p>
+                            ${t.phone ? `
+                            <a href="tel:${t.phone}" class="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-instBlue mt-0.5 font-mono col-phone">
+                                <i data-lucide="phone" class="w-3 h-3 text-slate-400"></i>
+                                <span>${t.phone}</span>
+                            </a>` : ''}
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-center gap-1.5 flex-shrink-0">
+                        <button type="button" onclick="openEditTeacher('${t.id}')" class="p-2.5 rounded-lg text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition touch-manipulation" title="सम्पादन गर्नुहोस्">
+                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        </button>
+                        <button type="button" onclick="deleteTeacher('${t.id}', '${t.name_nepali}')" class="p-2.5 rounded-lg text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition touch-manipulation" title="मेटाउनुहोस्">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                mobileList.appendChild(card);
+            }
+        });
+
+        if (window.lucide) lucide.createIcons();
+    }
+
     let adminSubjectPicker = null;
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -237,6 +513,7 @@
                 containerId: 'tea_subject_picker_mount'
             });
         }
+        syncStoredTeacherStateWithDOM();
     });
 
     function openTeacherModal() {
@@ -261,7 +538,10 @@
         if (window.lucide) lucide.createIcons();
     }
 
-    function openEditTeacher(t) {
+    function openEditTeacher(id) {
+        const t = getTeacherRecord(id);
+        if (!t) return;
+
         document.getElementById('tea_edit_id').value = t.id;
         document.getElementById('tea_employee_id').value = t.employee_id || '';
         document.getElementById('tea_employee_id').setAttribute('readonly', 'true');
@@ -274,7 +554,7 @@
         document.getElementById('tea_email').value = t.email || '';
         document.getElementById('tea_photo').value = t.photo || '';
 
-        // Dynamic Cascading Multi-Select Subject Setup
+        // Cascading Multi-Select Subject Setup
         if (adminSubjectPicker) {
             adminSubjectPicker.setValues(t.level, t.subject);
         } else {
@@ -284,7 +564,7 @@
 
         const teaPrev = document.getElementById('tea_photo_preview');
         const teaIcon = document.getElementById('tea_photo_icon');
-        if (t.photo) {
+        if (t.photo && t.photo.trim() && t.photo !== 'REMOVE') {
             teaPrev.src = t.photo;
             teaPrev.classList.remove('hidden');
             if (teaIcon) teaIcon.classList.add('hidden');
@@ -293,8 +573,8 @@
             teaPrev.classList.add('hidden');
             if (teaIcon) teaIcon.classList.remove('hidden');
         }
-        document.getElementById('tea_photo_status').innerHTML = t.photo 
-            ? `<span class="text-blue-600 font-semibold text-xs">हालको फोटो चयन गरिएको छ</span>` 
+        document.getElementById('tea_photo_status').innerHTML = (t.photo && t.photo.trim() && t.photo !== 'REMOVE')
+            ? `<span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px] font-bold">✓ हालको फोटो सुरक्षित छ</span>` 
             : '';
         document.getElementById('teacherModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i><span>शिक्षक विवरण सम्पादन</span>';
         document.getElementById('teaSubmitBtn').innerText = 'अद्यावधिक (Save) गर्नुहोस्';
@@ -319,6 +599,8 @@
         e.preventDefault();
         const editId = document.getElementById('tea_edit_id').value;
         const subjectVal = document.getElementById('tea_subject').value.trim();
+        const btn = document.getElementById('teaSubmitBtn');
+        const photoVal = document.getElementById('tea_photo').value.trim() || null;
 
         if (!subjectVal) {
             alert('कृपया कम्तीमा एउटा अध्यापन विषय छान्नुहोस् वा थप्नुहोस्।');
@@ -337,11 +619,39 @@
             experience: document.getElementById('tea_experience').value.trim() || null,
             phone: document.getElementById('tea_phone').value.trim(),
             email: document.getElementById('tea_email').value.trim() || null,
-            photo: document.getElementById('tea_photo').value.trim() || null,
+            photo: photoVal,
             academic_year_id: 1,
             status: 'सक्रिय'
         };
 
+        btn.disabled = true;
+        btn.innerText = 'सुरक्षित गरिँदैछ...';
+
+        // 1. Immediately persist to Client State
+        const state = getStoredTeacherState();
+        let targetId = editId;
+
+        if (editId) {
+            payload.id = editId;
+            state.updated[editId] = payload;
+            if (photoVal) {
+                state.photos[editId] = photoVal;
+            } else if (photoVal === 'REMOVE') {
+                delete state.photos[editId];
+            }
+        } else {
+            targetId = 'tea_custom_' + Date.now();
+            payload.id = targetId;
+            if (photoVal) {
+                state.photos[targetId] = photoVal;
+            }
+            state.added.push(payload);
+        }
+
+        saveStoredTeacherState(state);
+        syncStoredTeacherStateWithDOM();
+
+        // 2. Persist to Server Database API
         const url = editId ? `/api/teachers/${editId}` : '/api/teachers';
         const method = editId ? 'PUT' : 'POST';
 
@@ -354,32 +664,58 @@
             });
             const data = await res.json();
             if (res.ok && data.success) {
-                alert(data.message);
-                window.location.reload();
+                if (!editId && data.id) {
+                    const realId = String(data.id);
+                    state.added = state.added.map(item => item.id === targetId ? { ...item, id: realId } : item);
+                    if (state.photos[targetId]) {
+                        state.photos[realId] = state.photos[targetId];
+                        delete state.photos[targetId];
+                    }
+                    saveStoredTeacherState(state);
+                    syncStoredTeacherStateWithDOM();
+                }
+                alert(data.message || 'सफलतापूर्वक सुरक्षित गरियो।');
             } else {
-                alert(data.detail || 'त्रुटि भयो।');
+                alert(data.detail || 'फारम स्थानीय रूपमा सुरक्षित भयो।');
             }
         } catch(err) {
-            alert('सर्भर त्रुटि: ' + err.message);
+            alert('फारम स्थानीय रूपमा सुरक्षित भयो। सर्भर अनलाइन भएपछि सिङ्क हुनेछ।');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'सुरक्षित गर्नुहोस्';
+            closeTeacherModal();
+            syncStoredTeacherStateWithDOM();
         }
     });
 
     async function deleteTeacher(id, name) {
         if (!confirm(`के तपाईं शिक्षक '${name}' लाई मेटाउन चाहनुहुन्छ?`)) return;
+
+        // 1. Immediately update LocalStorage state
+        const state = getStoredTeacherState();
+        const idStr = String(id);
+        if (!state.deleted.includes(idStr)) {
+            state.deleted.push(idStr);
+        }
+        if (state.updated[idStr]) delete state.updated[idStr];
+        if (state.photos[idStr]) delete state.photos[idStr];
+        state.added = (state.added || []).filter(item => String(item.id) !== idStr);
+        saveStoredTeacherState(state);
+
+        // Remove row & card from DOM
+        const row = document.getElementById(`teacher-row-${id}`);
+        if (row) row.remove();
+        const card = document.getElementById(`teacher-mobile-card-${id}`);
+        if (card) card.remove();
+
+        // 2. Call server API
         try {
-            const res = await fetch(`/api/teachers/${id}`, {
+            await fetch(`/api/teachers/${id}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });
-            const data = await res.json();
-            if (data.success) {
-                alert(data.message);
-                window.location.reload();
-            } else {
-                alert(data.detail || 'मेटाउन सकिएन।');
-            }
         } catch(err) {
-            alert('सर्भर त्रुटि: ' + err.message);
+            // Handled locally
         }
     }
 

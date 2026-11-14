@@ -2,9 +2,12 @@
   "name": "सहिद स्मृति आवासीय माध्यमिक विद्यालय",
   "short_name": "सहिद स्मृति मा.वि.",
   "description": "सहिद स्मृति आवासीय माध्यमिक विद्यालय, इटहरी–१९, सुनसरी - आधिकारिक मोबाइल एप्लिकेसन",
+  "id": "/",
+  "scope": "/",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
   "background_color": "#15305b",
   "theme_color": "#15305b",
   "categories": ["education", "school"],
@@ -45,4 +48,3 @@
     }
   ]
 }
-

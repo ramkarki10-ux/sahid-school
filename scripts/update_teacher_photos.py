@@ -28,6 +28,10 @@ for db_file in db_files:
         SET photo = '/static/images/teachers/teacher_106_yubaraj_neupane.jpg' 
         WHERE id = 106 OR employee_id = 'TCH-83004'
     """)
+    # Teachers 107 to 118 SVG portraits
+    for tid in range(107, 119):
+        c.execute("UPDATE teachers SET photo = ? WHERE id = ?", (f"/static/images/teachers/teacher_{tid}.svg", tid))
+
     c.execute("""
         UPDATE school_leadership 
         SET photo = '/static/images/teachers/teacher_103_rita_phuyal.jpg' 

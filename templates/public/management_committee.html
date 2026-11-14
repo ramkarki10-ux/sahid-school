@@ -15,16 +15,20 @@
         </div>
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
             <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-instBlue">विद्यालय व्यवस्थापन समिति (School Management Committee)</h1>
-                <p class="text-xs text-slate-600 mt-1">कार्यकाल: २०८०–२०८३ • सहिद स्मृति आवासीय माध्यमिक विद्यालय, इटहरी–१९</p>
+                <h1 class="text-2xl sm:text-3xl font-bold text-instBlue">विद्यालय व्यवस्थापन समिति (School Management
+                    Committee)</h1>
+                <p class="text-xs text-slate-600 mt-1">कार्यकाल: २०८०–२०८३ • सहिद स्मृति आवासीय माध्यमिक विद्यालय,
+                    इटहरी–१९</p>
             </div>
             {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
             <div class="flex items-center gap-2">
-                <button type="button" onclick="openAddMemberModal()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow transition">
+                <button type="button" onclick="openAddMemberModal()"
+                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow transition">
                     <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-200"></i>
                     <span>+ नयाँ सदस्य थप्नुहोस्</span>
                 </button>
-                <a href="/admin/management-committee" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-bold shadow transition">
+                <a href="/admin/management-committee"
+                    class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-bold shadow transition">
                     <i data-lucide="settings" class="w-4 h-4 text-instGold"></i>
                     <span>एडमिन प्यानल</span>
                 </a>
@@ -41,58 +45,70 @@
         <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span class="font-bold text-amber-300">सुपर एडमिन / एडमिन पहुँच:</span>
-            <span>तपाईंलाई व्यवस्थापन समिति सदस्यहरू थप्न, सच्याउन (Edit), फोटो (अटो-साइज ३०० KB सम्म) परिवर्तन गर्न र मेटाउन (Delete) पूर्ण अनुमति छ।</span>
+            <span>तपाईंलाई व्यवस्थापन समिति सदस्यहरू थप्न, सच्याउन (Edit), फोटो (अटो-साइज ३०० KB सम्म) परिवर्तन गर्न र
+                मेटाउन (Delete) पूर्ण अनुमति छ।</span>
         </div>
-        <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono">ROLE: {{ current_user.role if current_user else 'SUPER_ADMIN' }}</span>
+        <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono">ROLE: {{ current_user.role if current_user
+            else 'SUPER_ADMIN' }}</span>
     </div>
 </div>
 {% endif %}
 
 <div class="py-12 bg-slate-50/50">
     <div class="max-w-7xl mx-auto px-4 sm:px-8">
-        
+
         {% if members %}
         <!-- Chairperson Card -->
         {% set chair = members[0] %}
         <div class="max-w-lg mx-auto mb-12" id="smcChairWrapper">
-            <div class="bg-gradient-to-b from-blue-50 to-white border-2 border-instBlue/80 rounded-2xl p-7 text-center shadow-lg hover:shadow-xl transition relative group smc-public-card" id="smc-public-card-{{ chair.id }}" data-id="{{ chair.id }}">
-                
+            <div class="bg-gradient-to-b from-blue-50 to-white border-2 border-instBlue/80 rounded-2xl p-7 text-center shadow-lg hover:shadow-xl transition relative group smc-public-card"
+                id="smc-public-card-{{ chair.id }}" data-id="{{ chair.id }}">
+
                 {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL']) %}
                 <!-- Super Admin Action Buttons for Chairperson -->
                 <div class="absolute top-4 right-4 flex items-center gap-1.5">
-                    <button type="button" onclick="openEditMemberModal('{{ chair.id }}')" class="p-1.5 bg-blue-50 hover:bg-blue-100 text-instBlue border border-blue-200 rounded-md transition" title="अध्यक्षको विवरण सम्पादन गर्नुहोस्">
+                    <button type="button" onclick="openEditMemberModal('{{ chair.id }}')"
+                        class="p-1.5 bg-blue-50 hover:bg-blue-100 text-instBlue border border-blue-200 rounded-md transition"
+                        title="अध्यक्षको विवरण सम्पादन गर्नुहोस्">
                         <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                     </button>
-                    <button type="button" onclick="deleteMemberRecord('{{ chair.id }}', '{{ chair.name|e }}')" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-md transition" title="मेटाउनुहोस्">
+                    <button type="button" onclick="deleteMemberRecord('{{ chair.id }}', '{{ chair.name|e }}')"
+                        class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-md transition"
+                        title="मेटाउनुहोस्">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                     </button>
                 </div>
                 {% endif %}
 
-                <div class="w-28 h-28 mx-auto rounded-full bg-instBlue/10 border-4 border-instBlue/30 overflow-hidden shadow-md flex items-center justify-center text-instBlue mb-4 relative member-photo-wrap">
-                    <img src="{{ chair.photo or ('/static/images/committees/smc_' ~ chair.id ~ '.svg') }}" 
-                         alt="{{ chair.name }}" 
-                         data-fallback="/static/images/committees/smc_{{ chair.id }}.svg"
-                         class="w-full h-full object-cover member-photo-img" 
-                         onerror="window.handleCommitteePhotoError(this, '{{ chair.id }}', 'smc')">
+                <div
+                    class="w-28 h-28 mx-auto rounded-full bg-instBlue/10 border-4 border-instBlue/30 overflow-hidden shadow-md flex items-center justify-center text-instBlue mb-4 relative member-photo-wrap">
+                    <img src="{{ chair.photo or ('/static/images/committees/smc_' ~ chair.id ~ '.svg') }}"
+                        alt="{{ chair.name }}" data-fallback="/static/images/committees/smc_{{ chair.id }}.svg"
+                        class="w-full h-full object-cover member-photo-img"
+                        onerror="window.handleCommitteePhotoError(this, '{{ chair.id }}', 'smc')">
                 </div>
-                <span class="bg-instGold text-white text-[11px] font-bold px-3.5 py-1 rounded-full uppercase tracking-wider shadow-sm member-position">
+                <span
+                    class="bg-instGold text-white text-[11px] font-bold px-3.5 py-1 rounded-full uppercase tracking-wider shadow-sm member-position">
                     {{ chair.position }}
                 </span>
                 <h2 class="text-xl font-bold text-slate-900 mt-3 member-name">{{ chair.name }}</h2>
-                <p class="text-xs font-semibold text-instBlue mt-1 flex items-center justify-center gap-1.5 member-qualification-p {% if not chair.qualification %}hidden{% endif %}">
+                <p
+                    class="text-xs font-semibold text-instBlue mt-1 flex items-center justify-center gap-1.5 member-qualification-p {% if not chair.qualification %}hidden{% endif %}">
                     <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-instGold"></i>
                     <span class="member-qualification">{{ chair.qualification or '' }}</span>
                 </p>
-                <p class="text-xs text-slate-500 mt-1 flex items-center justify-center gap-1 member-address-p {% if not chair.address %}hidden{% endif %}">
+                <p
+                    class="text-xs text-slate-500 mt-1 flex items-center justify-center gap-1 member-address-p {% if not chair.address %}hidden{% endif %}">
                     <i data-lucide="map-pin" class="w-3.5 h-3.5 text-red-500"></i>
                     <span class="member-address">{{ chair.address or '' }}</span>
                 </p>
-                <p class="text-xs text-slate-700 mt-2 flex items-center justify-center gap-1.5 font-medium member-phone-p {% if not chair.phone %}hidden{% endif %}">
+                <p
+                    class="text-xs text-slate-700 mt-2 flex items-center justify-center gap-1.5 font-medium member-phone-p {% if not chair.phone %}hidden{% endif %}">
                     <i data-lucide="phone" class="w-3.5 h-3.5 text-instBlue"></i>
                     <span class="font-mono member-phone">{{ chair.phone or '' }}</span>
                 </p>
-                <p class="text-xs text-slate-600 mt-1 flex items-center justify-center gap-1.5 member-email-p {% if not chair.email %}hidden{% endif %}">
+                <p
+                    class="text-xs text-slate-600 mt-1 flex items-center justify-center gap-1.5 member-email-p {% if not chair.email %}hidden{% endif %}">
                     <i data-lucide="mail" class="w-3.5 h-3.5 text-sky-600"></i>
                     <span class="font-mono text-[11px] member-email">{{ chair.email or '' }}</span>
                 </p>
@@ -103,56 +119,68 @@
         </div>
 
         <!-- Other Committee Members Grid -->
-        <h3 class="text-base font-bold text-slate-900 mb-6 pb-2 border-b border-slate-200 flex items-center justify-between">
+        <h3
+            class="text-base font-bold text-slate-900 mb-6 pb-2 border-b border-slate-200 flex items-center justify-between">
             <span class="flex items-center gap-2">
                 <i data-lucide="users" class="w-5 h-5 text-instBlue"></i>
                 <span>समिति पदाधिकारी तथा सदस्यहरू</span>
             </span>
-            <span class="text-xs text-slate-500 font-normal">कुल सदस्य: <span id="smcTotalCount">{{ members|length }}</span> जना</span>
+            <span class="text-xs text-slate-500 font-normal">कुल सदस्य: <span id="smcTotalCount">{{ members|length
+                    }}</span> जना</span>
         </h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5" id="smcMembersGrid">
             {% for m in members[1:] %}
-            <div class="bg-white border border-slate-200 rounded-xl p-5 text-center shadow-sm hover:shadow-md hover:border-instBlue/50 transition flex flex-col justify-between relative group smc-public-card" id="smc-public-card-{{ m.id }}" data-id="{{ m.id }}">
-                
+            <div class="bg-white border border-slate-200 rounded-xl p-5 text-center shadow-sm hover:shadow-md hover:border-instBlue/50 transition flex flex-col justify-between relative group smc-public-card"
+                id="smc-public-card-{{ m.id }}" data-id="{{ m.id }}">
+
                 {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL']) %}
                 <!-- Super Admin Action Buttons for Member -->
                 <div class="absolute top-3 right-3 flex items-center gap-1">
-                    <button type="button" onclick="openEditMemberModal('{{ m.id }}')" class="p-1 bg-blue-50 hover:bg-blue-100 text-instBlue border border-blue-200 rounded transition" title="सम्पादन गर्नुहोस्">
+                    <button type="button" onclick="openEditMemberModal('{{ m.id }}')"
+                        class="p-1 bg-blue-50 hover:bg-blue-100 text-instBlue border border-blue-200 rounded transition"
+                        title="सम्पादन गर्नुहोस्">
                         <i data-lucide="edit-3" class="w-3 h-3"></i>
                     </button>
-                    <button type="button" onclick="deleteMemberRecord('{{ m.id }}', '{{ m.name|e }}')" class="p-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded transition" title="मेटाउनुहोस्">
+                    <button type="button" onclick="deleteMemberRecord('{{ m.id }}', '{{ m.name|e }}')"
+                        class="p-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded transition"
+                        title="मेटाउनुहोस्">
                         <i data-lucide="trash-2" class="w-3 h-3"></i>
                     </button>
                 </div>
                 {% endif %}
 
                 <div>
-                    <div class="w-20 h-20 mx-auto rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden shadow-sm flex items-center justify-center mb-3 relative member-photo-wrap">
-                        <img src="{{ m.photo or ('/static/images/committees/smc_' ~ m.id ~ '.svg') }}" 
-                             alt="{{ m.name }}" 
-                             data-fallback="/static/images/committees/smc_{{ m.id }}.svg"
-                             class="w-full h-full object-cover member-photo-img" 
-                             onerror="window.handleCommitteePhotoError(this, '{{ m.id }}', 'smc')">
+                    <div
+                        class="w-20 h-20 mx-auto rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden shadow-sm flex items-center justify-center mb-3 relative member-photo-wrap">
+                        <img src="{{ m.photo or ('/static/images/committees/smc_' ~ m.id ~ '.svg') }}"
+                            alt="{{ m.name }}" data-fallback="/static/images/committees/smc_{{ m.id }}.svg"
+                            class="w-full h-full object-cover member-photo-img"
+                            onerror="window.handleCommitteePhotoError(this, '{{ m.id }}', 'smc')">
                     </div>
                     <h4 class="font-bold text-sm text-slate-900 leading-tight member-name">{{ m.name }}</h4>
-                    <span class="inline-block mt-1 bg-blue-50 text-instBlue text-[11px] font-semibold px-2.5 py-0.5 rounded-full member-position">
+                    <span
+                        class="inline-block mt-1 bg-blue-50 text-instBlue text-[11px] font-semibold px-2.5 py-0.5 rounded-full member-position">
                         {{ m.position }}
                     </span>
-                    <p class="text-[11px] font-medium text-slate-600 mt-2 flex items-center justify-center gap-1 member-qualification-p {% if not m.qualification %}hidden{% endif %}">
+                    <p
+                        class="text-[11px] font-medium text-slate-600 mt-2 flex items-center justify-center gap-1 member-qualification-p {% if not m.qualification %}hidden{% endif %}">
                         <i data-lucide="graduation-cap" class="w-3 h-3 text-instGold"></i>
                         <span class="member-qualification">{{ m.qualification or '' }}</span>
                     </p>
-                    <p class="text-[11px] text-slate-500 mt-1 flex items-center justify-center gap-1 member-address-p {% if not m.address %}hidden{% endif %}">
+                    <p
+                        class="text-[11px] text-slate-500 mt-1 flex items-center justify-center gap-1 member-address-p {% if not m.address %}hidden{% endif %}">
                         <i data-lucide="map-pin" class="w-3 h-3 text-red-400"></i>
                         <span class="member-address">{{ m.address or '' }}</span>
                     </p>
                 </div>
                 <div class="mt-3 pt-3 border-t border-slate-100 space-y-1">
-                    <p class="text-[11px] text-slate-600 flex items-center justify-center gap-1 font-mono member-phone-p {% if not m.phone %}hidden{% endif %}">
+                    <p
+                        class="text-[11px] text-slate-600 flex items-center justify-center gap-1 font-mono member-phone-p {% if not m.phone %}hidden{% endif %}">
                         <i data-lucide="phone" class="w-3 h-3 text-slate-400"></i>
                         <span class="member-phone">{{ m.phone or '' }}</span>
                     </p>
-                    <p class="text-[11px] text-slate-500 flex items-center justify-center gap-1 font-mono truncate member-email-p {% if not m.email %}hidden{% endif %}">
+                    <p
+                        class="text-[11px] text-slate-500 flex items-center justify-center gap-1 font-mono truncate member-email-p {% if not m.email %}hidden{% endif %}">
                         <i data-lucide="mail" class="w-3 h-3 text-slate-400"></i>
                         <span class="member-email">{{ m.email or '' }}</span>
                     </p>
@@ -169,14 +197,16 @@
 
 {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
 <!-- SUPER ADMIN INLINE MODAL (ADD / EDIT MEMBER) -->
-<div id="superAdminMemberModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+<div id="superAdminMemberModal"
+    class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b pb-3">
             <h3 id="samModalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
                 <i data-lucide="user-plus" class="w-4 h-4 text-instGold"></i>
                 <span>व्यवस्थापन समिति सदस्य थप्नुहोस् (Super Admin)</span>
             </h3>
-            <button type="button" onclick="closeMemberModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <button type="button" onclick="closeMemberModal()" class="text-slate-400 hover:text-slate-600"><i
+                    data-lucide="x" class="w-5 h-5"></i></button>
         </div>
 
         <form id="samMemberForm" class="space-y-3">
@@ -185,70 +215,95 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                     <label class="block font-semibold mb-1 text-slate-700">सदस्यको नाम थर *</label>
-                    <input type="text" id="sam_name" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="श्री ...">
+                    <input type="text" id="sam_name" required
+                        class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none"
+                        placeholder="श्री ...">
                 </div>
                 <div>
                     <label class="block font-semibold mb-1 text-slate-700">पद (Position) *</label>
-                    <input type="text" id="sam_position" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="अध्यक्ष / सदस्य / सदस्य-सचिव">
+                    <input type="text" id="sam_position" required
+                        class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none"
+                        placeholder="अध्यक्ष / सदस्य / सदस्य-सचिव">
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                     <label class="block font-semibold mb-1 text-slate-700">शैक्षिक योग्यता (Qualification)</label>
-                    <input type="text" id="sam_qualification" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="स्नातक / स्नातकोत्तर">
+                    <input type="text" id="sam_qualification"
+                        class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none"
+                        placeholder="स्नातक / स्नातकोत्तर">
                 </div>
                 <div>
                     <label class="block font-semibold mb-1 text-slate-700">फोन नम्बर (सम्पर्क)</label>
-                    <input type="tel" id="sam_phone" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="98XXXXXXXX">
+                    <input type="tel" id="sam_phone"
+                        class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none"
+                        placeholder="98XXXXXXXX">
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                     <label class="block font-semibold mb-1 text-slate-700">इमेल (Email)</label>
-                    <input type="email" id="sam_email" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="member@mail.com">
+                    <input type="email" id="sam_email"
+                        class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none"
+                        placeholder="member@mail.com">
                 </div>
                 <div>
                     <label class="block font-semibold mb-1 text-slate-700">ठेगाना (Address)</label>
-                    <input type="text" id="sam_address" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="इटहरी-१९, सुनसरी">
+                    <input type="text" id="sam_address"
+                        class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none"
+                        placeholder="इटहरी-१९, सुनसरी">
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block font-semibold mb-1 text-slate-700">क्रम सङ्ख्या (Order Index)</label>
-                    <input type="number" id="sam_order" value="10" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <input type="number" id="sam_order" value="10"
+                        class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
                 </div>
                 <div>
                     <label class="block font-semibold mb-1 text-slate-700">कार्यकाल (Term)</label>
-                    <input type="text" id="sam_term" value="२०८०-२०८३" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
+                    <input type="text" id="sam_term" value="२०८०-२०८३"
+                        class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
                 </div>
             </div>
 
             <!-- Passport Size Photo Upload (Auto-Resize <= 300 KB & Draggable Crop) -->
             <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
                 <div class="flex items-center justify-between">
-                    <label class="block font-semibold text-slate-700">सदस्यको पासपोर्ट साइज तस्विर (Photo) - अटो साइज ३०० KB सम्म</label>
-                    <span class="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded">ड्रयाग & पोजिसन</span>
+                    <label class="block font-semibold text-slate-700">सदस्यको पासपोर्ट साइज तस्विर (Photo) - अटो साइज
+                        ३०० KB सम्म</label>
+                    <span class="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded">ड्रयाग &
+                        पोजिसन</span>
                 </div>
                 <div class="flex items-center gap-3">
-                    <div class="w-14 h-18 rounded-lg border-2 border-slate-300 overflow-hidden bg-white flex items-center justify-center flex-shrink-0 shadow-sm relative group">
+                    <div
+                        class="w-14 h-18 rounded-lg border-2 border-slate-300 overflow-hidden bg-white flex items-center justify-center flex-shrink-0 shadow-sm relative group">
                         <img id="sam_photo_preview" src="" alt="Preview" class="w-full h-full object-cover hidden">
                         <i id="sam_photo_icon" data-lucide="user" class="w-6 h-6 text-slate-400"></i>
                     </div>
                     <div class="flex-1 space-y-1.5">
                         <div class="flex flex-wrap items-center gap-2">
-                            <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                            <label
+                                class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg text-xs font-semibold shadow-sm transition">
                                 <i data-lucide="upload" class="w-3.5 h-3.5 text-instGold"></i>
                                 <span>फोटो छान्नुहोस्</span>
-                                <input type="file" id="sam_file_input" accept=".jpg,.jpeg,.png,.webp" class="hidden" onchange="uploadMemberPhotoInline(this)">
+                                <input type="file" id="sam_file_input" accept=".jpg,.jpeg,.png,.webp" class="hidden"
+                                    onchange="uploadMemberPhotoInline(this)">
                             </label>
-                            <button type="button" onclick="window.reopenPassportCropper('sam_photo', 'sam_photo_preview', 'sam_photo_icon', 'sam_photo_status')" class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-[11px] font-semibold transition" title="फोटोको अवस्था मिलाउनुहोस्">
+                            <button type="button"
+                                onclick="window.reopenPassportCropper('sam_photo', 'sam_photo_preview', 'sam_photo_icon', 'sam_photo_status')"
+                                class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-[11px] font-semibold transition"
+                                title="फोटोको अवस्था मिलाउनुहोस्">
                                 <i data-lucide="move" class="w-3.5 h-3.5 text-blue-600"></i>
                                 <span>पोजिसन मिलाउनुहोस्</span>
                             </button>
-                            <button type="button" onclick="window.clearPassportPhotoDirect('sam_photo', 'sam_photo_preview', 'sam_photo_icon', 'sam_photo_status')" class="inline-flex items-center gap-1 px-2 py-1.5 text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-lg text-[11px] font-semibold transition" title="फोटो हटाउनुहोस्">
+                            <button type="button"
+                                onclick="window.clearPassportPhotoDirect('sam_photo', 'sam_photo_preview', 'sam_photo_icon', 'sam_photo_status')"
+                                class="inline-flex items-center gap-1 px-2 py-1.5 text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-lg text-[11px] font-semibold transition"
+                                title="फोटो हटाउनुहोस्">
                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                 <span>हटाउनुहोस्</span>
                             </button>
@@ -258,13 +313,19 @@
                 </div>
                 <div>
                     <label class="block text-[10px] text-slate-500 font-medium">वा फोटो URL राख्नुहोस्:</label>
-                    <input type="text" id="sam_photo" oninput="updateMemberPreviewInline(this.value)" placeholder="/static/uploads/sample.jpg" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono text-[11px]">
+                    <input type="text" id="sam_photo" oninput="updateMemberPreviewInline(this.value)"
+                        placeholder="/static/uploads/sample.jpg"
+                        class="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-mono text-[11px]">
                 </div>
             </div>
 
             <div class="pt-3 flex justify-end gap-2 border-t">
-                <button type="button" onclick="closeMemberModal()" class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
-                <button type="submit" id="samSubmitBtn" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded shadow transition">सुरक्षित गर्नुहोस्</button>
+                <button type="button" onclick="closeMemberModal()"
+                    class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द
+                    गर्नुहोस्</button>
+                <button type="submit" id="samSubmitBtn"
+                    class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded shadow transition">सुरक्षित
+                    गर्नुहोस्</button>
             </div>
         </form>
     </div>
@@ -278,23 +339,23 @@
     // In-memory Server Data Registry
     window.smcServerData = {
         {% for m in members %}
-        "{{ m.id }}": {
-            id: {{ m.id }},
-            name: {{ m.name | tojson }},
-            position: {{ m.position | tojson }},
-            qualification: {{ (m.qualification or '') | tojson }},
-            phone: {{ (m.phone or '') | tojson }},
-            email: {{ (m.email or '') | tojson }},
-            address: {{ (m.address or '') | tojson }},
-            order_index: {{ m.order_index or 10 }},
-            term: {{ (m.term or '२०८०-२०८३') | tojson }},
-            photo: {{ (m.photo or '') | tojson }},
-            status: {{ (m.status or 'सक्रिय') | tojson }}
-        }{% if not loop.last %},{% endif %}
-        {% endfor %}
+    "{{ m.id }}": {
+        id: { { m.id } },
+        name: { { m.name | tojson } },
+        position: { { m.position | tojson } },
+        qualification: { { (m.qualification or '') | tojson } },
+        phone: { { (m.phone or '') | tojson } },
+        email: { { (m.email or '') | tojson } },
+        address: { { (m.address or '') | tojson } },
+        order_index: { { m.order_index or 10 } },
+        term: { { (m.term or '२०८०-२०८३') | tojson } },
+        photo: { { (m.photo or '') | tojson } },
+        status: { { (m.status or 'सक्रिय') | tojson } }
+    } {% if not loop.last %}, {% endif %}
+    {% endfor %}
     };
 
-    window.handleCommitteePhotoError = function(img, memberId, committeeType) {
+    window.handleCommitteePhotoError = function (img, memberId, committeeType) {
         if (!img) return;
         img.onerror = null;
         try {
@@ -308,8 +369,8 @@
                     return;
                 }
             }
-        } catch(e) {}
-        
+        } catch (e) { }
+
         const fallback = img.getAttribute('data-fallback') || `/static/images/committees/${committeeType}_${memberId}.svg`;
         img.src = fallback;
         img.classList.remove('hidden');
@@ -325,7 +386,7 @@
                 added: p.added || [],
                 deleted: p.deleted || []
             };
-        } catch(e) {
+        } catch (e) {
             return { photos: {}, updated: {}, added: [], deleted: [] };
         }
     }
@@ -333,7 +394,7 @@
     function saveStoredSMCState(state) {
         try {
             localStorage.setItem(SMC_STORAGE_KEY, JSON.stringify(state));
-        } catch(e) {
+        } catch (e) {
             console.warn('LocalStorage error persisting SMC state:', e);
         }
     }
@@ -344,8 +405,8 @@
         const added = (state.added || []).find(x => String(x.id) === idStr);
         const base = added || window.smcServerData[idStr] || {};
         const upd = (state.updated || {})[idStr] || {};
-        const photo = (state.photos || {})[idStr] !== undefined 
-            ? state.photos[idStr] 
+        const photo = (state.photos || {})[idStr] !== undefined
+            ? state.photos[idStr]
             : (upd.photo !== undefined ? upd.photo : base.photo);
         return { ...base, ...upd, photo: photo || '' };
     }
@@ -403,8 +464,8 @@
         const fileInput = document.getElementById('sam_file_input');
         if (fileInput) fileInput.value = '';
         updateMemberPreviewInline(m.photo || '');
-        document.getElementById('sam_photo_status').innerHTML = (m.photo && m.photo.trim()) 
-            ? `<span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px] font-bold">✓ हालको तस्विर सुरक्षित छ</span>` 
+        document.getElementById('sam_photo_status').innerHTML = (m.photo && m.photo.trim())
+            ? `<span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px] font-bold">✓ हालको तस्विर सुरक्षित छ</span>`
             : '';
         document.getElementById('samModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-4 h-4 text-amber-500"></i><span>सदस्य विवरण सम्पादन (Super Admin)</span>';
         document.getElementById('samSubmitBtn').innerText = 'अद्यावधिक (Save) गर्नुहोस्';
@@ -508,7 +569,7 @@
                     const photoSrc = (photo && photo.trim() && photo !== 'REMOVE') ? photo : fallbackSvg;
                     const photoMarkup = `<img src="${photoSrc}" alt="${m.name || ''}" data-fallback="${fallbackSvg}" class="w-full h-full object-cover member-photo-img" onerror="window.handleCommitteePhotoError(this, '${m.id}', 'smc')">`;
 
-                    const adminBtns = {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}true{% else %}false{% endif %} ? `
+                    const adminBtns = {% if is_admin or(current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %} true{% else %} false{% endif %} ?`
                         <div class="absolute top-3 right-3 flex items-center gap-1">
                             <button type="button" onclick="openEditMemberModal('${m.id}')" class="p-1 bg-blue-50 hover:bg-blue-100 text-instBlue border border-blue-200 rounded transition" title="सम्पादन गर्नुहोस्">
                                 <i data-lucide="edit-3" class="w-3 h-3"></i>
@@ -519,7 +580,7 @@
                         </div>
                     ` : '';
 
-                    cardDiv.innerHTML = `
+                cardDiv.innerHTML = `
                         ${adminBtns}
                         <div>
                             <div class="w-20 h-20 mx-auto rounded-full bg-slate-100 border-2 border-slate-200 overflow-hidden shadow-sm flex items-center justify-center mb-3 relative member-photo-wrap">
@@ -549,28 +610,28 @@
                             </p>
                         </div>
                     `;
-                    grid.appendChild(cardDiv);
-                }
+                grid.appendChild(cardDiv);
+            }
             });
 
-            const countEl = document.getElementById('smcTotalCount');
-            if (countEl) {
-                countEl.innerText = document.querySelectorAll('.smc-public-card').length;
-            }
+        const countEl = document.getElementById('smcTotalCount');
+        if (countEl) {
+            countEl.innerText = document.querySelectorAll('.smc-public-card').length;
         }
-
-        if (window.lucide) lucide.createIcons();
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    if (window.lucide) lucide.createIcons();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
         syncStoredSMCStateWithDOM();
     });
 
-    {% if is_admin or (current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
+    {% if is_admin or(current_user and current_user.role in ['SUPER_ADMIN', 'ADMIN']) %}
     // Super Admin Form Submission
     const samForm = document.getElementById('samMemberForm');
     if (samForm) {
-        samForm.addEventListener('submit', async function(e) {
+        samForm.addEventListener('submit', async function (e) {
             e.preventDefault();
             const editId = document.getElementById('sam_edit_id').value;
             const btn = document.getElementById('samSubmitBtn');
@@ -623,7 +684,7 @@
             try {
                 const res = await fetch(url, {
                     method: method,
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                     body: JSON.stringify(payload)
                 });
@@ -643,7 +704,7 @@
                 } else {
                     alert(data.detail || 'फारम स्थानीय तथा ब्राउजरमा सफलतापूर्वक सुरक्षित भयो।');
                 }
-            } catch(err) {
+            } catch (err) {
                 alert('फारम स्थानीय रूपमा सुरक्षित भयो।');
             } finally {
                 btn.disabled = false;
@@ -682,7 +743,7 @@
                 method: 'DELETE',
                 credentials: 'include'
             });
-        } catch(err) {
+        } catch (err) {
             // Silently handled as LocalStorage has deleted it
         }
     }
