@@ -364,6 +364,15 @@
                 dataUrl = exportCanvas.toDataURL('image/jpeg', quality);
             }
 
+            if (dataUrl.length * 0.75 > MAX_BYTES) {
+                const downCanvas = document.createElement('canvas');
+                downCanvas.width = 450;
+                downCanvas.height = 600;
+                const downCtx = downCanvas.getContext('2d');
+                downCtx.drawImage(exportCanvas, 0, 0, 450, 600);
+                dataUrl = downCanvas.toDataURL('image/jpeg', 0.80);
+            }
+
             // Export as Blob for server upload
             const blob = await new Promise(resolve => exportCanvas.toBlob(resolve, 'image/jpeg', quality));
             const finalSizeKb = (blob.size / 1024).toFixed(1);
@@ -374,7 +383,11 @@
             const statusEl = currentOptions.statusElId ? document.getElementById(currentOptions.statusElId) : null;
 
             // Set Data URL immediately so image displays anywhere and persists reliably across serverless instances
-            if (targetInput) targetInput.value = dataUrl;
+            if (targetInput) {
+                targetInput.value = dataUrl;
+                targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+                targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
             if (previewImg) {
                 previewImg.src = dataUrl;
                 previewImg.classList.remove('hidden');
@@ -395,7 +408,7 @@
             }
 
             if (currentOptions.onSave) {
-                currentOptions.onSave({ dataUrl, blob, sizeKb: finalSizeKb });
+                currentOptions.onSave({ dataUrl, blob, sizeKb: finalSizeKb, targetInputId: currentOptions.targetInputId });
             }
 
             window.closePassportCropper();

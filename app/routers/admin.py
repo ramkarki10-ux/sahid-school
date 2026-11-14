@@ -749,6 +749,7 @@ def admin_staff(request: Request):
 
 @router.get("/management-committee", response_class=HTMLResponse)
 def admin_management_committee(request: Request):
+    from app.routers.api_committees import _normalize_member_row
     user, ctx = get_admin_context(request, "management_committee")
     if not user:
         return RedirectResponse(url="/login", status_code=303)
@@ -756,7 +757,7 @@ def admin_management_committee(request: Request):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM school_management_committee ORDER BY order_index ASC, id ASC")
-    members = [dict(r) for r in cursor.fetchall()]
+    members = [_normalize_member_row(dict(r)) for r in cursor.fetchall()]
     conn.close()
 
     ctx.update({"members": members})
@@ -764,6 +765,7 @@ def admin_management_committee(request: Request):
 
 @router.get("/trustee-committee", response_class=HTMLResponse)
 def admin_trustee_committee(request: Request):
+    from app.routers.api_committees import _normalize_member_row
     user, ctx = get_admin_context(request, "trustee_committee")
     if not user:
         return RedirectResponse(url="/login", status_code=303)
@@ -771,7 +773,7 @@ def admin_trustee_committee(request: Request):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM trustee_committee ORDER BY order_index ASC, id ASC")
-    members = [dict(r) for r in cursor.fetchall()]
+    members = [_normalize_member_row(dict(r)) for r in cursor.fetchall()]
     conn.close()
 
     ctx.update({"members": members})

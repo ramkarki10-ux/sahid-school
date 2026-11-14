@@ -111,40 +111,41 @@ def seed_all():
     cursor.execute("SELECT COUNT(*) FROM school_management_committee")
     if cursor.fetchone()[0] == 0:
         smc_members = [
-            ("श्री राम बहादुर कार्की", "अध्यक्ष", "९८४२०००००१", 1),
-            ("श्री राम कुमारी चौधरी", "सदस्य", "९८४२०००००२", 2),
-            ("श्री सन्तोष खतिवडा", "सदस्य", "९८४२०००००३", 3),
-            ("श्री सूर्य बहादुर थापा", "सदस्य", "९८४२०००००४", 4),
-            ("श्री तीर्थ कुमारी वन", "सदस्य", "९८४२०००००५", 5),
-            ("श्री पूजा खनाल", "सदस्य", "९८४२०००००६", 6),
-            ("श्री कृष्ण गोपाल घिमिरे", "सदस्य", "९८४२०००००७", 7),
-            ("श्री राजकुमार आचार्य", "सदस्य", "९८४२०००००८", 8),
-            ("श्री जमुना", "सदस्य", "९८४२०००००९", 9)
+            ("श्री राम बहादुर कार्की", "अध्यक्ष", "९८४२०००००१", "/static/images/committees/smc_28.svg", 1),
+            ("श्री राम कुमारी चौधरी", "सदस्य", "९८४२०००००२", "/static/images/smc_ram_kumari.jpg", 2),
+            ("श्री सन्तोष खतिवडा", "सदस्य", "९८४२०००००३", "/static/images/committees/smc_30.svg", 3),
+            ("श्री सूर्य बहादुर थापा", "सदस्य", "९८४२०००००४", "/static/images/committees/smc_31.svg", 4),
+            ("श्री तीर्थ कुमारी वन", "सदस्य", "९८४२०००००५", "/static/images/committees/smc_32.svg", 5),
+            ("श्री पूजा खनाल", "सदस्य", "९८४२०००००६", "/static/images/committees/smc_33.svg", 6),
+            ("श्री कृष्ण गोपाल घिमिरे", "सदस्य", "९८४२०००००७", "/static/images/committees/smc_34.svg", 7),
+            ("श्री राजकुमार आचार्य", "सदस्य", "९८४२०००००८", "/static/images/committees/smc_35.svg", 8),
+            ("श्री जमुना भण्डारी", "सदस्य", "९८४२०००००९", "/static/images/committees/smc_36.svg", 9),
+            ("श्री रीता फुयल", "सदस्य-सचिव", "९८५२०३३१३३", "/static/images/teachers/teacher_103_rita_phuyal.jpg", 10)
         ]
         for m in smc_members:
             cursor.execute("""
-                INSERT INTO school_management_committee (name, position, phone, order_index)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO school_management_committee (name, position, phone, photo, order_index)
+                VALUES (?, ?, ?, ?, ?)
             """, m)
 
     # 6. Trustee Committee / गुठियार समिति (Seed data from Section 12 & 64)
     cursor.execute("SELECT COUNT(*) FROM trustee_committee")
     if cursor.fetchone()[0] == 0:
         trustee_members = [
-            ("धर्मशिला चापागाई", "गुठियार प्रमुख", "९८५२०००००१", 1),
-            ("मणिकुमार साम्पाङ", "सदस्य", "९८५२०००००२", 2),
-            ("राम बहादुर कार्की", "सदस्य", "९८५२०००००३", 3),
-            ("राम कुमारी चौधरी", "सदस्य", "९८५२०००००४", 4),
-            ("पूजा खनाल", "सदस्य", "९८५२०००००५", 5),
-            ("कृष्ण गोपाल घिमिरे", "सदस्य", "९८५२०००००६", 6),
-            ("केशर बहादुर प्रधान", "सदस्य", "९८५२०००००७", 7),
-            ("मणिराम गिरी", "सदस्य", "९८५२०००००८", 8),
-            ("सपना परियार", "सदस्य", "९८५२०००००९", 9)
+            ("धर्मशिला चापागाई", "गुठियार प्रमुख", "९८५२०००००१", "/static/images/committees/trustee_1.svg", 1),
+            ("मणिकुमार साम्पाङ", "सदस्य", "९८५२०००००२", "/static/images/committees/trustee_2.svg", 2),
+            ("राम बहादुर कार्की", "सदस्य", "९८५२०००००३", "/static/images/committees/trustee_3.svg", 3),
+            ("राम कुमारी चौधरी", "सदस्य", "९८५२०००००४", "/static/images/smc_ram_kumari.jpg", 4),
+            ("पूजा खनाल", "सदस्य", "९८५२०००००५", "/static/images/committees/trustee_5.svg", 5),
+            ("कृष्ण गोपाल घिमिरे", "सदस्य", "९८५२०००००६", "/static/images/committees/trustee_6.svg", 6),
+            ("केशर बहादुर प्रधान", "सदस्य", "९८५२०००००७", "/static/images/committees/trustee_7.svg", 7),
+            ("मणिराम गिरी", "सदस्य", "९८५२०००००८", "/static/images/committees/trustee_8.svg", 8),
+            ("सपना परियार", "सदस्य", "९८५२०००००९", "/static/images/committees/trustee_9.svg", 9)
         ]
         for t in trustee_members:
             cursor.execute("""
-                INSERT INTO trustee_committee (name, position, phone, order_index)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO trustee_committee (name, position, phone, photo, order_index)
+                VALUES (?, ?, ?, ?, ?)
             """, t)
 
     # 7. School Leadership (Section 13 & 64)

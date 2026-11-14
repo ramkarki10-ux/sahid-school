@@ -39,12 +39,16 @@ class LeadershipUpdate(BaseModel):
 def _normalize_member_row(r: dict):
     item = dict(r)
     photo = item.get("photo")
-    if photo and not str(photo).startswith("data:image/") and not str(photo).startswith("http://") and not str(photo).startswith("https://"):
-        item["photo"] = f"https://sahid-school.vercel.app/{str(photo).lstrip('/')}"
+    if photo:
+        s_photo = str(photo).strip()
+        if not s_photo.startswith("data:image/") and not s_photo.startswith("http://") and not s_photo.startswith("https://") and not s_photo.startswith("/"):
+            item["photo"] = f"/{s_photo.lstrip('/')}"
+        else:
+            item["photo"] = s_photo
     pos = item.get("position") or item.get("designation") or "सदस्य"
     item["position"] = pos
     item["designation"] = pos
-    item["avatar_url"] = item.get("photo") or "https://sahid-school.vercel.app/static/images/default_avatar.png"
+    item["avatar_url"] = item.get("photo") or "/static/images/default_avatar.png"
     return item
 
 @router.get("/management")
@@ -57,20 +61,36 @@ def list_management_committee():
     conn.close()
     return {"members": members}
 
+@router.get("/management/{id}")
+def get_management_member(id: int):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM school_management_committee WHERE id = ?", (id,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="सदस्य फेला परेन।")
+    return _normalize_member_row(dict(row))
+
 @router.post("/management")
 def create_management_member(data: CommitteeMemberCreate, request: Request):
     user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     conn = get_db()
     cursor = conn.cursor()
+    photo = None
+    if data.photo is not None:
+        p_clean = data.photo.strip()
+        if p_clean and p_clean not in ["REMOVE", "__DELETE__", "null", "none"]:
+            photo = p_clean
     cursor.execute("""
         INSERT INTO school_management_committee (name, position, phone, photo, qualification, email, address, term, order_index, status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (data.name, data.position, data.phone, data.photo, data.qualification, data.email, data.address, data.term, data.order_index, data.status))
+    """, (data.name, data.position, data.phone, photo, data.qualification, data.email, data.address, data.term, data.order_index, data.status or 'सक्रिय'))
     new_id = cursor.lastrowid
     conn.commit()
     conn.close()
     log_audit("CREATE", "MANAGEMENT_COMMITTEE", record_id=str(new_id), new_value=data.dict(), user=user, request=request)
-    return {"success": True, "message": "व्यवस्थापन समिति सदस्य सफलतापूर्वक थपियो।", "id": new_id}
+    return {"success": True, "message": "व्यवस्थापन समिति सदस्य सफलतापूर्वक थपियो।", "id": new_id, "photo": photo}
 
 @router.put("/management/{id}")
 def update_management_member(id: int, data: CommitteeMemberCreate, request: Request):
@@ -95,11 +115,11 @@ def update_management_member(id: int, data: CommitteeMemberCreate, request: Requ
         UPDATE school_management_committee SET
             name = ?, position = ?, phone = ?, photo = ?, qualification = ?, email = ?, address = ?, term = ?, order_index = ?, status = ?
         WHERE id = ?
-    """, (data.name, data.position, data.phone, photo_to_save, data.qualification, data.email, data.address, data.term, data.order_index, data.status, id))
+    """, (data.name, data.position, data.phone, photo_to_save, data.qualification, data.email, data.address, data.term, data.order_index, data.status or existing["status"], id))
     conn.commit()
     conn.close()
     log_audit("UPDATE", "MANAGEMENT_COMMITTEE", record_id=str(id), new_value=data.dict(), user=user, request=request)
-    return {"success": True, "message": "व्यवस्थापन समिति सदस्य अद्यावधिक भयो।"}
+    return {"success": True, "message": "व्यवस्थापन समिति सदस्य अद्यावधिक भयो।", "id": id, "photo": photo_to_save}
 
 @router.delete("/management/{id}")
 def delete_management_member(id: int, request: Request):
@@ -137,20 +157,36 @@ def list_trustee_committee():
     conn.close()
     return {"members": members}
 
+@router.get("/trustee/{id}")
+def get_trustee_member(id: int):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM trustee_committee WHERE id = ?", (id,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="गुठियार सदस्य फेला परेन।")
+    return _normalize_member_row(dict(row))
+
 @router.post("/trustee")
 def create_trustee_member(data: CommitteeMemberCreate, request: Request):
     user = require_role("SUPER_ADMIN", "ADMIN", "PRINCIPAL")(request)
     conn = get_db()
     cursor = conn.cursor()
+    photo = None
+    if data.photo is not None:
+        p_clean = data.photo.strip()
+        if p_clean and p_clean not in ["REMOVE", "__DELETE__", "null", "none"]:
+            photo = p_clean
     cursor.execute("""
         INSERT INTO trustee_committee (name, position, phone, photo, qualification, email, address, order_index, status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (data.name, data.position, data.phone, data.photo, data.qualification, data.email, data.address, data.order_index, data.status))
+    """, (data.name, data.position, data.phone, photo, data.qualification, data.email, data.address, data.order_index, data.status or 'सक्रिय'))
     new_id = cursor.lastrowid
     conn.commit()
     conn.close()
     log_audit("CREATE", "TRUSTEE_COMMITTEE", record_id=str(new_id), new_value=data.dict(), user=user, request=request)
-    return {"success": True, "message": "गुठियार समिति सदस्य थपियो।", "id": new_id}
+    return {"success": True, "message": "गुठियार समिति सदस्य थपियो।", "id": new_id, "photo": photo}
 
 @router.put("/trustee/{id}")
 def update_trustee_member(id: int, data: CommitteeMemberCreate, request: Request):
@@ -175,11 +211,11 @@ def update_trustee_member(id: int, data: CommitteeMemberCreate, request: Request
         UPDATE trustee_committee SET
             name = ?, position = ?, phone = ?, photo = ?, qualification = ?, email = ?, address = ?, order_index = ?, status = ?
         WHERE id = ?
-    """, (data.name, data.position, data.phone, photo_to_save, data.qualification, data.email, data.address, data.order_index, data.status, id))
+    """, (data.name, data.position, data.phone, photo_to_save, data.qualification, data.email, data.address, data.order_index, data.status or existing["status"], id))
     conn.commit()
     conn.close()
     log_audit("UPDATE", "TRUSTEE_COMMITTEE", record_id=str(id), new_value=data.dict(), user=user, request=request)
-    return {"success": True, "message": "गुठियार समिति सदस्य अद्यावधिक भयो।"}
+    return {"success": True, "message": "गुठियार समिति सदस्य अद्यावधिक भयो।", "id": id, "photo": photo_to_save}
 
 @router.delete("/trustee/{id}")
 def delete_trustee_member(id: int, request: Request):

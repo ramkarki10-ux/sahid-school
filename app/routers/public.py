@@ -151,13 +151,14 @@ def page_administration(request: Request):
 
 @router.get("/management-committee", response_class=HTMLResponse)
 def page_management_committee(request: Request):
+    from app.routers.api_committees import _normalize_member_row
     settings, ticker_notice = get_school_context()
     user = get_current_user(request)
     is_admin = bool(user and user.get("role") in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"])
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM school_management_committee WHERE status = 'सक्रिय' OR status = 'active' ORDER BY order_index ASC")
-    members = [dict(r) for r in cursor.fetchall()]
+    cursor.execute("SELECT * FROM school_management_committee WHERE status = 'सक्रिय' OR status = 'active' ORDER BY order_index ASC, id ASC")
+    members = [_normalize_member_row(dict(r)) for r in cursor.fetchall()]
     conn.close()
     return templates.TemplateResponse(request, "public/management_committee.html", {
         "settings": settings,
@@ -170,13 +171,14 @@ def page_management_committee(request: Request):
 
 @router.get("/trustee-committee", response_class=HTMLResponse)
 def page_trustee_committee(request: Request):
+    from app.routers.api_committees import _normalize_member_row
     settings, ticker_notice = get_school_context()
     user = get_current_user(request)
     is_admin = bool(user and user.get("role") in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"])
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM trustee_committee WHERE status = 'सक्रिय' OR status = 'active' ORDER BY order_index ASC")
-    members = [dict(r) for r in cursor.fetchall()]
+    cursor.execute("SELECT * FROM trustee_committee WHERE status = 'सक्रिय' OR status = 'active' ORDER BY order_index ASC, id ASC")
+    members = [_normalize_member_row(dict(r)) for r in cursor.fetchall()]
     conn.close()
     return templates.TemplateResponse(request, "public/trustee_committee.html", {
         "settings": settings,

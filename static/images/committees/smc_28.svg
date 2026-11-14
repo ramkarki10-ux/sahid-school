@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="grad_smc_28" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a" />
+      <stop offset="100%" stop-color="#172554" />
+    </linearGradient>
+    <filter id="shadow_smc_28" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="400" height="400" fill="url(#grad_smc_28)" />
+  <circle cx="200" cy="200" r="170" fill="none" stroke="#ffffff" stroke-width="2" stroke-opacity="0.1" />
+
+  <!-- Avatar Group -->
+  <g filter="url(#shadow_smc_28)">
+    
+
+    <!-- Neck -->
+    <rect x="175" y="215" width="50" height="45" rx="6" fill="#cc9c78" />
+
+    <!-- Face Oval -->
+    <ellipse cx="200" cy="165" rx="55" ry="65" fill="#e2b391" />
+
+    
+        <!-- Nepali Dhaka Topi -->
+        <path d="M 145 130 L 155 70 L 225 65 L 255 125 Z" fill="#b91c1c" stroke="#f59e0b" stroke-width="2"/>
+        <polygon points="155,70 185,67 180,95 152,95" fill="#991b1b"/>
+        <polygon points="185,67 225,65 220,95 180,95" fill="#b91c1c"/>
+        <polygon points="225,65 255,125 240,125 220,95" fill="#7f1d1d"/>
+        <path d="M 145 125 Q 200 135 255 120" stroke="#fbbf24" stroke-width="3" fill="none"/>
+        
+
+    <!-- Ears -->
+    <ellipse cx="145" cy="165" rx="9" ry="16" fill="#cc9c78" />
+    <ellipse cx="255" cy="165" rx="9" ry="16" fill="#cc9c78" />
+
+    <!-- Eyebrows -->
+    <path d="M 165 142 Q 180 138 190 144" stroke="#292524" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 235 142 Q 220 138 210 144" stroke="#292524" stroke-width="3" stroke-linecap="round" fill="none" />
+
+    <!-- Eyes -->
+    <ellipse cx="177" cy="153" rx="6" ry="4" fill="#1c1917" />
+    <circle cx="179" cy="151" r="1.5" fill="#ffffff" />
+    <ellipse cx="223" cy="153" rx="6" ry="4" fill="#1c1917" />
+    <circle cx="225" cy="151" r="1.5" fill="#ffffff" />
+
+    <!-- Nose -->
+    <path d="M 200 152 L 200 175 L 206 177" stroke="#cc9c78" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+    <!-- Smile / Lips -->
+    <path d="M 184 193 Q 200 205 216 193" stroke="#991b1b" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+    
+        <!-- Male Suit Coat & Shirt & Tie -->
+        <path d="M 100 400 L 140 250 L 260 250 L 300 400 Z" fill="#1e293b"/>
+        <!-- Shirt V -->
+        <polygon points="170,250 230,250 200,320" fill="#ffffff"/>
+        <!-- Tie -->
+        <polygon points="195,270 205,270 208,350 200,365 192,350" fill="#dc2626"/>
+        <!-- Lapels -->
+        <polygon points="140,250 170,250 185,340 150,330" fill="#1e293b" stroke="#0f172a" stroke-width="1"/>
+        <polygon points="260,250 230,250 215,340 250,330" fill="#1e293b" stroke="#0f172a" stroke-width="1"/>
+        
+  </g>
+
+  <!-- Bottom Badge: School Initial / Role -->
+  <rect x="20" y="340" width="360" height="45" rx="10" fill="#0f172a" fill-opacity="0.85" />
+  <text x="200" y="368" font-family="sans-serif" font-size="15" font-weight="bold" fill="#f8fafc" text-anchor="middle">राम बहादुर कार्की</text>
+</svg>
