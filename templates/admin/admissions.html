@@ -1,89 +1,192 @@
 {% extends "admin/base_admin.html" %}
 
-{% block title %}अनलाइन भर्ना आवेदनहरू | {{ settings.name_ne }}{% endblock %}
+{% block title %}अनलाइन भर्ना आवेदन तथा कागजात प्रमाणिकरण | {{ settings.name_ne }}{% endblock %}
 
 {% block admin_content %}
 <div class="space-y-6">
     
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-        <div>
-            <h1 class="text-xl font-bold text-instBlue">अनलाइन भर्ना आवेदनहरू (Admission Applications)</h1>
-            <p class="text-xs text-slate-500 mt-0.5">वेबसाइट मार्फत अभिभावक तथा विद्यार्थीले भरेका भर्ना फारामहरू, स्थिति व्यवस्थापन र तथ्याङ्क डाउनलोड</p>
+    <!-- Header & Stats Summary -->
+    <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-xl sm:text-2xl font-bold text-instBlue">अनलाइन भर्ना आवेदन तथा कागजात प्रमाणिकरण</h1>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                        <i class="fas fa-shield-alt text-amber-600"></i> RBAC: Admin & Principal
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">
+                    फाराम विवरण रुजु, संपादन (Inline Edit), कागजात हटाउने वा नयाँ अपलोड गर्ने तथा भर्ना स्वीकृति कार्यप्रवाह (Full Control Workflow)
+                </p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="/api/admissions/export" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm transition">
+                    <i class="fas fa-file-excel"></i> Excel डाउनलोड
+                </a>
+                <button onclick="location.reload()" class="p-2 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-xs transition" title="रिफ्रेस गर्नुहोस्">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
         </div>
-        <div class="flex items-center gap-2">
-            <span class="bg-blue-100 text-blue-800 font-bold px-3 py-1.5 rounded-lg text-xs">
-                कुल आवेदन: {{ applications | length }}
-            </span>
-            <a href="/api/admissions/export" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm transition">
-                <i class="fas fa-file-excel"></i> Excel डाउनलोड
-            </a>
+
+        <!-- 4 Summary KPI Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+            <div class="bg-blue-50/60 border border-blue-200/80 rounded-xl p-3.5 flex items-center justify-between">
+                <div>
+                    <div class="text-[11px] font-medium text-blue-700">कुल आवेदनहरू</div>
+                    <div class="text-2xl font-bold text-blue-950 mt-0.5" id="stat_total">{{ total_count or (applications | length) }}</div>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 text-base">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+
+            <div class="bg-amber-50/60 border border-amber-200/80 rounded-xl p-3.5 flex items-center justify-between">
+                <div>
+                    <div class="text-[11px] font-medium text-amber-700">समीक्षा बाँकी (नयाँ)</div>
+                    <div class="text-2xl font-bold text-amber-950 mt-0.5" id="stat_new">{{ new_count or 0 }}</div>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 text-base">
+                    <i class="fas fa-clock"></i>
+                </div>
+            </div>
+
+            <div class="bg-purple-50/60 border border-purple-200/80 rounded-xl p-3.5 flex items-center justify-between">
+                <div>
+                    <div class="text-[11px] font-medium text-purple-700">कागजात संलग्न आवेदन</div>
+                    <div class="text-2xl font-bold text-purple-950 mt-0.5" id="stat_docs">{{ with_docs_count or 0 }}</div>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 text-base">
+                    <i class="fas fa-file-upload"></i>
+                </div>
+            </div>
+
+            <div class="bg-emerald-50/60 border border-emerald-200/80 rounded-xl p-3.5 flex items-center justify-between">
+                <div>
+                    <div class="text-[11px] font-medium text-emerald-700">स्वीकृत भर्ना</div>
+                    <div class="text-2xl font-bold text-emerald-950 mt-0.5" id="stat_approved">{{ approved_count or 0 }}</div>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 text-base">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Table -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <!-- Search & Filter Controls -->
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-1.5 flex-wrap w-full sm:w-auto" id="filterTabs">
+            <button onclick="filterByStatus('all', this)" class="px-3 py-1.5 rounded-lg font-semibold bg-instBlue text-white filter-btn transition">सबै ({{ applications | length }})</button>
+            <button onclick="filterByStatus('नयाँ', this)" class="px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 filter-btn transition">नयाँ</button>
+            <button onclick="filterByStatus('सम्पर्क गरिएको', this)" class="px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 filter-btn transition">सम्पर्क गरिएको</button>
+            <button onclick="filterByStatus('स्वीकृत', this)" class="px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 filter-btn transition">स्वीकृत</button>
+            <button onclick="filterByStatus('अस्वीकृत', this)" class="px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 filter-btn transition">अस्वीकृत</button>
+        </div>
+        <div class="w-full sm:w-64 relative">
+            <i class="fas fa-search absolute left-3 top-2.5 text-slate-400"></i>
+            <input type="text" id="tableSearch" onkeyup="searchTable()" placeholder="विद्यार्थी वा अभिभावक खोज्नुहोस्..." class="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-instBlue text-xs">
+        </div>
+    </div>
+
+    <!-- Table of Admissions -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs border-collapse">
+            <table class="w-full text-left text-xs border-collapse" id="admissionsTable">
                 <thead class="bg-instBlue text-white font-semibold text-[11px] uppercase tracking-wider">
                     <tr>
-                        <th class="py-3 px-4 text-center">क्र.सं.</th>
-                        <th class="py-3 px-4">विद्यार्थीको नाम</th>
-                        <th class="py-3 px-4">कक्षा</th>
-                        <th class="py-3 px-4">अभिभावक</th>
-                        <th class="py-3 px-4 font-mono">सम्पर्क नम्बर</th>
-                        <th class="py-3 px-4">ठेगाना</th>
-                        <th class="py-3 px-4 text-center">मिति</th>
-                        <th class="py-3 px-4 text-center">स्थिति</th>
-                        <th class="py-3 px-4 text-center">कार्य (Actions)</th>
+                        <th class="py-3.5 px-4 text-center">क्र.सं.</th>
+                        <th class="py-3.5 px-4">विद्यार्थीको नाम तथा विवरण</th>
+                        <th class="py-3.5 px-4">भर्ना कक्षा</th>
+                        <th class="py-3.5 px-4">अभिभावक तथा सम्पर्क</th>
+                        <th class="py-3.5 px-4 text-center">संलग्न कागजात</th>
+                        <th class="py-3.5 px-4 text-center">आवेदन मिति</th>
+                        <th class="py-3.5 px-4 text-center">स्थिति</th>
+                        <th class="py-3.5 px-4 text-center">कार्य (Actions)</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-200">
+                <tbody class="divide-y divide-slate-200" id="admissionsTbody">
                     {% for a in applications %}
-                    <tr class="hover:bg-slate-50 transition" id="row-adm-{{ a.id }}">
-                        <td class="py-3 px-4 text-center font-bold text-slate-500">{{ loop.index }}</td>
-                        <td class="py-3 px-4 font-bold text-slate-900">
-                            <div>{{ a.student_name }}</div>
-                            <div class="text-[10px] text-slate-500 font-normal">लिंग: {{ a.gender or 'खुलाइएको छैन' }} | जन्म: {{ a.dob or '-' }}</div>
-                        </td>
-                        <td class="py-3 px-4 font-semibold text-instBlue">{{ a.applying_class }}</td>
-                        <td class="py-3 px-4 text-slate-700">{{ a.parent_name }}</td>
-                        <td class="py-3 px-4 font-mono text-slate-700">
-                            <a href="tel:{{ a.mobile }}" class="text-blue-600 hover:underline">{{ a.mobile }}</a>
-                        </td>
-                        <td class="py-3 px-4 text-slate-600">{{ a.address }}</td>
-                        <td class="py-3 px-4 font-mono text-slate-500 text-center">{{ a.created_at[:10] if a.created_at else '' }}</td>
-                        <td class="py-3 px-4 text-center">
-                            {% if a.status == 'स्वीकृत' %}
-                            <span class="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full text-[10px]"><i class="fas fa-check-circle mr-1"></i>स्वीकृत</span>
-                            {% elif a.status == 'अस्वीकृत' %}
-                            <span class="bg-rose-100 text-rose-800 font-bold px-2.5 py-0.5 rounded-full text-[10px]"><i class="fas fa-times-circle mr-1"></i>अस्वीकृत</span>
-                            {% elif a.status == 'सम्पर्क गरिएको' %}
-                            <span class="bg-purple-100 text-purple-800 font-bold px-2.5 py-0.5 rounded-full text-[10px]"><i class="fas fa-phone mr-1"></i>सम्पर्क गरिएको</span>
-                            {% else %}
-                            <span class="bg-amber-100 text-amber-800 font-bold px-2.5 py-0.5 rounded-full text-[10px]"><i class="fas fa-clock mr-1"></i>{{ a.status or 'नयाँ' }}</span>
+                    <tr class="hover:bg-slate-50/80 transition adm-row" id="row-adm-{{ a.id }}" data-status="{{ a.status or 'नयाँ' }}">
+                        <td class="py-3.5 px-4 text-center font-bold text-slate-400">{{ loop.index }}</td>
+                        <td class="py-3.5 px-4">
+                            <div class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                                <span class="student-name">{{ a.student_name }}</span>
+                                <span class="text-[10px] text-slate-400 font-mono">#ADM-{{ a.id }}</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">
+                                लिङ्ग: {{ a.gender or 'खुलाइएको छैन' }} | जन्म मिति: {{ a.dob or '-' }}
+                            </div>
+                            {% if a.previous_school %}
+                            <div class="text-[10px] text-slate-400 truncate max-w-xs mt-0.5">
+                                पूर्व विद्यालय: {{ a.previous_school }}
+                            </div>
                             {% endif %}
                         </td>
-                        <td class="py-3 px-4 text-center">
+                        <td class="py-3.5 px-4">
+                            <span class="inline-block bg-blue-50 text-instBlue font-bold px-2.5 py-1 rounded-md border border-blue-200 text-xs">
+                                {{ a.applying_class }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <div class="font-semibold text-slate-800 parent-name">{{ a.parent_name }}</div>
+                            <div class="text-[11px] text-slate-600 font-mono mt-0.5">
+                                <a href="tel:{{ a.mobile }}" class="text-blue-600 hover:underline flex items-center gap-1">
+                                    <i class="fas fa-phone-alt text-[10px]"></i> {{ a.mobile }}
+                                </a>
+                            </div>
+                            <div class="text-[10px] text-slate-400 truncate max-w-xs">{{ a.address }}</div>
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
+                            {% if a.doc_count and a.doc_count > 0 %}
+                            <button type="button" onclick="openReviewModal({{ a.id }})" class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 hover:bg-purple-200 transition" title="कागजातहरू हेर्नुहोस्">
+                                <i class="fas fa-paperclip"></i> {{ a.doc_count }} कागजात
+                            </button>
+                            {% else %}
+                            <span class="text-[11px] text-slate-400 italic">कागजात छैन</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-center font-mono text-slate-500 text-[11px]">
+                            {{ a.created_at[:10] if a.created_at else '-' }}
+                        </td>
+                        <td class="py-3.5 px-4 text-center" id="status-badge-cell-{{ a.id }}">
+                            {% if a.status == 'स्वीकृत' %}
+                            <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-2.5 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1"><i class="fas fa-check-circle"></i> स्वीकृत</span>
+                            {% elif a.status == 'अस्वीकृत' %}
+                            <span class="bg-rose-100 text-rose-800 border border-rose-300 font-bold px-2.5 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1"><i class="fas fa-times-circle"></i> अस्वीकृत</span>
+                            {% elif a.status == 'सम्पर्क गरिएको' %}
+                            <span class="bg-purple-100 text-purple-800 border border-purple-300 font-bold px-2.5 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1"><i class="fas fa-phone"></i> सम्पर्क गरिएको</span>
+                            {% elif a.status == 'सुधार आवश्यक' %}
+                            <span class="bg-amber-100 text-amber-800 border border-amber-300 font-bold px-2.5 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1"><i class="fas fa-exclamation-triangle"></i> सुधार आवश्यक</span>
+                            {% else %}
+                            <span class="bg-blue-100 text-blue-800 border border-blue-300 font-bold px-2.5 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1"><i class="fas fa-clock"></i> {{ a.status or 'नयाँ' }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
                                 <button type="button" 
-                                        onclick='openStatusModal({{ a | tojson | safe }})'
-                                        class="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition" 
-                                        title="स्थिति सम्पादन र विस्तृत विवरण">
-                                    <i class="fas fa-edit"></i>
+                                        onclick="openReviewModal({{ a.id }})"
+                                        class="px-2.5 py-1.5 bg-instBlue hover:bg-instBlue-dark text-white rounded-lg transition font-semibold text-[11px] shadow-xs flex items-center gap-1" 
+                                        title="समीक्षा, सम्पादन तथा प्रमाणिकरण">
+                                    <i class="fas fa-user-check"></i>
+                                    <span>समीक्षा / सम्पादन</span>
                                 </button>
                                 <button type="button" 
-                                        onclick="deleteAdmission({{ a.id }}, '{{ a.student_name }}')"
-                                        class="p-1.5 text-rose-600 hover:bg-rose-50 rounded transition" 
-                                        title="हटाउनुहोस्">
+                                        onclick="deleteAdmissionRecord({{ a.id }}, '{{ a.student_name }}')"
+                                        class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition" 
+                                        title="आवेदन हटाउनुहोस्">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
                         </td>
                     </tr>
                     {% else %}
-                    <tr>
-                        <td colspan="9" class="py-6 text-center text-slate-500">हाल कुनै नयाँ अनलाइन भर्ना आवेदन प्राप्त भएको छैन।</td>
+                    <tr id="emptyRow">
+                        <td colspan="8" class="py-12 text-center text-slate-400">
+                            <div class="max-w-xs mx-auto space-y-2">
+                                <i class="fas fa-inbox text-3xl text-slate-300"></i>
+                                <div class="font-medium">हाल कुनै अनलाइन भर्ना आवेदन प्राप्त भएको छैन।</div>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -92,116 +195,566 @@
     </div>
 </div>
 
-<!-- Status & Details Modal -->
-<div id="statusModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-            <h3 class="font-bold text-instBlue text-base flex items-center gap-2">
-                <i class="fas fa-user-graduate text-accentGold"></i>
-                भर्ना आवेदन विवरण तथा स्थिति सम्पादन
-            </h3>
-            <button onclick="closeStatusModal()" class="text-slate-400 hover:text-slate-600">
+<!-- ========================================================== -->
+<!-- COMPREHENSIVE REVIEW, INLINE EDIT & APPROVAL WORKFLOW MODAL -->
+<!-- ========================================================== -->
+<div id="reviewModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-4xl w-full my-8 shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+        
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-instBlue to-slate-900 text-white p-5 flex items-center justify-between border-b border-slate-700">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-accentGold text-lg border border-white/20">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 class="font-bold text-base sm:text-lg" id="modalStudentNameTitle">उम्मेदवार समीक्षा</h3>
+                        <span id="modalApplicationBadge" class="text-xs font-mono bg-white/20 px-2 py-0.5 rounded">#ADM</span>
+                        <span id="modalStatusBadge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-400 text-slate-900">नयाँ</span>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-0.5">भर्ना फाराम रुजु, व्यक्तिगत विवरण सम्पादन, कागजात व्यवस्थापन तथा स्वीकृति</p>
+                </div>
+            </div>
+            <button onclick="closeReviewModal()" class="text-slate-300 hover:text-white p-2 rounded-lg hover:bg-white/10 transition">
                 <i class="fas fa-times text-lg"></i>
             </button>
         </div>
 
-        <form id="admissionStatusForm" onsubmit="submitAdmissionStatus(event)" class="mt-4 space-y-4">
-            <input type="hidden" id="modal_adm_id">
+        <!-- Modal Body (Scrollable Two Columns) -->
+        <div class="p-5 sm:p-6 overflow-y-auto space-y-6 flex-1 text-xs">
             
-            <!-- Readonly info summary -->
-            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs space-y-1.5">
-                <div class="flex justify-between"><span class="text-slate-500">विद्यार्थीको नाम:</span> <strong id="modal_student_name" class="text-slate-800"></strong></div>
-                <div class="flex justify-between"><span class="text-slate-500">भर्ना हुन चाहेको कक्षा:</span> <span id="modal_applying_class" class="font-bold text-instBlue"></span></div>
-                <div class="flex justify-between"><span class="text-slate-500">अभिभावक:</span> <span id="modal_parent_name"></span></div>
-                <div class="flex justify-between"><span class="text-slate-500">मोबाइल नम्बर:</span> <span id="modal_mobile" class="font-mono font-bold"></span></div>
-                <div class="flex justify-between"><span class="text-slate-500">ठेगाना:</span> <span id="modal_address"></span></div>
-                <div class="flex justify-between"><span class="text-slate-500">पछिल्लो विद्यालय:</span> <span id="modal_prev_school"></span></div>
-                <div class="pt-1 text-slate-600"><span class="text-slate-500">सन्देश/कैफियत:</span> <span id="modal_message"></span></div>
+            <input type="hidden" id="current_adm_id">
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- LEFT COLUMN (7 cols): INLINE EDIT CANDIDATE FORM -->
+                <div class="lg:col-span-7 space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+                        <h4 class="font-bold text-instBlue text-sm flex items-center gap-1.5">
+                            <i class="fas fa-edit text-accentGold"></i>
+                            <span>१. उम्मेदवार विवरण सम्पादन (Inline Form Edit)</span>
+                        </h4>
+                        <span class="text-[11px] text-slate-400">कुनै गल्ती भए सच्याउनुहोस्</span>
+                    </div>
+
+                    <form id="candidateEditForm" onsubmit="saveCandidateDetails(event)" class="space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">विद्यार्थीको पूरा नाम *</label>
+                                <input type="text" id="edit_student_name" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">जन्म मिति (DOB) *</label>
+                                <input type="text" id="edit_dob" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">लिङ्ग (Gender) *</label>
+                                <select id="edit_gender" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                                    <option value="छात्र">छात्र (Male)</option>
+                                    <option value="छात्रा">छात्रा (Female)</option>
+                                    <option value="अन्य">अन्य (Other)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">भर्ना हुन चाहेको कक्षा *</label>
+                                <input type="text" id="edit_applying_class" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label class="block font-semibold text-slate-700 mb-1">अघिल्लो विद्यालय (Previous School)</label>
+                                <input type="text" id="edit_previous_school" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">बाबु / आमाको नाम *</label>
+                                <input type="text" id="edit_parent_name" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">स्थानीय अभिभावक (Guardian)</label>
+                                <input type="text" id="edit_guardian_name" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">सम्पर्क मोबाइल नम्बर *</label>
+                                <input type="tel" id="edit_mobile" required class="w-full p-2 border border-slate-300 rounded-lg font-mono focus:ring-2 focus:ring-instBlue focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">ईमेल (Email)</label>
+                                <input type="email" id="edit_email" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label class="block font-semibold text-slate-700 mb-1">स्थायी तथा हालको ठेगाना *</label>
+                                <input type="text" id="edit_address" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label class="block font-semibold text-slate-700 mb-1">विद्यार्थी/अभिभावकको सन्देश</label>
+                                <textarea id="edit_message" rows="2" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none"></textarea>
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label class="block font-semibold text-slate-700 mb-1">प्रशासकीय टिप्पणी / नोट (Admin Remarks)</label>
+                                <textarea id="edit_remarks" rows="2" placeholder="फोन सम्पर्कको विवरण वा कागजात सम्बन्धी नोट..." class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none"></textarea>
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label class="block font-semibold text-slate-700 mb-1">आवेदन स्थिति (Application Status)</label>
+                                <select id="edit_status" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none font-semibold">
+                                    <option value="नयाँ">नयाँ (New)</option>
+                                    <option value="सम्पर्क गरिएको">सम्पर्क गरिएको (Contacted)</option>
+                                    <option value="सुधार आवश्यक">सुधार आवश्यक (Revision Needed)</option>
+                                    <option value="स्वीकृत">स्वीकृत (Approved)</option>
+                                    <option value="अस्वीकृत">अस्वीकृत (Rejected)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 flex justify-end">
+                            <button type="submit" id="saveDetailsBtn" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg shadow-sm transition flex items-center gap-1.5">
+                                <i class="fas fa-save"></i>
+                                <span>फाराम विवरण सुरक्षित गर्नुहोस्</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- RIGHT COLUMN (5 cols): ATTACHED DOCUMENTS MANAGER -->
+                <div class="lg:col-span-5 space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+                        <h4 class="font-bold text-instBlue text-sm flex items-center gap-1.5">
+                            <i class="fas fa-paperclip text-purple-600"></i>
+                            <span>२. संलग्न कागजात व्यवस्थापन</span>
+                        </h4>
+                        <span id="docCountBadge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800">० कागजात</span>
+                    </div>
+
+                    <!-- Documents List Container -->
+                    <div id="modalDocsContainer" class="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                        <!-- Populated dynamically via JS -->
+                        <div class="text-center py-6 text-slate-400">
+                            <i class="fas fa-spinner fa-spin text-lg"></i>
+                            <div class="mt-1 text-[11px]">कागजातहरू लोड हुँदैछन्...</div>
+                        </div>
+                    </div>
+
+                    <!-- UPLOAD NEW / REPLACEMENT DOCUMENT FORM -->
+                    <div class="mt-4 pt-3 border-t border-slate-200 bg-white p-3.5 rounded-xl border border-slate-200/80">
+                        <h5 class="font-bold text-slate-800 text-xs mb-2 flex items-center gap-1">
+                            <i class="fas fa-cloud-upload-alt text-blue-600"></i>
+                            <span>नयाँ / प्रतिस्थापन कागजात थप्नुहोस् (Add / Replace Doc)</span>
+                        </h5>
+
+                        <form id="adminUploadDocForm" onsubmit="uploadNewDocumentAdmin(event)" class="space-y-2.5">
+                            <div>
+                                <label class="block font-semibold text-slate-600 text-[11px] mb-1">कागजात प्रकार छनोट गर्नुहोस् *</label>
+                                <select id="admin_doc_type" required class="w-full p-2 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-instBlue focus:outline-none">
+                                    <option value="विद्यार्थीको जन्मदर्ता (Birth Certificate)">विद्यार्थीको जन्मदर्ता (Birth Certificate)</option>
+                                    <option value="अभिभावकको नागरिकता (Guardian Citizenship)">अभिभावकको नागरिकता (Guardian Citizenship)</option>
+                                    <option value="मार्कसिट (Mark Sheet / Transcript)">मार्कसिट / लब्धांक पत्र (Mark Sheet)</option>
+                                    <option value="चारित्रिक प्रमाणपत्र (Character Certificate)">चारित्रिक प्रमाणपत्र (Character Certificate)</option>
+                                    <option value="स्थानान्तरण प्रमाणपत्र (Transfer Certificate / TC)">स्थानान्तरण प्रमाणपत्र (TC)</option>
+                                    <option value="अन्य आधिकारिक कागजात">अन्य आधिकारिक कागजात (Other Doc)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-600 text-[11px] mb-1">फाइल (PDF वा फोटो) *</label>
+                                <input type="file" id="admin_doc_file" required accept=".pdf,image/*" class="w-full text-[11px] p-1.5 border border-slate-300 rounded-lg file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-600 text-[11px] mb-1">टिप्पणी / नोट (ऐच्छिक)</label>
+                                <input type="text" id="admin_doc_notes" placeholder="उदाहरण: नयाँ जन्मदर्ता प्रतिलिपि..." class="w-full p-2 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-instBlue focus:outline-none">
+                            </div>
+
+                            <button type="submit" id="adminUploadDocBtn" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition text-xs shadow-xs flex items-center justify-center gap-1.5">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>कागजात अपलोड तथा संलग्न गर्नुहोस्</span>
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+
             </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">आवेदन स्थिति (Application Status) *</label>
-                <select id="modal_status" class="w-full text-xs rounded-lg border-slate-300 focus:ring-accentGold focus:border-accentGold p-2 border">
-                    <option value="नयाँ">नयाँ (New)</option>
-                    <option value="सम्पर्क गरिएको">सम्पर्क गरिएको (Contacted)</option>
-                    <option value="स्वीकृत">स्वीकृत (Approved)</option>
-                    <option value="अस्वीकृत">अस्वीकृत (Rejected)</option>
-                </select>
-            </div>
+        </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">एडमिन टिप्पणी / नोट (Admin Remarks)</label>
-                <textarea id="modal_remarks" rows="3" class="w-full text-xs rounded-lg border-slate-300 focus:ring-accentGold focus:border-accentGold p-2 border" placeholder="उदाहरण: फोनमा कुरा भयो, कागजात मगाइयो..."></textarea>
+        <!-- Modal Footer / Approval Workflow Action Bar -->
+        <div class="bg-slate-100 p-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="text-[11px] text-slate-500 flex items-center gap-1.5">
+                <i class="fas fa-lock text-slate-400"></i>
+                <span>कागजात र विवरणहरू केवल एडमिन र प्रिन्सिपललाई मात्र दृश्यमान छन्।</span>
             </div>
-
-            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                <button type="button" onclick="closeStatusModal()" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-50">
-                    रद्द गर्नुहोस्
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button type="button" onclick="closeReviewModal()" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold hover:bg-white transition">
+                    बन्द गर्नुहोस्
                 </button>
-                <button type="submit" class="px-5 py-2 bg-instBlue hover:bg-instBlue/90 text-white rounded-lg text-xs font-bold shadow-md transition">
-                    स्थिति सुरक्षित गर्नुहोस्
+                <button type="button" onclick="rejectCurrentAdmission()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fas fa-times-circle"></i>
+                    <span>अस्वीकृत गर्नुहोस्</span>
+                </button>
+                <button type="button" onclick="approveCurrentAdmission()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md">
+                    <i class="fas fa-check-double"></i>
+                    <span>स्वीकृत तथा प्रमाणित गर्नुहोस् (Approve)</span>
                 </button>
             </div>
-        </form>
+        </div>
+
     </div>
 </div>
 
 <script>
-function openStatusModal(adm) {
-    document.getElementById('modal_adm_id').value = adm.id;
-    document.getElementById('modal_student_name').textContent = adm.student_name || '-';
-    document.getElementById('modal_applying_class').textContent = adm.applying_class || '-';
-    document.getElementById('modal_parent_name').textContent = adm.parent_name || '-';
-    document.getElementById('modal_mobile').textContent = adm.mobile || '-';
-    document.getElementById('modal_address').textContent = adm.address || '-';
-    document.getElementById('modal_prev_school').textContent = adm.previous_school || 'खुलाइएको छैन';
-    document.getElementById('modal_message').textContent = adm.message || 'कुनै सन्देश छैन';
-    document.getElementById('modal_status').value = adm.status || 'नयाँ';
-    document.getElementById('modal_remarks').value = adm.remarks || '';
-    document.getElementById('statusModal').classList.remove('hidden');
+let currentApplicationData = null;
+
+// Search Table Filter
+function searchTable() {
+    const input = document.getElementById('tableSearch').value.toLowerCase();
+    const rows = document.querySelectorAll('.adm-row');
+    rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(input) ? '' : 'none';
+    });
 }
 
-function closeStatusModal() {
-    document.getElementById('statusModal').classList.add('hidden');
+// Status Tab Filter
+function filterByStatus(status, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => {
+        b.className = 'px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 filter-btn transition';
+    });
+    btn.className = 'px-3 py-1.5 rounded-lg font-semibold bg-instBlue text-white filter-btn transition';
+
+    const rows = document.querySelectorAll('.adm-row');
+    rows.forEach(row => {
+        const rowStatus = row.getAttribute('data-status');
+        if (status === 'all' || rowStatus === status) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
 }
 
-async function submitAdmissionStatus(e) {
-    e.preventDefault();
-    const id = document.getElementById('modal_adm_id').value;
-    const status = document.getElementById('modal_status').value;
-    const remarks = document.getElementById('modal_remarks').value;
+// Open Complete Review Modal
+async function openReviewModal(admId) {
+    document.getElementById('current_adm_id').value = admId;
+    document.getElementById('reviewModal').classList.remove('hidden');
+    
+    // Set loading state in documents
+    document.getElementById('modalDocsContainer').innerHTML = `
+        <div class="text-center py-8 text-slate-400">
+            <i class="fas fa-spinner fa-spin text-xl text-instBlue"></i>
+            <div class="mt-2 text-xs">विवरण तथा कागजातहरू लोड हुँदैछन्...</div>
+        </div>
+    `;
 
     try {
-        const res = await fetch(`/api/admissions/${id}`, {
+        const res = await fetch(`/api/admissions/${admId}`);
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            alert(data.detail || 'विवरण लोड गर्न सकिएन।');
+            closeReviewModal();
+            return;
+        }
+
+        const app = data.application;
+        currentApplicationData = app;
+
+        // Populate Headers
+        document.getElementById('modalStudentNameTitle').textContent = app.student_name || 'उम्मेदवार';
+        document.getElementById('modalApplicationBadge').textContent = `#ADM-${app.id}`;
+        
+        const statusBadge = document.getElementById('modalStatusBadge');
+        statusBadge.textContent = app.status || 'नयाँ';
+        if (app.status === 'स्वीकृत') statusBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-400 text-slate-900';
+        else if (app.status === 'अस्वीकृत') statusBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-400 text-white';
+        else if (app.status === 'सम्पर्क गरिएको') statusBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-400 text-slate-900';
+        else statusBadge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-400 text-slate-900';
+
+        // Populate Form Fields for Inline Edit
+        document.getElementById('edit_student_name').value = app.student_name || '';
+        document.getElementById('edit_dob').value = app.dob || '';
+        document.getElementById('edit_gender').value = app.gender || 'छात्र';
+        document.getElementById('edit_applying_class').value = app.applying_class || '';
+        document.getElementById('edit_previous_school').value = app.previous_school || '';
+        document.getElementById('edit_parent_name').value = app.parent_name || '';
+        document.getElementById('edit_guardian_name').value = app.guardian_name || '';
+        document.getElementById('edit_mobile').value = app.mobile || '';
+        document.getElementById('edit_email').value = app.email || '';
+        document.getElementById('edit_address').value = app.address || '';
+        document.getElementById('edit_message').value = app.message || '';
+        document.getElementById('edit_remarks').value = app.remarks || '';
+        document.getElementById('edit_status').value = app.status || 'नयाँ';
+
+        // Render Attached Documents
+        renderDocumentsList(app.documents || []);
+
+    } catch (err) {
+        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+        closeReviewModal();
+    }
+}
+
+function closeReviewModal() {
+    document.getElementById('reviewModal').classList.add('hidden');
+    currentApplicationData = null;
+}
+
+// Render Attached Documents inside Modal
+function renderDocumentsList(docs) {
+    const container = document.getElementById('modalDocsContainer');
+    const badge = document.getElementById('docCountBadge');
+    badge.textContent = `${docs.length} कागजात`;
+
+    if (!docs || docs.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-6 bg-white rounded-xl border border-dashed border-slate-300 text-slate-400">
+                <i class="far fa-folder-open text-2xl text-slate-300"></i>
+                <div class="mt-1 font-semibold text-slate-500">हाल कुनै कागजात संलग्न छैन</div>
+                <p class="text-[10px] text-slate-400 mt-0.5">तपाईं तलको फारामबाट नयाँ कागजात थप्न सक्नुहुन्छ।</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '';
+    docs.forEach(doc => {
+        const isPdf = (doc.mime_type && doc.mime_type.includes('pdf')) || (doc.file_path && doc.file_path.endsWith('.pdf'));
+        const sizeKB = Math.round((doc.file_size || 0) / 1024);
+        const sizeStr = sizeKB > 1024 ? (sizeKB / 1024).toFixed(1) + ' MB' : (sizeKB || 0) + ' KB';
+        
+        let statusBadge = '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800">जाँच हुन बाँकी</span>';
+        if (doc.verification_status === 'प्रमाणित') {
+            statusBadge = '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800"><i class="fas fa-check mr-1"></i>प्रमाणित</span>';
+        } else if (doc.verification_status === 'अस्वीकृत') {
+            statusBadge = '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-800"><i class="fas fa-times mr-1"></i>अस्वीकृत</span>';
+        }
+
+        html += `
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 hover:border-slate-300 transition" id="doc-card-${doc.id}">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-lg ${isPdf ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-blue-50 text-blue-600 border border-blue-200'} flex items-center justify-center text-sm flex-shrink-0">
+                        <i class="${isPdf ? 'fas fa-file-pdf' : 'fas fa-file-image'}"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="font-bold text-slate-800 truncate text-[11px]">${doc.document_type || doc.document_name}</div>
+                        <div class="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5">
+                            <span>${sizeStr}</span>
+                            <span>•</span>
+                            ${statusBadge}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                    <a href="${doc.download_url || `/api/documents/${doc.id}/download`}" target="_blank" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[10px] font-semibold transition flex items-center gap-1" title="हेर्नुहोस्">
+                        <i class="fas fa-eye text-blue-600"></i> हेर्नुहोस्
+                    </a>
+                    <button type="button" onclick="deleteDocumentFromAdmission(${doc.id}, '${(doc.document_type || 'कागजात').replace(/'/g, "\\'")}')" class="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded transition" title="कागजात हटाउनुहोस्">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+// 1. Save Candidate Form Details (Inline Edit)
+async function saveCandidateDetails(e) {
+    e.preventDefault();
+    const admId = document.getElementById('current_adm_id').value;
+    const btn = document.getElementById('saveDetailsBtn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> सुरक्षित हुँदैछ...';
+
+    const payload = {
+        student_name: document.getElementById('edit_student_name').value.trim(),
+        dob: document.getElementById('edit_dob').value.trim(),
+        gender: document.getElementById('edit_gender').value,
+        applying_class: document.getElementById('edit_applying_class').value.trim(),
+        previous_school: document.getElementById('edit_previous_school').value.trim(),
+        parent_name: document.getElementById('edit_parent_name').value.trim(),
+        guardian_name: document.getElementById('edit_guardian_name').value.trim(),
+        mobile: document.getElementById('edit_mobile').value.trim(),
+        email: document.getElementById('edit_email').value.trim(),
+        address: document.getElementById('edit_address').value.trim(),
+        message: document.getElementById('edit_message').value.trim(),
+        remarks: document.getElementById('edit_remarks').value.trim(),
+        status: document.getElementById('edit_status').value
+    };
+
+    try {
+        const res = await fetch(`/api/admissions/${admId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status, remarks })
+            body: JSON.stringify(payload)
         });
         const data = await res.json();
         if (res.ok && data.success) {
-            alert(data.message || 'स्थिति सफलतापूर्वक सुरक्षित भयो!');
-            location.reload();
+            alert(data.message || 'विवरण सफलतापूर्वक सुरक्षित भयो!');
+            // Update table row in UI
+            const row = document.getElementById(`row-adm-${admId}`);
+            if (row) {
+                row.querySelector('.student-name').textContent = payload.student_name;
+                row.querySelector('.parent-name').textContent = payload.parent_name;
+                row.setAttribute('data-status', payload.status);
+            }
+            openReviewModal(admId); // Refresh modal view
         } else {
-            alert(data.detail || 'त्रुटि देखा पर्यो।');
+            alert(data.detail || 'विवरण अद्यावधिक गर्दा त्रुटि देखा पर्यो।');
         }
-    } catch(err) {
+    } catch (err) {
+        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
+// 2. Upload New or Replacement Document Directly from Review Panel
+async function uploadNewDocumentAdmin(e) {
+    e.preventDefault();
+    const admId = document.getElementById('current_adm_id').value;
+    const docType = document.getElementById('admin_doc_type').value;
+    const fileInput = document.getElementById('admin_doc_file');
+    const notes = document.getElementById('admin_doc_notes').value;
+    const btn = document.getElementById('adminUploadDocBtn');
+
+    if (!fileInput.files || !fileInput.files[0]) {
+        alert('कृपया फाइल छनोट गर्नुहोस्।');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('document_type', docType);
+    formData.append('document_file', fileInput.files[0]);
+    if (notes) formData.append('notes', notes);
+
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> अपलोड हुँदैछ...';
+
+    try {
+        const res = await fetch(`/api/admissions/${admId}/documents`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert(data.message || 'नयाँ कागजात सफलतापूर्वक थपियो!');
+            document.getElementById('adminUploadDocForm').reset();
+            openReviewModal(admId); // Reload to display new doc
+        } else {
+            alert(data.detail || 'कागजात अपलोड गर्दा त्रुटि भयो।');
+        }
+    } catch (err) {
+        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
+// 3. Delete Document from Admission (Capability to remove unwanted docs)
+async function deleteDocumentFromAdmission(docId, docTitle) {
+    const admId = document.getElementById('current_adm_id').value;
+    if (!confirm(`के तपाईं निश्चित हुनुहुन्छ? "${docTitle}" कागजात हटाइनेछ।`)) return;
+
+    try {
+        const res = await fetch(`/api/admissions/${admId}/documents/${docId}`, {
+            method: 'DELETE'
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            const el = document.getElementById(`doc-card-${docId}`);
+            if (el) el.remove();
+            openReviewModal(admId); // Refresh modal view
+        } else {
+            alert(data.detail || 'कागजात हटाउन सकिएन।');
+        }
+    } catch (err) {
         alert('सर्भरसँग सम्पर्क हुन सकेन।');
     }
 }
 
-async function deleteAdmission(id, name) {
-    if (!confirm(`के तपाईं निश्चित हुनुहुन्छ? "${name}" को भर्ना आवेदन स्थायी रूपमा हट्नेछ।`)) return;
+// 4. Approve Current Admission
+async function approveCurrentAdmission() {
+    const admId = document.getElementById('current_adm_id').value;
+    const name = document.getElementById('edit_student_name').value;
+    const remarks = document.getElementById('edit_remarks').value || 'प्रशासकद्वारा रुजु तथा स्वीकृत';
+
+    if (!confirm(`के तपाईं विद्यार्थी "${name}" को भर्ना आवेदन तथा संलग्न कागजातहरू स्वीकृत र प्रमाणित गर्न चाहनुहुन्छ?`)) return;
+
     try {
-        const res = await fetch(`/api/admissions/${id}`, { method: 'DELETE' });
+        const res = await fetch(`/api/admissions/${admId}/approve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ remarks })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert(data.message || 'भर्ना सफलतापूर्वक स्वीकृत भयो!');
+            location.reload();
+        } else {
+            alert(data.detail || 'स्वीकृत गर्दा त्रुटि देखा पर्यो।');
+        }
+    } catch (err) {
+        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+    }
+}
+
+// 5. Reject Current Admission
+async function rejectCurrentAdmission() {
+    const admId = document.getElementById('current_adm_id').value;
+    const name = document.getElementById('edit_student_name').value;
+    const reason = prompt(`"${name}" को आवेदन अस्वीकृत गर्नुको कारण उल्लेख गर्नुहोस्:`, 'कागजात वा मापदण्ड अपुग');
+    if (reason === null) return;
+
+    try {
+        const res = await fetch(`/api/admissions/${admId}/reject`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert(data.message || 'आवेदन अस्वीकृत गरियो।');
+            location.reload();
+        } else {
+            alert(data.detail || 'अस्वीकृत गर्दा त्रुटि देखा पर्यो।');
+        }
+    } catch (err) {
+        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+    }
+}
+
+// 6. Delete Admission Record
+async function deleteAdmissionRecord(admId, studentName) {
+    if (!confirm(`के तपाईं निश्चित हुनुहुन्छ? "${studentName}" को भर्ना आवेदन तथा सम्पूर्ण कागजातहरू स्थायी रूपमा हट्नेछन्।`)) return;
+
+    try {
+        const res = await fetch(`/api/admissions/${admId}`, {
+            method: 'DELETE'
+        });
         const data = await res.json();
         if (res.ok && data.success) {
             alert(data.message || 'आवेदन हटाइयो।');
-            const row = document.getElementById(`row-adm-${id}`);
+            const row = document.getElementById(`row-adm-${admId}`);
             if (row) row.remove();
         } else {
-            alert(data.detail || 'त्रुटि देखा पर्यो।');
+            alert(data.detail || 'आवेदन हटाउँदा त्रुटि देखा पर्यो।');
         }
-    } catch(err) {
+    } catch (err) {
         alert('सर्भरसँग सम्पर्क हुन सकेन।');
     }
 }

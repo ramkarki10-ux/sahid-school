@@ -1052,9 +1052,37 @@ def admin_admissions(request: Request):
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM admission_applications ORDER BY id DESC")
     applications = [dict(r) for r in cursor.fetchall()]
+
+    for app in applications:
+        cursor.execute("""
+            SELECT id, admission_id, document_type, document_name, file_size, mime_type,
+                   verification_status, verification_note, created_at
+            FROM student_documents
+            WHERE admission_id = ?
+            ORDER BY id ASC
+        """, (app["id"],))
+        docs = [dict(d) for d in cursor.fetchall()]
+        for d in docs:
+            d["download_url"] = f"/api/documents/{d['id']}/download"
+        app["documents"] = docs
+        app["doc_count"] = len(docs)
+
     conn.close()
 
-    ctx.update({"applications": applications})
+    total_count = len(applications)
+    new_count = sum(1 for a in applications if a.get("status") in ["नयाँ", "New", ""] or not a.get("status"))
+    approved_count = sum(1 for a in applications if a.get("status") in ["स्वीकृत", "Approved"])
+    contacted_count = sum(1 for a in applications if a.get("status") in ["सम्पर्क गरिएको", "Contacted"])
+    with_docs_count = sum(1 for a in applications if a.get("doc_count", 0) > 0)
+
+    ctx.update({
+        "applications": applications,
+        "total_count": total_count,
+        "new_count": new_count,
+        "approved_count": approved_count,
+        "contacted_count": contacted_count,
+        "with_docs_count": with_docs_count,
+    })
     return templates.TemplateResponse(request, "admin/admissions.html", ctx)
 
 @router.get("/audit-logs", response_class=HTMLResponse)

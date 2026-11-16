@@ -638,7 +638,12 @@ def init_db():
         message TEXT,
         status TEXT DEFAULT 'नयाँ',
         remarks TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        birth_certificate_url TEXT,
+        citizenship_url TEXT,
+        marksheet_url TEXT,
+        character_cert_url TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
 
@@ -881,8 +886,20 @@ def init_db():
     );
     """)
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_student_docs_student_id ON student_documents(student_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_student_docs_admission_id ON student_documents(admission_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_student_docs_status ON student_documents(verification_status);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_student_docs_req_group ON student_documents(requirement_group);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_admission_status ON admission_applications(status);")
+
+    # Ensure columns exist in admission_applications if table was created previously
+    cursor.execute("PRAGMA table_info(admission_applications)")
+    adm_cols = [r["name"] if isinstance(r, dict) else r[1] for r in cursor.fetchall()]
+    for col, col_t in [("birth_certificate_url", "TEXT"), ("citizenship_url", "TEXT"), ("marksheet_url", "TEXT"), ("character_cert_url", "TEXT"), ("updated_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")]:
+        if col not in adm_cols:
+            try:
+                cursor.execute(f"ALTER TABLE admission_applications ADD COLUMN {col} {col_t}")
+            except Exception:
+                pass
 
     # Ensure columns exist in committees if table was created previously
     for tbl in ["school_management_committee", "trustee_committee"]:

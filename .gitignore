@@ -14,3 +14,5 @@ ENV/
 Thumbs.db
 sahid/
 
+uploads/documents/*
+!uploads/documents/.gitkeep

@@ -546,7 +546,7 @@ async def upload_document(
 @router.get("/{doc_id}/download")
 def download_document(doc_id: int, request: Request):
     """Download or view student document. Supports both disk file and self-contained Base64."""
-    require_auth(request)
+    user = require_auth(request)
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM student_documents WHERE id = ?", (doc_id,))
@@ -555,6 +555,15 @@ def download_document(doc_id: int, request: Request):
 
     if not doc:
         raise HTTPException(status_code=404, detail="कागजात फेला परेन।")
+
+    # Strict Privacy: If document belongs to an admission application, only SUPER_ADMIN, ADMIN, PRINCIPAL can view it!
+    if doc["admission_id"]:
+        role = str(user.get("role", "")).upper()
+        if role not in {"SUPER_ADMIN", "ADMIN", "PRINCIPAL"}:
+            raise HTTPException(
+                status_code=403,
+                detail="पहुँच अस्वीकृत: भर्ना आवेदनका कागजातहरू केवल अधिकृत प्रशासक र प्रिन्सिपलले मात्र हेर्न सक्छन्।"
+            )
 
     # If data URL exists, serve directly (supports Vercel serverless cold instances)
     if doc["file_data"] and doc["file_data"].startswith("data:"):
