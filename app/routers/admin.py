@@ -1106,11 +1106,19 @@ def admin_documents(request: Request):
     user, ctx = get_admin_context(request, "documents")
     if not user:
         return RedirectResponse(url="/login", status_code=303)
-    
+
+    user_role = str(user.get("role", "")).upper()
+    can_verify = user_role in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"]
+
     conn = get_db()
     cursor = conn.cursor()
+
+    # Documents query with class and verifier
     cursor.execute("""
-        SELECT d.*, s.name_nepali as student_name, s.roll_no, c.class_name_ne, u.full_name_ne as verifier_name
+        SELECT d.*, 
+               s.name_nepali as student_name, s.roll_no,
+               COALESCE(NULLIF(d.student_class, ''), c.class_name_ne, 'नयाँ भर्ना') as display_class,
+               COALESCE(NULLIF(d.verified_by_name, ''), u.full_name_ne, '') as verifier_name
         FROM student_documents d
         LEFT JOIN students s ON d.student_id = s.id
         LEFT JOIN classes c ON s.class_id = c.id
@@ -1118,9 +1126,47 @@ def admin_documents(request: Request):
         ORDER BY d.id DESC
     """)
     documents = [dict(r) for r in cursor.fetchall()]
+
+    # Status counts for tabs
+    status_counts = {
+        "all": len(documents),
+        "pending": sum(1 for d in documents if d.get("verification_status") == "जाँच हुन बाँकी"),
+        "verified": sum(1 for d in documents if d.get("verification_status") == "प्रमाणित"),
+        "needs_revision": sum(1 for d in documents if d.get("verification_status") == "सुधार आवश्यक"),
+        "rejected": sum(1 for d in documents if d.get("verification_status") == "अस्वीकृत")
+    }
+
+    # Group counts
+    group_counts = {
+        "nursery_to_10": sum(1 for d in documents if d.get("requirement_group") == "nursery_to_10"),
+        "class_11_12": sum(1 for d in documents if d.get("requirement_group") == "class_11_12")
+    }
+
+    # Fetch active students for dropdown selection
+    cursor.execute("""
+        SELECT s.id, s.name_nepali, s.roll_no, c.class_name_ne, c.class_numeric, s.date_of_birth
+        FROM students s
+        LEFT JOIN classes c ON s.class_id = c.id
+        WHERE s.status = 'सक्रिय'
+        ORDER BY c.class_numeric ASC, s.roll_no ASC
+    """)
+    students_list = [dict(r) for r in cursor.fetchall()]
+
+    # Fetch classes
+    cursor.execute("SELECT id, class_name_ne, class_numeric FROM classes ORDER BY class_numeric ASC")
+    classes_list = [dict(r) for r in cursor.fetchall()]
+
     conn.close()
 
-    ctx.update({"documents": documents})
+    ctx.update({
+        "documents": documents,
+        "status_counts": status_counts,
+        "group_counts": group_counts,
+        "students_list": students_list,
+        "classes_list": classes_list,
+        "can_verify": can_verify,
+        "user_role": user_role
+    })
     return templates.TemplateResponse(request, "admin/document_verification.html", ctx)
 
 @router.get("/sms-gateway", response_class=HTMLResponse)

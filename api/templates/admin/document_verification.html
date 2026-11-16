@@ -1,122 +1,326 @@
 {% extends "admin/base_admin.html" %}
 
-{% block title %}विद्यार्थी कागजात प्रमाणीकरण | {{ settings.name_ne }}{% endblock %}
+{% block title %}विद्यार्थी कागजात प्रमाणीकरण (Student Document Verification) | {{ settings.name_ne }}{% endblock %}
 
 {% block admin_content %}
 <div class="space-y-6">
 
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <!-- Top Header Bar with RBAC Badge & Actions -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
         <div>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900">विद्यार्थी कागजात प्रमाणीकरण (Document Verification)</h1>
-            <p class="text-xs text-slate-500 mt-0.5">जन्मदर्ता, स्थानान्तरण प्रमाणपत्र (TC), चारित्रिक प्रमाणपत्र तथा लब्धांक पत्र जाँच एवं प्रमाणीकरण</p>
+            <div class="flex flex-wrap items-center gap-2">
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
+                    <i class="fas fa-file-signature text-instBlue"></i>
+                    <span>विद्यार्थी कागजात प्रमाणीकरण (Document Verification)</span>
+                </h1>
+                
+                <!-- RBAC Status Badge -->
+                {% if can_verify %}
+                <span class="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-[11px] font-bold px-3 py-1 rounded-full border border-emerald-300 shadow-xs">
+                    <i class="fas fa-shield-alt text-emerald-600"></i>
+                    <span>RBAC: {{ user_role }} (प्रमाणीकरण अधिकार प्राप्त)</span>
+                </span>
+                {% else %}
+                <span class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-800 text-[11px] font-bold px-3 py-1 rounded-full border border-amber-300 shadow-xs">
+                    <i class="fas fa-eye text-amber-600"></i>
+                    <span>RBAC: {{ user_role }} (अवलोकन मात्र - Read Only)</span>
+                </span>
+                {% endif %}
+            </div>
+            <p class="text-xs text-slate-500 mt-1">
+                कक्षा तथा उमेर अनुसारको सर्तबद्ध कागजात अपलोड, प्रमाणीकरण (Approval Workflow) तथा रुजु व्यवस्थापन
+            </p>
         </div>
+
         <div class="flex flex-wrap items-center gap-2">
-            <button type="button" onclick="openUploadModal()" class="inline-flex items-center gap-2 bg-instBlue hover:bg-instBlue-dark text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-sm transition">
-                <i data-lucide="upload" class="w-4 h-4"></i>
-                <span>नयाँ कागजात अपलोड गर्नुहोस्</span>
+            <!-- Upload Button (Accessible to all authorized roles) -->
+            <button type="button" onclick="openUploadModal()" class="inline-flex items-center gap-2 bg-instBlue hover:bg-instBlue-dark text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition">
+                <i class="fas fa-cloud-upload-alt text-amber-300"></i>
+                <span>+ नयाँ कागजात अपलोड गर्नुहोस्</span>
             </button>
-            <a href="/api/documents/export" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3.5 py-2.5 rounded-lg shadow-sm transition" title="कागजात सूची Excel मा डाउनलोड गर्नुहोस्">
-                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+
+            <!-- Export to Excel Button -->
+            <a href="/api/documents/export" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-sm transition" title="कागजात सूची Excel मा डाउनलोड गर्नुहोस्">
+                <i class="fas fa-file-excel"></i>
                 <span>Excel निर्यात</span>
             </a>
         </div>
     </div>
 
-    <!-- Status Filter Tabs -->
-    <div class="flex border-b border-slate-200 gap-2 bg-white p-2 rounded-xl shadow-sm text-xs font-bold overflow-x-auto">
-        <button onclick="filterStatus('')" class="status-tab-btn px-4 py-2 rounded-lg bg-instBlue text-white shadow-sm" data-status="">
-            सबै कागजात ({{ documents|length }})
-        </button>
-        <button onclick="filterStatus('जाँच हुन बाँकी')" class="status-tab-btn px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100" data-status="जाँच हुन बाँकी">
-            जाँच हुन बाँकी (Pending)
-        </button>
-        <button onclick="filterStatus('प्रमाणित')" class="status-tab-btn px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100" data-status="प्रमाणित">
-            प्रमाणित (Verified)
-        </button>
-        <button onclick="filterStatus('सुधार आवश्यक')" class="status-tab-btn px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100" data-status="सुधार आवश्यक">
-            सुधार आवश्यक
-        </button>
-        <button onclick="filterStatus('अस्वीकृत')" class="status-tab-btn px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100" data-status="अस्वीकृत">
-            अस्वीकृत (Rejected)
-        </button>
+    <!-- Conditional Rules Information Banner -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Rule 1: Nursery to Class 10 -->
+        <div class="bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-[11px] font-bold">
+                        <i class="fas fa-child"></i>
+                        <span>नर्सरी देखि कक्षा १० (वा १६ वर्ष मुनि)</span>
+                    </span>
+                    <span class="text-[11px] font-bold text-blue-700 font-mono">२ अनिवार्य कागजात</span>
+                </div>
+                <h3 class="font-extrabold text-sm text-slate-900 mt-2">आधारभूत तथा माध्यमिक तह कागजात नियम</h3>
+                <ul class="mt-2 space-y-1.5 text-xs text-slate-700">
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                        <span><strong>विद्यार्थीको जन्मदर्ता (Birth Certificate)</strong> - स्थानीय पञ्जिकाधिकारीबाट जारी</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                        <span><strong>अभिभावकको नागरिकता (Guardian Citizenship)</strong> - बुबा/आमा वा संरक्षकको नागरिकता</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-blue-200/60 flex items-center justify-between text-[11px] text-blue-800">
+                <span>हाल दर्ता कागजात: <strong>{{ group_counts.nursery_to_10 }}</strong> थान</span>
+                <button type="button" onclick="filterGroup('nursery_to_10')" class="font-bold underline hover:text-blue-950">यो समूह मात्र हेर्नुहोस् &rarr;</button>
+            </div>
+        </div>
+
+        <!-- Rule 2: Class 11 and 12 (+2 Level) -->
+        <div class="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-purple-700 text-white text-[11px] font-bold">
+                        <i class="fas fa-user-graduate"></i>
+                        <span>कक्षा ११ र १२ (वा १६ वर्ष माथि - +२ तह)</span>
+                    </span>
+                    <span class="text-[11px] font-bold text-purple-700 font-mono">४ अनिवार्य कागजात</span>
+                </div>
+                <h3 class="font-extrabold text-sm text-slate-900 mt-2">उच्च माध्यमिक तह (+२) कागजात नियम</h3>
+                <ul class="mt-2 space-y-1.5 text-xs text-slate-700">
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-purple-600 mt-0.5 flex-shrink-0"></i>
+                        <span><strong>नागरिकता वा जन्मदर्ता</strong> - विद्यार्थीको आफ्नै परिचयपत्र</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-purple-600 mt-0.5 flex-shrink-0"></i>
+                        <span><strong>लब्धांक पत्र / मार्कसिट (Marksheet)</strong> - SEE वा पूर्व तहको ग्रेडसिट</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fas fa-check-circle text-purple-600 mt-0.5 flex-shrink-0"></i>
+                        <span><strong>चारित्रिक प्रमाणपत्र (Character Certificate)</strong> र <strong>स्थानान्तरण प्रमाणपत्र (TC)</strong></span>
+                    </li>
+                </ul>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-purple-200/60 flex items-center justify-between text-[11px] text-purple-800">
+                <span>हाल दर्ता कागजात: <strong>{{ group_counts.class_11_12 }}</strong> थान</span>
+                <button type="button" onclick="filterGroup('class_11_12')" class="font-bold underline hover:text-purple-950">यो समूह मात्र हेर्नुहोस् &rarr;</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Documents Table -->
+    <!-- Status Tabs (All, Pending, Verified, Needs Revision, Rejected) -->
+    <div class="bg-white p-2 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <!-- Status Pills -->
+        <div class="flex items-center gap-1.5 text-xs font-bold overflow-x-auto p-1">
+            <button type="button" onclick="filterStatus('')" class="status-tab-btn px-4 py-2 rounded-xl bg-instBlue text-white shadow-sm transition" data-status="">
+                सबै कागजात ({{ status_counts.all }})
+            </button>
+            <button type="button" onclick="filterStatus('जाँच हुन बाँकी')" class="status-tab-btn px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 transition" data-status="जाँच हुन बाँकी">
+                <i class="fas fa-clock text-amber-500 mr-1"></i>
+                जाँच हुन बाँकी ({{ status_counts.pending }})
+            </button>
+            <button type="button" onclick="filterStatus('प्रमाणित')" class="status-tab-btn px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 transition" data-status="प्रमाणित">
+                <i class="fas fa-check-circle text-emerald-600 mr-1"></i>
+                प्रमाणित ({{ status_counts.verified }})
+            </button>
+            <button type="button" onclick="filterStatus('सुधार आवश्यक')" class="status-tab-btn px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 transition" data-status="सुधार आवश्यक">
+                <i class="fas fa-exclamation-triangle text-amber-600 mr-1"></i>
+                सुधार आवश्यक ({{ status_counts.needs_revision }})
+            </button>
+            <button type="button" onclick="filterStatus('अस्वीकृत')" class="status-tab-btn px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 transition" data-status="अस्वीकृत">
+                <i class="fas fa-times-circle text-red-600 mr-1"></i>
+                अस्वीकृत ({{ status_counts.rejected }})
+            </button>
+        </div>
+
+        <!-- Group & Search Toolbar -->
+        <div class="flex items-center gap-2 px-2 w-full sm:w-auto">
+            <!-- Group Level Filter Dropdown -->
+            <select id="groupFilterSelect" onchange="applyAllFilters()" class="text-xs px-3 py-2 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-instBlue focus:outline-none font-semibold text-slate-700">
+                <option value="">सबै तह (All Levels)</option>
+                <option value="nursery_to_10">नर्सरी - १० (१६ वर्ष मुनि)</option>
+                <option value="class_11_12">कक्षा ११ र १२ (+२ तह)</option>
+            </select>
+
+            <!-- Search Input -->
+            <div class="relative flex-1 sm:w-64">
+                <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                <input type="text" id="docSearchInput" oninput="applyAllFilters()" placeholder="विद्यार्थी वा कागजात खोज्नुहोस्..." class="w-full pl-8 pr-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none">
+            </div>
+        </div>
+    </div>
+
+    <!-- Documents Data Table -->
     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs" id="docTable">
                 <thead class="bg-slate-100 text-slate-800 font-bold border-b border-slate-200">
                     <tr>
-                        <th class="py-3 px-3.5 text-center w-12">क्र.सं.</th>
-                        <th class="py-3 px-4">विद्यार्थीको नाम</th>
-                        <th class="py-3 px-3 text-center">कक्षा</th>
-                        <th class="py-3 px-3 text-center">रोल नं.</th>
-                        <th class="py-3 px-4">कागजातको प्रकार</th>
-                        <th class="py-3 px-4">कागजातको नाम / साइज</th>
-                        <th class="py-3 px-3 text-center">प्रमाणीकरण स्थिति</th>
-                        <th class="py-3 px-4">कैफियत / प्रमाणीकरणकर्ता</th>
-                        <th class="py-3 px-4 text-center">कार्य (Actions)</th>
+                        <th class="py-3.5 px-3.5 text-center w-12">क्र.सं.</th>
+                        <th class="py-3.5 px-4">विद्यार्थीको नाम</th>
+                        <th class="py-3.5 px-3 text-center">कक्षा</th>
+                        <th class="py-3.5 px-3 text-center">रोल नं.</th>
+                        <th class="py-3.5 px-3 text-center">तह / वर्ग</th>
+                        <th class="py-3.5 px-4">कागजातको प्रकार</th>
+                        <th class="py-3.5 px-4">कागजातको नाम / साइज</th>
+                        <th class="py-3.5 px-3 text-center">प्रमाणीकरण स्थिति</th>
+                        <th class="py-3.5 px-4">कैफियत / प्रमाणीकरणकर्ता</th>
+                        <th class="py-3.5 px-4 text-center">कार्य (Actions)</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100" id="docTableBody">
                     {% for doc in documents %}
-                    <tr class="doc-row hover:bg-slate-50 transition" data-status="{{ doc.verification_status }}">
-                        <td class="py-3 px-3.5 text-center text-slate-400 font-bold">{{ loop.index }}</td>
+                    <tr class="doc-row hover:bg-slate-50/80 transition"
+                        data-status="{{ doc.verification_status }}"
+                        data-group="{{ doc.requirement_group }}"
+                        data-student="{{ (doc.student_name or '') | lower }}"
+                        data-class="{{ (doc.display_class or '') | lower }}"
+                        data-doctype="{{ doc.document_type | lower }}"
+                        data-docname="{{ doc.document_name | lower }}"
+                        data-roll="{{ doc.roll_no or '' }}"
+                        id="docRow_{{ doc.id }}">
+                        
+                        <!-- S.N. -->
+                        <td class="py-3 px-3.5 text-center text-slate-400 font-bold font-mono">{{ loop.index }}</td>
+
+                        <!-- Student Name & Checklist Trigger -->
                         <td class="py-3 px-4 font-bold text-slate-900">
-                            {{ doc.student_name or 'नयाँ भर्ना आवेदक' }}
+                            {% if doc.student_id %}
+                            <button type="button" onclick="openStudentChecklistModal({{ doc.student_id }}, '{{ (doc.student_name or 'विद्यार्थी') | escape }}')" class="hover:text-instBlue hover:underline text-left inline-flex items-center gap-1 font-bold" title="विद्यार्थीको सम्पूर्ण कागजात चेकलिस्ट हेर्नुहोस्">
+                                <span>{{ doc.student_name or 'नयाँ भर्ना आवेदक' }}</span>
+                                <i class="fas fa-clipboard-check text-[11px] text-blue-500 ml-1"></i>
+                            </button>
+                            {% else %}
+                            <span>{{ doc.student_name or 'नयाँ भर्ना आवेदक' }}</span>
+                            {% endif %}
                         </td>
-                        <td class="py-3 px-3 text-center font-semibold text-instBlue">
-                            {{ doc.class_name_ne or '-' }}
+
+                        <!-- Class -->
+                        <td class="py-3 px-3 text-center font-semibold text-instBlue whitespace-nowrap">
+                            {{ doc.display_class or '-' }}
                         </td>
-                        <td class="py-3 px-3 text-center font-mono font-bold">
+
+                        <!-- Roll No -->
+                        <td class="py-3 px-3 text-center font-mono font-bold text-slate-700">
                             {{ doc.roll_no or '-' }}
                         </td>
+
+                        <!-- Requirement Group Badge -->
+                        <td class="py-3 px-3 text-center whitespace-nowrap">
+                            {% if doc.requirement_group == 'class_11_12' %}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold border border-purple-200">
+                                <i class="fas fa-graduation-cap text-[9px]"></i> कक्षा ११-१२ (+२)
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold border border-blue-200">
+                                <i class="fas fa-child text-[9px]"></i> नर्सरी-१० (१६ मुनि)
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Document Type -->
                         <td class="py-3 px-4">
-                            <span class="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-800 font-bold text-[11px]">
-                                {{ doc.document_type }}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-semibold text-[11px] border border-slate-200">
+                                {% if 'जन्मदर्ता' in doc.document_type %}
+                                <i class="fas fa-id-card text-blue-600"></i>
+                                {% elif 'नागरिकता' in doc.document_type %}
+                                <i class="fas fa-passport text-emerald-600"></i>
+                                {% elif 'मार्कसिट' in doc.document_type %}
+                                <i class="fas fa-award text-amber-600"></i>
+                                {% elif 'स्थानान्तरण' in doc.document_type or 'TC' in doc.document_type %}
+                                <i class="fas fa-exchange-alt text-purple-600"></i>
+                                {% elif 'चारित्रिक' in doc.document_type %}
+                                <i class="fas fa-medal text-teal-600"></i>
+                                {% else %}
+                                <i class="fas fa-file-alt text-slate-500"></i>
+                                {% endif %}
+                                <span>{{ doc.document_type }}</span>
                             </span>
                         </td>
+
+                        <!-- File Name & Size -->
                         <td class="py-3 px-4">
-                            <p class="font-medium text-slate-800">{{ doc.document_name }}</p>
-                            <p class="text-[10px] text-slate-400 font-mono">{{ (doc.file_size / 1024)|round(1) }} KB</p>
+                            <p class="font-bold text-slate-800 line-clamp-1 leading-snug">{{ doc.document_name }}</p>
+                            <p class="text-[10px] text-slate-400 font-mono mt-0.5">
+                                <i class="fas fa-file text-[9px] mr-1"></i>{{ ((doc.file_size or 0) / 1024)|round(1) }} KB
+                            </p>
                         </td>
-                        <td class="py-3 px-3 text-center">
-                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold
-                                {% if doc.verification_status == 'प्रमाणित' %}bg-emerald-100 text-emerald-800
-                                {% elif doc.verification_status == 'सुधार आवश्यक' %}bg-amber-100 text-amber-800
-                                {% elif doc.verification_status == 'अस्वीकृत' %}bg-red-100 text-red-800
-                                {% else %}bg-slate-100 text-slate-700{% endif %}">
-                                {{ doc.verification_status }}
+
+                        <!-- Verification Status Badge -->
+                        <td class="py-3 px-3 text-center whitespace-nowrap">
+                            {% if doc.verification_status == 'प्रमाणित' %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                <i class="fas fa-check-circle text-emerald-600"></i> प्रमाणित (Verified)
                             </span>
+                            {% elif doc.verification_status == 'सुधार आवश्यक' %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                <i class="fas fa-exclamation-triangle text-amber-600"></i> सुधार आवश्यक
+                            </span>
+                            {% elif doc.verification_status == 'अस्वीकृत' %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-100 text-red-800 border border-red-300">
+                                <i class="fas fa-times-circle text-red-600"></i> अस्वीकृत (Rejected)
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-300">
+                                <i class="fas fa-clock text-slate-500"></i> जाँच हुन बाँकी
+                            </span>
+                            {% endif %}
                         </td>
-                        <td class="py-3 px-4 text-slate-600">
+
+                        <!-- Remarks & Verifier Name -->
+                        <td class="py-3 px-4 text-slate-600 max-w-[200px]">
                             {% if doc.verification_note %}
-                            <p class="font-medium">{{ doc.verification_note }}</p>
+                            <p class="font-medium text-xs text-slate-800 line-clamp-2 leading-relaxed" title="{{ doc.verification_note }}">{{ doc.verification_note }}</p>
+                            {% else %}
+                            <span class="text-slate-400 text-[11px]">-</span>
                             {% endif %}
+
                             {% if doc.verifier_name %}
-                            <p class="text-[10px] text-slate-400">जाँचकर्ता: {{ doc.verifier_name }}</p>
+                            <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                                <i class="fas fa-user-check text-blue-500"></i>
+                                <span>जाँचकर्ता: {{ doc.verifier_name }}</span>
+                            </p>
                             {% endif %}
                         </td>
-                        <td class="py-3 px-4 text-center">
-                            <div class="inline-flex items-center gap-1.5">
-                                <a href="/api/documents/{{ doc.id }}/download" target="_blank" class="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition" title="कागजात हेर्नुहोस् / डाउनलोड">
-                                    <i data-lucide="download" class="w-3.5 h-3.5 text-instBlue"></i>
+
+                        <!-- Action Buttons -->
+                        <td class="py-3 px-4 text-center whitespace-nowrap">
+                            <div class="inline-flex items-center gap-1">
+                                <!-- View / Download Document -->
+                                <a href="/api/documents/{{ doc.id }}/download" target="_blank" class="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 transition" title="कागजात हेर्नुहोस् वा डाउनलोड गर्नुहोस्">
+                                    <i class="fas fa-external-link-alt text-xs"></i>
                                 </a>
-                                <button type="button" onclick="verifyDoc({{ doc.id }}, 'प्रमाणित')" class="p-1.5 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition" title="प्रमाणित गर्नुहोस्">
-                                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+
+                                {% if can_verify %}
+                                <!-- Approve Button -->
+                                <button type="button" onclick="openReviewModal({{ doc.id }}, '{{ (doc.student_name or 'विद्यार्थी') | escape }}', '{{ doc.document_name | escape }}', 'प्रमाणित', '{{ (doc.verification_note or '') | escape }}')" class="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition" title="प्रमाणित गर्नुहोस् (Approve)">
+                                    <i class="fas fa-check text-xs"></i>
                                 </button>
-                                <button type="button" onclick="verifyDoc({{ doc.id }}, 'सुधार आवश्यक')" class="p-1.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-700 transition" title="सुधार आवश्यक">
-                                    <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
+
+                                <!-- Needs Revision Button -->
+                                <button type="button" onclick="openReviewModal({{ doc.id }}, '{{ (doc.student_name or 'विद्यार्थी') | escape }}', '{{ doc.document_name | escape }}', 'सुधार आवश्यक', '{{ (doc.verification_note or '') | escape }}')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 transition" title="सुधार आवश्यक चिन्ह लगाउनुहोस्">
+                                    <i class="fas fa-exclamation-triangle text-xs"></i>
                                 </button>
-                                <button type="button" onclick="verifyDoc({{ doc.id }}, 'अस्वीकृत')" class="p-1.5 rounded-md bg-red-50 hover:bg-red-100 text-red-700 transition" title="अस्वीकृत गर्नुहोस्">
-                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+
+                                <!-- Reject Button -->
+                                <button type="button" onclick="openReviewModal({{ doc.id }}, '{{ (doc.student_name or 'विद्यार्थी') | escape }}', '{{ doc.document_name | escape }}', 'अस्वीकृत', '{{ (doc.verification_note or '') | escape }}')" class="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 transition" title="अस्वीकृत गर्नुहोस् (Reject)">
+                                    <i class="fas fa-times text-xs"></i>
                                 </button>
-                                <button type="button" onclick="deleteDoc({{ doc.id }}, '{{ doc.document_name | escape }}')" class="p-1.5 rounded-md bg-rose-100 hover:bg-rose-200 text-rose-800 transition" title="कागजात मेटाउनुहोस्">
-                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+
+                                <!-- Delete Button -->
+                                <button type="button" onclick="confirmDeleteDoc({{ doc.id }}, '{{ doc.document_name | escape }}')" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 transition" title="कागजात मेटाउनुहोस्">
+                                    <i class="fas fa-trash-alt text-xs"></i>
                                 </button>
+                                {% else %}
+                                <span class="text-[10px] text-slate-400 font-semibold px-2 py-1 bg-slate-100 rounded-md" title="कागजात प्रमाणित गर्ने अधिकार केवल एडमिन र प्रिन्सिपललाई मात्र छ।">
+                                    <i class="fas fa-lock mr-0.5"></i> अवलोकन मात्र
+                                </span>
+                                {% endif %}
                             </div>
                         </td>
+
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -124,109 +328,396 @@
         </div>
 
         {% if not documents %}
-        <div class="py-12 text-center text-slate-400 text-xs">
-            <i data-lucide="file-question" class="w-10 h-10 mx-auto text-slate-300 mb-2"></i>
-            <p class="font-bold text-slate-600">कुनै कागजात दर्ता भएको छैन।</p>
+        <div class="py-16 text-center text-slate-400 text-xs">
+            <i class="fas fa-folder-open text-4xl text-slate-300 mb-2 block"></i>
+            <p class="font-bold text-slate-700 text-sm">हाल कुनै कागजात दर्ता भएको छैन।</p>
+            <p class="text-slate-400 mt-1">माथिको "+ नयाँ कागजात अपलोड गर्नुहोस्" बटनबाट विद्यार्थीको कागजात थप्नुहोस्।</p>
         </div>
         {% endif %}
+
+        <div id="noMatchFilteredMsg" class="hidden py-16 text-center text-slate-400 text-xs">
+            <i class="fas fa-search text-3xl text-slate-300 mb-2 block"></i>
+            <p class="font-bold text-slate-700 text-sm">खोजिएको फिल्टर अनुसार कुनै कागजात फेला परेन।</p>
+            <button onclick="resetFilters()" class="mt-2 text-instBlue font-bold underline">सबै कागजातहरू देखाउनुहोस्</button>
+        </div>
     </div>
 
 </div>
 
-<!-- Upload Modal -->
+<!-- ---------------------------------------------------------------- -->
+<!-- MODAL 1: CONDITIONAL UPLOAD DOCUMENT MODAL                       -->
+<!-- ---------------------------------------------------------------- -->
 <div id="uploadDocModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-4 max-h-[92vh] overflow-y-auto">
         <button type="button" onclick="closeUploadModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700">
-            <i data-lucide="x" class="w-5 h-5"></i>
+            <i class="fas fa-times text-base"></i>
         </button>
 
-        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-            <i data-lucide="upload" class="w-4 h-4 text-instBlue"></i>
-            <span>विद्यार्थी कागजात अपलोड गर्नुहोस्</span>
+        <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
+            <i class="fas fa-cloud-upload-alt text-instBlue"></i>
+            <span>विद्यार्थी कागजात अपलोड (Conditional Upload)</span>
         </h3>
 
-        <form id="uploadDocForm" onsubmit="handleDocUpload(event)" class="space-y-3 text-xs">
+        <form id="uploadDocForm" onsubmit="handleDocUpload(event)" class="space-y-4 text-xs">
+            
+            <!-- Student Selection Dropdown -->
             <div>
-                <label class="block font-bold text-slate-700 mb-1">विद्यार्थी ID / रोल नम्बर</label>
-                <input type="number" id="uploadStudentId" placeholder="विद्यार्थी ID (उदा: १)" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
-            </div>
-
-            <div>
-                <label class="block font-bold text-slate-700 mb-1">कागजातको प्रकार <span class="text-red-500">*</span></label>
-                <select id="uploadDocType" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
-                    <option value="जन्मदर्ता प्रमाणपत्र (Birth Certificate)">जन्मदर्ता प्रमाणपत्र (Birth Certificate)</option>
-                    <option value="स्थानान्तरण प्रमाणपत्र (Transfer Certificate)">स्थानान्तरण प्रमाणपत्र (Transfer Certificate)</option>
-                    <option value="चारित्रिक प्रमाणपत्र (Character Certificate)">चारित्रिक प्रमाणपत्र (Character Certificate)</option>
-                    <option value="लब्धांक पत्र (Marksheet)">लब्धांक पत्र (Marksheet)</option>
-                    <option value="नागरिकता / अभिभावक परिचयपत्र">नागरिकता / अभिभावक परिचयपत्र</option>
-                    <option value="अन्य आधिकारिक कागजात">अन्य आधिकारिक कागजात</option>
+                <label class="block font-bold text-slate-700 mb-1">विद्यार्थी छनोट (वा नयाँ भर्ना आवेदक) *</label>
+                <select id="uploadStudentSelect" onchange="onStudentSelected(this)" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none bg-white font-medium">
+                    <option value="" data-class="" data-numeric="0" data-age="14">-- विद्यार्थी छनोट गर्नुहोस् वा नयाँ आवेदक --</option>
+                    {% for st in students_list %}
+                    <option value="{{ st.id }}" 
+                            data-name="{{ st.name_nepali }}"
+                            data-class="{{ st.class_name_ne }}"
+                            data-numeric="{{ st.class_numeric }}"
+                            data-dob="{{ st.date_of_birth or '' }}">
+                        {{ st.name_nepali }} ({{ st.class_name_ne }} | रोल: {{ st.roll_no or '-' }})
+                    </option>
+                    {% endfor %}
                 </select>
             </div>
 
+            <!-- Class & Age row -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">कक्षा (Class) *</label>
+                    <select id="uploadClassSelect" required onchange="onClassOrAgeChanged()" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none bg-white font-medium">
+                        <option value="कक्षा ८" data-numeric="8">कक्षा ८</option>
+                        <option value="नर्सरी" data-numeric="-1">नर्सरी</option>
+                        <option value="यु.के.जी." data-numeric="0">यु.के.जी.</option>
+                        <option value="कक्षा १" data-numeric="1">कक्षा १</option>
+                        <option value="कक्षा २" data-numeric="2">कक्षा २</option>
+                        <option value="कक्षा ३" data-numeric="3">कक्षा ३</option>
+                        <option value="कक्षा ४" data-numeric="4">कक्षा ४</option>
+                        <option value="कक्षा ५" data-numeric="5">कक्षा ५</option>
+                        <option value="कक्षा ६" data-numeric="6">कक्षा ६</option>
+                        <option value="कक्षा ७" data-numeric="7">कक्षा ७</option>
+                        <option value="कक्षा ९" data-numeric="9">कक्षा ९</option>
+                        <option value="कक्षा १०" data-numeric="10">कक्षा १०</option>
+                        <option value="कक्षा ११ - म्यानेजमेन्ट" data-numeric="11">कक्षा ११ - म्यानेजमेन्ट</option>
+                        <option value="कक्षा ११ - साइन्स" data-numeric="11">कक्षा ११ - साइन्स</option>
+                        <option value="कक्षा ११ - कम्प्युटर साइन्स" data-numeric="11">कक्षा ११ - कम्प्युटर साइन्स</option>
+                        <option value="कक्षा १२ - म्यानेजमेन्ट" data-numeric="12">कक्षा १२ - म्यानेजमेन्ट</option>
+                        <option value="कक्षा १२ - साइन्स" data-numeric="12">कक्षा १२ - साइन्स</option>
+                        <option value="कक्षा १२ - कम्प्युटर साइन्स" data-numeric="12">कक्षा १२ - कम्प्युटर साइन्स</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">उमेर (Age in Years)</label>
+                    <input type="number" id="uploadAgeInput" min="3" max="30" value="14" oninput="onClassOrAgeChanged()" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none font-mono">
+                </div>
+            </div>
+
+            <!-- Dynamic Conditional Requirement Notice Box -->
+            <div id="dynamicRuleBanner" class="p-3.5 rounded-xl border border-blue-200 bg-blue-50/80 transition-all">
+                <div class="flex items-center gap-2 font-bold text-xs" id="ruleBannerTitle">
+                    <i class="fas fa-info-circle text-blue-600"></i>
+                    <span>नर्सरी देखि कक्षा १०: सर्तबद्ध कागजात नियम</span>
+                </div>
+                <p class="text-[11px] text-slate-700 mt-1" id="ruleBannerText">
+                    यस तहका लागि <strong>विद्यार्थीको जन्मदर्ता</strong> र <strong>अभिभावकको नागरिकता</strong> अनिवार्य छन्।
+                </p>
+            </div>
+
+            <!-- Document Type Selection -->
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">कागजातको प्रकार (Document Type) <span class="text-red-500">*</span></label>
+                <select id="uploadDocType" required class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none bg-white font-medium">
+                    <!-- Dynamic Options Populated by JS based on Class/Age -->
+                </select>
+            </div>
+
+            <!-- Document Title / Description -->
             <div>
                 <label class="block font-bold text-slate-700 mb-1">कागजातको शीर्षक / नाम <span class="text-red-500">*</span></label>
-                <input type="text" id="uploadDocName" required placeholder="उदा: कक्षा ८ स्थानान्तरण प्रमाणपत्र" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-instBlue focus:outline-none">
+                <input type="text" id="uploadDocName" required placeholder="उदा: रोहित कार्की - जन्मदर्ता प्रमाणपत्र" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none">
+            </div>
+
+            <!-- File Input -->
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">फाइल छनोट गर्नुहोस् (PDF, JPG, PNG - अधिकतम १० MB) <span class="text-red-500">*</span></label>
+                <input type="file" id="uploadFile" required accept=".pdf,.jpg,.jpeg,.png,.webp" class="w-full text-xs p-2 border border-slate-300 rounded-xl bg-slate-50">
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeUploadModal()" class="px-4 py-2 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-slate-50 transition">रद्द गर्नुहोस्</button>
+                <button type="submit" id="uploadSubmitBtn" class="px-5 py-2 bg-instBlue hover:bg-instBlue-dark text-white font-bold rounded-xl shadow-md transition">
+                    <i class="fas fa-save mr-1"></i> अपलोड गर्नुहोस्
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- ---------------------------------------------------------------- -->
+<!-- MODAL 2: RBAC VERIFICATION / APPROVAL WORKFLOW MODAL             -->
+<!-- ---------------------------------------------------------------- -->
+<div id="reviewModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
+        <button type="button" onclick="closeReviewModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700">
+            <i class="fas fa-times text-base"></i>
+        </button>
+
+        <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
+            <i class="fas fa-check-shield text-emerald-600"></i>
+            <span>कागजात प्रमाणीकरण कार्य (Approval Action)</span>
+        </h3>
+
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
+            <p><strong class="text-slate-600">विद्यार्थी:</strong> <span id="reviewStudentName" class="font-bold text-slate-900"></span></p>
+            <p><strong class="text-slate-600">कागजात:</strong> <span id="reviewDocName" class="font-bold text-slate-900"></span></p>
+        </div>
+
+        <form id="reviewActionForm" onsubmit="submitReviewAction(event)" class="space-y-4 text-xs">
+            <input type="hidden" id="reviewDocId">
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1.5">प्रमाणीकरण निर्णय (Verification Status) *</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <label class="cursor-pointer border border-emerald-300 rounded-xl p-2.5 text-center flex flex-col items-center gap-1 hover:bg-emerald-50 transition font-bold text-emerald-800">
+                        <input type="radio" name="reviewStatus" value="प्रमाणित" checked class="text-emerald-600 focus:ring-emerald-600">
+                        <i class="fas fa-check-circle text-base text-emerald-600 mt-1"></i>
+                        <span>प्रमाणित (Verified)</span>
+                    </label>
+
+                    <label class="cursor-pointer border border-amber-300 rounded-xl p-2.5 text-center flex flex-col items-center gap-1 hover:bg-amber-50 transition font-bold text-amber-800">
+                        <input type="radio" name="reviewStatus" value="सुधार आवश्यक" class="text-amber-600 focus:ring-amber-600">
+                        <i class="fas fa-exclamation-triangle text-base text-amber-600 mt-1"></i>
+                        <span>सुधार आवश्यक</span>
+                    </label>
+
+                    <label class="cursor-pointer border border-red-300 rounded-xl p-2.5 text-center flex flex-col items-center gap-1 hover:bg-red-50 transition font-bold text-red-800">
+                        <input type="radio" name="reviewStatus" value="अस्वीकृत" class="text-red-600 focus:ring-red-600">
+                        <i class="fas fa-times-circle text-base text-red-600 mt-1"></i>
+                        <span>अस्वीकृत (Reject)</span>
+                    </label>
+                </div>
             </div>
 
             <div>
-                <label class="block font-bold text-slate-700 mb-1">फाइल छनोट गर्नुहोस् (PDF, JPG, PNG - अधिकतम ५ MB) <span class="text-red-500">*</span></label>
-                <input type="file" id="uploadFile" required accept=".pdf,.jpg,.jpeg,.png" class="w-full text-xs">
+                <label class="block font-bold text-slate-700 mb-1">
+                    कैफियत / प्रमाणीकरण नोट (Remarks)
+                    <span class="text-slate-400 font-normal text-[11px]">(सुधार वा अस्वीकृत गर्नु परे कारण खुलाउनुहोस्)</span>
+                </label>
+                <textarea id="reviewNote" rows="3" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="उदा: कागजात स्पष्ट रहेकोले सदर गरियो... वा फोटो अस्पष्ट छ..."></textarea>
             </div>
 
-            <div class="pt-2 flex justify-end gap-2">
-                <button type="button" onclick="closeUploadModal()" class="px-3 py-2 border rounded-lg hover:bg-slate-50">रद्द गर्नुहोस्</button>
-                <button type="submit" id="uploadSubmitBtn" class="px-4 py-2 bg-instBlue text-white font-bold rounded-lg hover:bg-instBlue-dark shadow">अपलोड गर्नुहोस्</button>
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeReviewModal()" class="px-4 py-2 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-slate-50 transition">रद्द गर्नुहोस्</button>
+                <button type="submit" id="reviewSubmitBtn" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition">
+                    <i class="fas fa-check-double mr-1"></i> स्थिति अद्यावधिक गर्नुहोस्
+                </button>
             </div>
         </form>
     </div>
 </div>
 
+<!-- ---------------------------------------------------------------- -->
+<!-- MODAL 3: STUDENT DOCUMENT COMPLIANCE CHECKLIST MODAL             -->
+<!-- ---------------------------------------------------------------- -->
+<div id="studentChecklistModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-4 max-h-[90vh] overflow-y-auto">
+        <button type="button" onclick="closeStudentChecklistModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700">
+            <i class="fas fa-times text-base"></i>
+        </button>
+
+        <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
+            <i class="fas fa-tasks text-instBlue"></i>
+            <span>विद्यार्थी कागजात रुजु चेकलिस्ट (Compliance Checklist)</span>
+        </h3>
+
+        <!-- Student summary badge -->
+        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs flex items-center justify-between">
+            <div>
+                <p class="font-extrabold text-sm text-slate-900" id="chkModalStudentName"></p>
+                <p class="text-[11px] text-slate-500 mt-0.5" id="chkModalStudentClass"></p>
+            </div>
+            <div id="chkModalOverallBadge"></div>
+        </div>
+
+        <!-- Checklist List -->
+        <div class="space-y-2.5" id="chkModalItemsList">
+            <div class="py-6 text-center text-slate-400"><i class="fas fa-spinner fa-spin mr-1"></i> चेकलिस्ट लोड हुँदैछ...</div>
+        </div>
+
+        <div class="pt-3 flex justify-end border-t">
+            <button type="button" onclick="closeStudentChecklistModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">बन्द गर्नुहोस्</button>
+        </div>
+    </div>
+</div>
+
 <script>
-function filterStatus(status) {
-    const tabs = document.querySelectorAll('.status-tab-btn');
-    tabs.forEach(t => {
-        if (t.dataset.status === status) {
-            t.className = "status-tab-btn px-4 py-2 rounded-lg bg-instBlue text-white shadow-sm";
+// Global filter state
+let currentStatusFilter = '';
+let currentGroupFilter = '';
+
+// ----------------------------------------------------
+// FILTER & SEARCH LOGIC
+// ----------------------------------------------------
+function filterStatus(st) {
+    currentStatusFilter = st;
+    const btns = document.querySelectorAll('.status-tab-btn');
+    btns.forEach(b => {
+        if (b.dataset.status === st) {
+            b.className = "status-tab-btn px-4 py-2 rounded-xl bg-instBlue text-white shadow-sm transition font-bold";
         } else {
-            t.className = "status-tab-btn px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100";
+            b.className = "status-tab-btn px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 transition font-bold";
         }
     });
+    applyAllFilters();
+}
+
+function filterGroup(grp) {
+    currentGroupFilter = grp;
+    document.getElementById('groupFilterSelect').value = grp;
+    applyAllFilters();
+}
+
+function applyAllFilters() {
+    currentGroupFilter = document.getElementById('groupFilterSelect').value.trim();
+    const q = (document.getElementById('docSearchInput').value || '').trim().toLowerCase();
 
     const rows = document.querySelectorAll('.doc-row');
+    let visibleCount = 0;
+
     rows.forEach(r => {
-        if (!status || r.dataset.status === status) {
+        const rStatus = r.dataset.status || '';
+        const rGroup = r.dataset.group || '';
+        const rStudent = r.dataset.student || '';
+        const rClass = r.dataset.class || '';
+        const rDocType = r.dataset.doctype || '';
+        const rDocName = r.dataset.docname || '';
+        const rRoll = r.dataset.roll || '';
+
+        const matchesStatus = (!currentStatusFilter) || (rStatus === currentStatusFilter);
+        const matchesGroup = (!currentGroupFilter) || (rGroup === currentGroupFilter);
+        const matchesQ = (!q) || (
+            rStudent.includes(q) || rClass.includes(q) || rDocType.includes(q) ||
+            rDocName.includes(q) || rRoll.includes(q)
+        );
+
+        if (matchesStatus && matchesGroup && matchesQ) {
             r.style.display = '';
+            visibleCount++;
         } else {
             r.style.display = 'none';
         }
     });
+
+    const noMatch = document.getElementById('noMatchFilteredMsg');
+    if (visibleCount === 0 && rows.length > 0) {
+        noMatch.classList.remove('hidden');
+    } else {
+        noMatch.classList.add('hidden');
+    }
 }
 
-async function verifyDoc(docId, status) {
-    const note = prompt(`स्थिति '${status}' का लागि कैफियत लेख्नुहोस् (ऐच्छिक):`, '');
-    if (note === null) return;
+function resetFilters() {
+    document.getElementById('groupFilterSelect').value = '';
+    document.getElementById('docSearchInput').value = '';
+    currentGroupFilter = '';
+    filterStatus('');
+}
 
-    try {
-        const res = await fetch(`/api/documents/${docId}/verify`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ verification_status: status, verification_note: note })
-        });
-        const data = await res.json();
-        if (data.success) {
-            alert(data.message);
-            location.reload();
-        } else {
-            alert(data.detail || 'त्रुटि भयो।');
+// ----------------------------------------------------
+// DYNAMIC CONDITIONAL UPLOAD MODAL LOGIC
+// ----------------------------------------------------
+const DOC_OPTIONS = {
+    nursery_to_10: [
+        { val: "विद्यार्थीको जन्मदर्ता (Birth Certificate)", label: "१. विद्यार्थीको जन्मदर्ता (Birth Certificate) [अनिवार्य]", req: true },
+        { val: "अभिभावकको नागरिकता (Guardian Citizenship)", label: "२. अभिभावकको नागरिकता (Guardian Citizenship) [अनिवार्य]", req: true },
+        { val: "स्थानान्तरण प्रमाणपत्र (Transfer Certificate / TC)", label: "३. स्थानान्तरण प्रमाणपत्र (TC) [ऐच्छिक/स्थानान्तरण भएमा]", req: false },
+        { val: "चारित्रिक प्रमाणपत्र (Character Certificate)", label: "४. चारित्रिक प्रमाणपत्र [ऐच्छिक]", req: false },
+        { val: "अन्य आधिकारिक कागजात", label: "५. अन्य आधिकारिक कागजात", req: false }
+    ],
+    class_11_12: [
+        { val: "विद्यार्थीको नागरिकता वा जन्मदर्ता (Citizenship / Birth Certificate)", label: "१. विद्यार्थीको नागरिकता वा जन्मदर्ता [अनिवार्य]", req: true },
+        { val: "लब्धांक पत्र / मार्कसिट (Marksheet)", label: "२. मार्कसिट (SEE / कक्षा १० लब्धांक पत्र) [अनिवार्य]", req: true },
+        { val: "चारित्रिक प्रमाणपत्र (Character Certificate)", label: "३. चारित्रिक प्रमाणपत्र (Character Certificate) [अनिवार्य]", req: true },
+        { val: "स्थानान्तरण प्रमाणपत्र / TC (Transfer Certificate)", label: "४. स्थानान्तरण प्रमाणपत्र / TC (Transfer Certificate) [अनिवार्य]", req: true },
+        { val: "अभिभावकको नागरिकता (Guardian Citizenship)", label: "५. अभिभावकको नागरिकता [ऐच्छिक]", req: false },
+        { val: "अन्य आधिकारिक कागजात", label: "६. अन्य आधिकारिक कागजात", req: false }
+    ]
+};
+
+function onStudentSelected(select) {
+    const opt = select.options[select.selectedIndex];
+    if (!opt || !opt.value) return;
+
+    const cName = opt.dataset.class;
+    const cNum = opt.dataset.numeric;
+    const dob = opt.dataset.dob;
+
+    if (cName) {
+        const classSelect = document.getElementById('uploadClassSelect');
+        for (let i = 0; i < classSelect.options.length; i++) {
+            if (classSelect.options[i].value === cName || classSelect.options[i].dataset.numeric === cNum) {
+                classSelect.selectedIndex = i;
+                break;
+            }
         }
-    } catch (err) {
-        alert('सर्भरसँग सम्पर्क हुन सकेन।');
+    }
+
+    if (dob) {
+        try {
+            const yrMatch = dob.match(/\b(20\d\d)\b/);
+            if (yrMatch) {
+                const yr = parseInt(yrMatch[1]);
+                const estAge = yr > 2050 ? (2082 - yr) : (2026 - yr);
+                document.getElementById('uploadAgeInput').value = Math.max(4, estAge);
+            }
+        } catch(e) {}
+    }
+
+    onClassOrAgeChanged();
+}
+
+function onClassOrAgeChanged() {
+    const classSelect = document.getElementById('uploadClassSelect');
+    const selectedOpt = classSelect.options[classSelect.selectedIndex];
+    const cNum = parseInt(selectedOpt ? selectedOpt.dataset.numeric : 0);
+    const cVal = classSelect.value || '';
+    const age = parseInt(document.getElementById('uploadAgeInput').value || 14);
+
+    const isClass11_12 = (cNum >= 11) || (cVal.includes("11") || cVal.includes("12") || cVal.includes("११") || cVal.includes("१२")) || (age >= 16);
+
+    const banner = document.getElementById('dynamicRuleBanner');
+    const bTitle = document.getElementById('ruleBannerTitle');
+    const bText = document.getElementById('ruleBannerText');
+    const docTypeSelect = document.getElementById('uploadDocType');
+
+    docTypeSelect.innerHTML = '';
+
+    if (isClass11_12) {
+        banner.className = "p-3.5 rounded-xl border border-purple-200 bg-purple-50/80 transition-all";
+        bTitle.innerHTML = '<i class="fas fa-user-graduate text-purple-700"></i><span class="text-purple-900 font-bold">कक्षा ११ र १२ (+२ तह): सर्तबद्ध कागजात नियम (४ अनिवार्य)</span>';
+        bText.innerHTML = 'यस तहका लागि <strong>१. विद्यार्थीको नागरिकता/जन्मदर्ता</strong>, <strong>२. मार्कसिट</strong>, <strong>३. चारित्रिक प्रमाणपत्र</strong>, र <strong>४. स्थानान्तरण प्रमाणपत्र (TC)</strong> अनिवार्य छन्।';
+
+        DOC_OPTIONS.class_11_12.forEach(opt => {
+            const el = document.createElement('option');
+            el.value = opt.val;
+            el.innerText = opt.label;
+            docTypeSelect.appendChild(el);
+        });
+    } else {
+        banner.className = "p-3.5 rounded-xl border border-blue-200 bg-blue-50/80 transition-all";
+        bTitle.innerHTML = '<i class="fas fa-child text-blue-600"></i><span class="text-blue-900 font-bold">नर्सरी देखि कक्षा १० (१६ वर्ष मुनि): सर्तबद्ध कागजात नियम (२ अनिवार्य)</span>';
+        bText.innerHTML = 'यस तहका लागि <strong>१. विद्यार्थीको जन्मदर्ता प्रमाणपत्र</strong> र <strong>२. अभिभावकको नागरिकता</strong> अनिवार्य छन्।';
+
+        DOC_OPTIONS.nursery_to_10.forEach(opt => {
+            const el = document.createElement('option');
+            el.value = opt.val;
+            el.innerText = opt.label;
+            docTypeSelect.appendChild(el);
+        });
     }
 }
 
 function openUploadModal() {
+    document.getElementById('uploadDocForm').reset();
     document.getElementById('uploadDocModal').classList.remove('hidden');
-    if (window.lucide) lucide.createIcons();
+    onClassOrAgeChanged();
 }
 
 function closeUploadModal() {
@@ -237,17 +728,27 @@ async function handleDocUpload(e) {
     e.preventDefault();
     const btn = document.getElementById('uploadSubmitBtn');
     const fileInput = document.getElementById('uploadFile');
-    if (!fileInput.files.length) return;
+    if (!fileInput.files || !fileInput.files.length) {
+        alert("कृपया फाइल छनोट गर्नुहोस्।");
+        return;
+    }
+
+    const stSelect = document.getElementById('uploadStudentSelect');
+    const classSelect = document.getElementById('uploadClassSelect');
+    const selectedOpt = classSelect.options[classSelect.selectedIndex];
 
     const formData = new FormData();
     formData.append('file', fileInput.files[0]);
     formData.append('document_type', document.getElementById('uploadDocType').value);
-    formData.append('document_name', document.getElementById('uploadDocName').value);
-    const stuId = document.getElementById('uploadStudentId').value;
-    if (stuId) formData.append('student_id', stuId);
+    formData.append('document_name', document.getElementById('uploadDocName').value.trim());
+
+    if (stSelect.value) formData.append('student_id', stSelect.value);
+    formData.append('student_class', classSelect.value);
+    formData.append('class_numeric', selectedOpt ? selectedOpt.dataset.numeric : 0);
+    formData.append('student_age', document.getElementById('uploadAgeInput').value || 14);
 
     btn.disabled = true;
-    btn.innerText = 'अपलोड हुँदैछ...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> अपलोड हुँदैछ...';
 
     try {
         const res = await fetch('/api/documents/upload', {
@@ -255,34 +756,164 @@ async function handleDocUpload(e) {
             body: formData
         });
         const data = await res.json();
-        if (data.success) {
-            alert(data.message);
-            location.reload();
+        if (res.ok && data.success) {
+            alert("✓ " + data.message);
+            window.location.reload();
         } else {
-            alert(data.detail || 'अपलोड असफल भयो।');
+            alert("त्रुटि: " + (data.detail || "अपलोड असफल भयो।"));
         }
-    } catch (err) {
-        alert('त्रुटि भयो।');
+    } catch(err) {
+        alert("सर्भर त्रुटि भयो: " + err.message);
     } finally {
         btn.disabled = false;
-        btn.innerText = 'अपलोड गर्नुहोस्';
+        btn.innerHTML = '<i class="fas fa-save mr-1"></i> अपलोड गर्नुहोस्';
     }
 }
 
-async function deleteDoc(id, name) {
-    if (!confirm(`के तपाईं निश्चित रूपमा "${name}" मेटाउन चाहनुहुन्छ?`)) return;
+// ----------------------------------------------------
+// RBAC APPROVAL / REVIEW WORKFLOW MODAL
+// ----------------------------------------------------
+function openReviewModal(docId, studentName, docName, defaultStatus, defaultNote) {
+    document.getElementById('reviewDocId').value = docId;
+    document.getElementById('reviewStudentName').innerText = studentName;
+    document.getElementById('reviewDocName').innerText = docName;
+    document.getElementById('reviewNote').value = defaultNote || '';
+
+    const radios = document.getElementsByName('reviewStatus');
+    radios.forEach(r => {
+        if (r.value === defaultStatus) r.checked = true;
+    });
+
+    document.getElementById('reviewModal').classList.remove('hidden');
+}
+
+function closeReviewModal() {
+    document.getElementById('reviewModal').classList.add('hidden');
+}
+
+async function submitReviewAction(e) {
+    e.preventDefault();
+    const docId = document.getElementById('reviewDocId').value;
+    const selectedRadio = document.querySelector('input[name="reviewStatus"]:checked');
+    const statusVal = selectedRadio ? selectedRadio.value : 'प्रमाणित';
+    const noteVal = document.getElementById('reviewNote').value.trim();
+
+    const btn = document.getElementById('reviewSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> अद्यावधिक हुँदैछ...';
+
     try {
-        const res = await fetch(`/api/documents/${id}`, { method: 'DELETE' });
+        const res = await fetch(`/api/documents/${docId}/verify`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                verification_status: statusVal,
+                verification_note: noteVal
+            })
+        });
         const data = await res.json();
-        if (res.ok) {
-            alert('कागजात सफलतापूर्वक हटाइयो!');
-            location.reload();
+        if (res.ok && data.success) {
+            alert("✓ " + data.message);
+            window.location.reload();
         } else {
-            alert('त्रुटि: ' + (data.detail || 'मेटाउन सकिएन'));
+            alert("त्रुटि: " + (data.detail || "अद्यावधिक हुन सकेन।"));
         }
     } catch(err) {
-        alert('सर्भर त्रुटि: ' + err.message);
+        alert("सर्भर त्रुटि: " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-double mr-1"></i> स्थिति अद्यावधिक गर्नुहोस्';
     }
+}
+
+async function confirmDeleteDoc(docId, docName) {
+    if (!confirm(`के तपाईं निश्चित हुनुहुन्छ?\n\n"${docName}" लाई डाटाबेस र सर्भरबाट स्थायी रूपमा हटाउन चाहनुहुन्छ?`)) return;
+
+    try {
+        const res = await fetch(`/api/documents/${docId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert("✓ " + data.message);
+            const row = document.getElementById(`docRow_${docId}`);
+            if (row) row.remove();
+            applyAllFilters();
+        } else {
+            alert("त्रुटि: " + (data.detail || "मेटाउन सकिएन।"));
+        }
+    } catch(err) {
+        alert("सर्भर त्रुटि: " + err.message);
+    }
+}
+
+// ----------------------------------------------------
+// STUDENT DOCUMENT CHECKLIST MODAL
+// ----------------------------------------------------
+async function openStudentChecklistModal(studentId, studentName) {
+    document.getElementById('chkModalStudentName').innerText = studentName;
+    document.getElementById('chkModalStudentClass').innerText = "लोड हुँदैछ...";
+    document.getElementById('chkModalOverallBadge').innerHTML = '';
+    document.getElementById('chkModalItemsList').innerHTML = '<div class="py-6 text-center text-slate-400"><i class="fas fa-spinner fa-spin mr-1"></i> लोड हुँदैछ...</div>';
+    document.getElementById('studentChecklistModal').classList.remove('hidden');
+
+    try {
+        const res = await fetch(`/api/documents/checklist/${studentId}`);
+        const data = await res.json();
+        if (res.ok && data.success) {
+            document.getElementById('chkModalStudentClass').innerText = `${data.student.class} | रोल: ${data.student.roll_no || '-'} (${data.group_title})`;
+            
+            // Overall status badge
+            let badgeHtml = '';
+            if (data.overall_status === 'COMPLETED') {
+                badgeHtml = '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fas fa-check-circle mr-1"></i> पूर्ण प्रमाणित</span>';
+            } else if (data.overall_status === 'NEEDS_REVISION') {
+                badgeHtml = '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300"><i class="fas fa-exclamation-triangle mr-1"></i> सुधार आवश्यक</span>';
+            } else if (data.overall_status === 'INCOMPLETE') {
+                badgeHtml = '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-800 border border-red-300"><i class="fas fa-times-circle mr-1"></i> अपूर्ण कागजात</span>';
+            } else {
+                badgeHtml = '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-300"><i class="fas fa-clock mr-1"></i> जाँच बाँकी</span>';
+            }
+            document.getElementById('chkModalOverallBadge').innerHTML = badgeHtml;
+
+            // Render list of required documents
+            const listContainer = document.getElementById('chkModalItemsList');
+            listContainer.innerHTML = '';
+            data.checklist.forEach(item => {
+                const d = document.createElement('div');
+                d.className = "p-3 rounded-xl border flex items-center justify-between text-xs " + 
+                    (item.status === 'प्रमाणित' ? "bg-emerald-50/50 border-emerald-200" :
+                    (item.status === 'सुधार आवश्यक' ? "bg-amber-50/50 border-amber-200" :
+                    (item.status === 'अस्वीकृत' ? "bg-red-50/50 border-red-200" :
+                    (item.is_uploaded ? "bg-blue-50/50 border-blue-200" : "bg-slate-50 border-slate-200"))));
+
+                d.innerHTML = `
+                    <div class="space-y-0.5 max-w-[280px]">
+                        <p class="font-bold text-slate-900">${item.label}</p>
+                        <p class="text-[10px] text-slate-500">${item.document_name || item.note}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-bold px-2 py-0.5 rounded text-[10px] ${
+                            item.status === 'प्रमाणित' ? 'bg-emerald-100 text-emerald-800' :
+                            (item.status === 'सुधार आवश्यक' ? 'bg-amber-100 text-amber-800' :
+                            (item.status === 'अस्वीकृत' ? 'bg-red-100 text-red-800' :
+                            (item.is_uploaded ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-600')))
+                        }">
+                            ${item.status}
+                        </span>
+                        ${item.document_id ? `<div class="mt-1"><a href="/api/documents/${item.document_id}/download" target="_blank" class="text-[10px] text-blue-600 underline font-semibold">हेर्नुहोस् &rarr;</a></div>` : ''}
+                    </div>
+                `;
+                listContainer.appendChild(d);
+            });
+        } else {
+            document.getElementById('chkModalItemsList').innerHTML = '<div class="py-4 text-center text-red-600">चेकलिस्ट लोड गर्न सकिएन।</div>';
+        }
+    } catch(err) {
+        document.getElementById('chkModalItemsList').innerHTML = '<div class="py-4 text-center text-red-600">सर्भर त्रुटि भयो।</div>';
+    }
+}
+
+function closeStudentChecklistModal() {
+    document.getElementById('studentChecklistModal').classList.add('hidden');
 }
 </script>
 {% endblock %}

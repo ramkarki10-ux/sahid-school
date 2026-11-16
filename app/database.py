@@ -855,6 +855,35 @@ def init_db():
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_media_gallery_type ON media_gallery(media_type);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_media_gallery_category ON media_gallery(category);")
 
+    # 21. Student Documents (विद्यार्थी कागजात प्रमाणिकरण with Conditional Rules & RBAC)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS student_documents (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id INTEGER,
+        admission_id INTEGER,
+        student_class TEXT DEFAULT '',
+        class_numeric INTEGER DEFAULT 0,
+        student_age INTEGER DEFAULT 0,
+        requirement_group TEXT DEFAULT 'nursery_to_10',
+        document_type TEXT NOT NULL,
+        document_name TEXT NOT NULL,
+        file_path TEXT NOT NULL,
+        file_size INTEGER DEFAULT 0,
+        mime_type TEXT DEFAULT 'application/pdf',
+        file_data TEXT DEFAULT '',
+        verification_status TEXT DEFAULT 'जाँच हुन बाँकी',
+        verification_note TEXT DEFAULT '',
+        verified_by INTEGER,
+        verified_by_name TEXT DEFAULT '',
+        verified_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_student_docs_student_id ON student_documents(student_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_student_docs_status ON student_documents(verification_status);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_student_docs_req_group ON student_documents(requirement_group);")
+
     # Ensure columns exist in committees if table was created previously
     for tbl in ["school_management_committee", "trustee_committee"]:
         cursor.execute(f"PRAGMA table_info({tbl})")
