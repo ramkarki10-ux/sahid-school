@@ -980,13 +980,31 @@ def admin_publications(request: Request):
     return templates.TemplateResponse(request, "admin/publications.html", ctx)
 
 @router.get("/gallery", response_class=HTMLResponse)
-def admin_gallery(request: Request):
+def admin_gallery(request: Request, tab: Optional[str] = "all"):
     user, ctx = get_admin_context(request, "gallery")
     if not user:
         return RedirectResponse(url="/login", status_code=303)
-    
+
+    # RBAC: Strictly restricted to Admin and Principal
+    user_role = str(user.get("role", "")).upper()
+    if user_role not in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"]:
+        return RedirectResponse(url="/admin/dashboard?error=access_denied", status_code=303)
+
     conn = get_db()
     cursor = conn.cursor()
+
+    # Fetch modern media_gallery items
+    cursor.execute("SELECT * FROM media_gallery ORDER BY display_order ASC, id DESC")
+    all_media = [dict(m) for m in cursor.fetchall()]
+
+    photos = [m for m in all_media if m.get("media_type") == "photo"]
+    videos = [m for m in all_media if m.get("media_type") == "video"]
+
+    # Distinct categories
+    cursor.execute("SELECT DISTINCT category FROM media_gallery WHERE category IS NOT NULL AND category != '' ORDER BY category ASC")
+    categories = [r[0] for r in cursor.fetchall()]
+
+    # Legacy albums
     cursor.execute("SELECT * FROM photo_albums ORDER BY id DESC")
     albums = [dict(a) for a in cursor.fetchall()]
     for alb in albums:
@@ -994,23 +1012,20 @@ def admin_gallery(request: Request):
         alb["photos"] = [dict(p) for p in cursor.fetchall()]
     conn.close()
 
-    ctx.update({"albums": albums})
+    ctx.update({
+        "all_media": all_media,
+        "photos": photos,
+        "videos": videos,
+        "categories": categories,
+        "albums": albums,
+        "active_tab": tab or "all",
+        "user_role": user_role
+    })
     return templates.TemplateResponse(request, "admin/gallery.html", ctx)
 
 @router.get("/videos", response_class=HTMLResponse)
 def admin_videos(request: Request):
-    user, ctx = get_admin_context(request, "videos")
-    if not user:
-        return RedirectResponse(url="/login", status_code=303)
-    
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM videos ORDER BY id DESC")
-    videos = [dict(r) for r in cursor.fetchall()]
-    conn.close()
-
-    ctx.update({"videos": videos})
-    return templates.TemplateResponse(request, "admin/videos.html", ctx)
+    return RedirectResponse(url="/admin/gallery?tab=video", status_code=302)
 
 @router.get("/facilities", response_class=HTMLResponse)
 def admin_facilities(request: Request):

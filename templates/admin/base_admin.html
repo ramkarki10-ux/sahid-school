@@ -312,14 +312,14 @@
                         <span>प्रकाशन (Publications)</span>
                     </a>
                     <a href="/admin/gallery"
-                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'gallery' %}bg-instBlue text-white font-bold{% endif %}">
-                        <i data-lucide="image" class="w-4 h-4"></i>
-                        <span>फोटो ग्यालेरी</span>
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active in ['gallery', 'videos'] %}bg-instBlue text-white font-bold{% endif %}">
+                        <i data-lucide="image" class="w-4 h-4 text-amber-400"></i>
+                        <span>मिडिया ग्यालेरी CMS</span>
                     </a>
-                    <a href="/admin/videos"
+                    <a href="/admin/gallery?tab=video"
                         class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'videos' %}bg-instBlue text-white font-bold{% endif %}">
                         <i data-lucide="video" class="w-4 h-4 text-red-500"></i>
-                        <span>भिडियो</span>
+                        <span>भिडियो व्यवस्थापन</span>
                     </a>
                     <a href="/admin/calendar"
                         class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'calendar' %}bg-instBlue text-white font-bold{% endif %}">

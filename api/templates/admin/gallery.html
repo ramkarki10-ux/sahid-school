@@ -1,417 +1,1120 @@
 {% extends "admin/base_admin.html" %}
 
-{% block title %}फोटो ग्यालरी व्यवस्थापन | {{ settings.name_ne }}{% endblock %}
+{% block title %}मिडिया ग्यालेरी CMS (Media Gallery Management) | {{ settings.name_ne }}{% endblock %}
 
 {% block admin_content %}
 <div class="space-y-6">
     
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+    <!-- Top Header Bar with RBAC Badge -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
         <div>
-            <h1 class="text-xl font-bold text-instBlue">फोटो ग्यालरी (Photo Gallery Albums)</h1>
-            <p class="text-xs text-slate-500 mt-0.5">विद्यालयका एल्बम, तस्विरहरू तथा फेसबुक फोटो आयात व्यवस्थापन</p>
+            <div class="flex items-center gap-2">
+                <h1 class="text-xl font-bold text-instBlue">मिडिया ग्यालेरी व्यवस्थापन प्रणाली (Media Gallery CMS)</h1>
+                <span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-300">
+                    <i class="fas fa-shield-alt text-emerald-600"></i>
+                    <span>RBAC: {{ user_role }} (अधिकृत)</span>
+                </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">
+                विद्यालयका उच्च-गुणस्तरका तस्विरहरू, वृत्तचित्र, युट्युब भिडियो तथा फेसबुक सामाजिक लिङ्कहरूको सुरक्षित व्यवस्थापन
+            </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-            <!-- Facebook Fetch Button -->
-            <button onclick="openFbModal()" class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
-                <i class="fab fa-facebook-f"></i>
-                <span>Facebook बाट फोटो ल्याउनुहोस्</span>
+            <!-- Batch Upload Button -->
+            <button onclick="openBatchUploadModal()" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-sm transition">
+                <i class="fas fa-layer-group"></i>
+                <span>+ धेरै फोटो एकैपटक अपलोड</span>
             </button>
 
-            <!-- Standard Add Album Button -->
-            <button onclick="openAlbumModal()" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue/90 text-white font-semibold text-xs px-3.5 py-2 rounded-lg shadow-sm transition">
-                <i class="fas fa-plus text-amber-300"></i>
-                <span>+ नयाँ एल्बम थप्नुहोस्</span>
+            <!-- Standard Add Single Media Button -->
+            <button onclick="openAddMediaModal()" class="inline-flex items-center gap-1.5 bg-instBlue hover:bg-instBlue/90 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-sm transition">
+                <i class="fas fa-cloud-upload-alt text-amber-300"></i>
+                <span>+ नयाँ तस्विर / भिडियो थप्नुहोस्</span>
             </button>
         </div>
     </div>
 
-    <!-- Official Facebook Page Banner -->
-    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
-                <i class="fab fa-facebook-f text-lg"></i>
-            </div>
+    <!-- Stats & Social Quick Bar -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 flex items-center justify-between shadow-sm">
             <div>
-                <p class="font-bold text-slate-900">आधिकारिक फेसबुक पेज: सहिद स्मृति आवासीय माध्यमिक विद्यालय</p>
-                <a href="https://www.facebook.com/profile.php?id=100092258731456" target="_blank" rel="noopener" class="text-blue-700 font-mono text-[11px] hover:underline break-all">
-                    https://www.facebook.com/profile.php?id=100092258731456
+                <p class="text-xs font-semibold text-blue-700">कुल तस्विरहरू (Photos)</p>
+                <p class="text-2xl font-black text-blue-900 mt-0.5" id="statsPhotoCount">{{ photos | length }}</p>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md">
+                <i class="fas fa-images text-lg"></i>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-red-50 to-rose-50 border border-red-200 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+            <div>
+                <p class="text-xs font-semibold text-red-700">कुल भिडियोहरू (Videos)</p>
+                <p class="text-2xl font-black text-red-900 mt-0.5" id="statsVideoCount">{{ videos | length }}</p>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-red-600 text-white flex items-center justify-center shadow-md">
+                <i class="fas fa-video text-lg"></i>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+            <div>
+                <p class="text-xs font-semibold text-amber-700">कुल विधा / क्याटेगरी</p>
+                <p class="text-2xl font-black text-amber-900 mt-0.5">{{ categories | length }}</p>
+            </div>
+            <div class="w-11 h-11 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-md">
+                <i class="fas fa-tags text-lg"></i>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+            <div>
+                <p class="text-xs font-semibold text-emerald-700">फेसबुक सिङ्क पेज</p>
+                <a href="https://www.facebook.com/profile.php?id=100092258731456" target="_blank" rel="noopener" class="text-xs text-blue-700 font-bold hover:underline flex items-center gap-1 mt-1">
+                    <span>आधिकारिक पेज खोल्नुहोस्</span>
+                    <i class="fas fa-external-link-alt text-[10px]"></i>
                 </a>
             </div>
+            <div class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md">
+                <i class="fab fa-facebook-f text-lg"></i>
+            </div>
         </div>
-        <a href="https://www.facebook.com/profile.php?id=100092258731456" target="_blank" rel="noopener" class="inline-flex items-center gap-1 bg-white border border-blue-300 text-blue-700 hover:bg-blue-100 font-bold px-3 py-1.5 rounded-lg text-xs transition">
-            <i class="fas fa-external-link-alt"></i>
-            <span>फेसबुक पेज खोल्नुहोस्</span>
-        </a>
     </div>
 
-    <!-- Albums Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% for a in albums %}
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition">
+    <!-- Filter & Search Toolbar -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
+        <!-- Sub-tabs: All / Photos / Videos -->
+        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-bold w-full md:w-auto">
+            <button type="button" onclick="setMediaTypeFilter('all')" id="tabBtnAll" class="px-4 py-2 rounded-lg bg-white text-instBlue shadow-sm transition">
+                <i class="fas fa-th-large mr-1"></i> सबै मिडिया ({{ all_media | length }})
+            </button>
+            <button type="button" onclick="setMediaTypeFilter('photo')" id="tabBtnPhoto" class="px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition">
+                <i class="fas fa-camera mr-1"></i> फोटोहरू ({{ photos | length }})
+            </button>
+            <button type="button" onclick="setMediaTypeFilter('video')" id="tabBtnVideo" class="px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition">
+                <i class="fab fa-youtube mr-1 text-red-600"></i> भिडियोहरू ({{ videos | length }})
+            </button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <!-- Category Filter Dropdown -->
+            <select id="filterCategory" onchange="applyFilters()" class="text-xs px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none bg-white font-medium">
+                <option value="">सबै विधाहरू (All Categories)</option>
+                <option value="विद्यालय कार्यक्रम">विद्यालय कार्यक्रम</option>
+                <option value="शैक्षिक">शैक्षिक (Academic)</option>
+                <option value="खेलकुद">खेलकुद (Sports)</option>
+                <option value="सांस्कृतिक">सांस्कृतिक (Cultural)</option>
+                <option value="अभिभावक">अभिभावक (Parents)</option>
+                <option value="पुरस्कार">पुरस्कार (Awards)</option>
+                <option value="भ्रमण">भ्रमण (Tour)</option>
+                <option value="छात्रावास">छात्रावास (Hostel)</option>
+                <option value="अन्य">अन्य (Other)</option>
+            </select>
+
+            <!-- Search Input -->
+            <div class="relative flex-1 sm:w-64">
+                <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                <input type="text" id="filterSearch" oninput="applyFilters()" placeholder="शीर्षक वा विवरण खोज्नुहोस्..." class="w-full pl-8 pr-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none">
+            </div>
+
+            <!-- Public View Link -->
+            <a href="/gallery" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition" title="पब्लिक ग्यालेरी नयाँ ट्याबमा खोल्नुहोस्">
+                <i class="fas fa-external-link-alt text-blue-600"></i>
+                <span class="hidden sm:inline">पब्लिक हेर्नुहोस्</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Media Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" id="mediaGrid">
+        {% for m in all_media %}
+        <div class="media-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition group"
+             data-type="{{ m.media_type }}"
+             data-category="{{ m.category }}"
+             data-title="{{ m.title | lower }}"
+             data-desc="{{ (m.description or '') | lower }}"
+             id="mediaCard_{{ m.id }}">
+            
             <div>
-                <div class="h-44 bg-slate-100 overflow-hidden relative group">
-                    <img src="{{ a.cover_image or '/static/images/hero-banner.jpg' }}" alt="" class="w-full h-full object-cover">
-                    <span class="absolute top-2 right-2 bg-slate-900/80 text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                        {{ a.photos | length if a.photos else 0 }} तस्विरहरू
+                <!-- Thumbnail / Media Preview -->
+                <div class="h-44 bg-slate-900 relative overflow-hidden group">
+                    <img src="{{ m.thumbnail_url or m.media_url or '/static/images/hero-banner.jpg' }}" alt="{{ m.title }}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105" loading="lazy">
+                    
+                    <!-- Type Badge -->
+                    <span class="absolute top-2.5 left-2.5 text-[10px] font-black px-2 py-0.5 rounded-lg shadow-sm backdrop-blur-md {% if m.media_type == 'video' %}bg-red-600/90 text-white{% else %}bg-instBlue/90 text-white{% endif %}">
+                        {% if m.media_type == 'video' %}
+                        <i class="fab fa-youtube mr-1"></i> भिडियो
+                        {% else %}
+                        <i class="fas fa-image mr-1"></i> तस्विर
+                        {% endif %}
                     </span>
-                    <span class="absolute bottom-2 left-2 bg-instBlue/90 text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                        {{ a.category or 'विद्यालय कार्यक्रम' }}
+
+                    <!-- Category Badge -->
+                    <span class="absolute top-2.5 right-2.5 bg-slate-900/80 backdrop-blur-md text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-lg">
+                        {{ m.category }}
                     </span>
+
+                    {% if m.media_type == 'video' %}
+                    <!-- Play Overlay Button -->
+                    <button type="button" onclick='previewMedia({{ m | tojson | safe }})' class="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/50 transition">
+                        <div class="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg transform group-hover:scale-110 transition">
+                            <i class="fas fa-play text-base ml-0.5"></i>
+                        </div>
+                    </button>
+                    {% else %}
+                    <!-- Zoom Overlay Button -->
+                    <button type="button" onclick='previewMedia({{ m | tojson | safe }})' class="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition opacity-0 group-hover:opacity-100">
+                        <div class="w-10 h-10 rounded-full bg-white/90 text-instBlue flex items-center justify-center shadow-lg transform group-hover:scale-110 transition">
+                            <i class="fas fa-search-plus text-base"></i>
+                        </div>
+                    </button>
+                    {% endif %}
+
+                    <!-- Event Date Pill -->
+                    {% if m.event_date %}
+                    <span class="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-mono px-2 py-0.5 rounded">
+                        <i class="far fa-calendar-alt mr-1 text-amber-300"></i>{{ m.event_date }}
+                    </span>
+                    {% endif %}
                 </div>
-                <div class="p-4 space-y-1">
-                    <h3 class="font-bold text-sm text-instBlue">{{ a.title_ne }}</h3>
-                    <p class="text-xs text-slate-500 line-clamp-2">{{ a.description_ne or 'विवरण उपलब्ध छैन' }}</p>
+
+                <!-- Text Content & Description -->
+                <div class="p-4 space-y-2">
+                    <h3 class="font-bold text-sm text-slate-900 line-clamp-1 leading-snug group-hover:text-instBlue transition" title="{{ m.title }}">
+                        {{ m.title }}
+                    </h3>
+
+                    <!-- Rich Description Box -->
+                    <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed" title="{{ m.description or '' }}">
+                        {{ m.description or 'कुनै विस्तृत विवरण उपलब्ध छैन।' }}
+                    </p>
+
+                    <!-- External Social Link Pill -->
+                    {% if m.external_link %}
+                    <div class="pt-1">
+                        <a href="{{ m.external_link }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-lg transition max-w-full truncate">
+                            {% if 'facebook' in m.external_link %}
+                            <i class="fab fa-facebook text-blue-600"></i>
+                            {% elif 'youtube' in m.external_link %}
+                            <i class="fab fa-youtube text-red-600"></i>
+                            {% else %}
+                            <i class="fas fa-link text-slate-500"></i>
+                            {% endif %}
+                            <span class="truncate">{{ m.external_link_title or 'सामाजिक लिङ्क खोल्नुहोस्' }}</span>
+                            <i class="fas fa-external-link-alt text-[9px] text-blue-400 ml-0.5"></i>
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
-            <div class="p-3 border-t bg-slate-50 flex items-center justify-between text-xs">
-                <span class="text-slate-500 font-mono text-[11px]">{{ a.created_at[:10] if a.created_at else '' }}</span>
-                <div class="flex items-center gap-1">
-                    <button type="button" onclick="openAddPhotoModal({{ a.id }}, '{{ a.title_ne | escape }}')" class="p-1.5 rounded text-emerald-700 hover:bg-emerald-50 transition" title="तस्विर थप्नुहोस्">
-                        <i class="fas fa-plus-circle"></i>
+            <!-- Action Controls (RBAC: Replace, Edit, Delete) -->
+            <div class="p-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs">
+                <span class="text-slate-400 font-mono text-[10px]">#{{ m.id }}</span>
+
+                <div class="flex items-center gap-1.5">
+                    <!-- Replace Media Button -->
+                    <button type="button" onclick='openReplaceMediaModal({{ m | tojson | safe }})' class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 font-bold text-[11px] transition shadow-xs" title="तस्विर वा भिडियो फाइल बदल्नुहोस् (Replace)">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>बदल्नुहोस्</span>
                     </button>
-                    <button type="button" onclick='openEditAlbumModal({{ a | tojson | safe }})' class="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition" title="एल्बम सम्पादन">
-                        <i class="fas fa-edit"></i>
+
+                    <!-- Edit Metadata Button -->
+                    <button type="button" onclick='openEditMediaModal({{ m | tojson | safe }})' class="p-1.5 rounded-lg text-blue-600 hover:bg-blue-100 transition" title="विवरण सम्पादन गर्नुहोस्">
+                        <i class="fas fa-edit text-sm"></i>
                     </button>
-                    <button type="button" onclick="deleteAlbum({{ a.id }}, '{{ a.title_ne | escape }}')" class="p-1.5 rounded text-rose-600 hover:bg-rose-50 transition" title="एल्बम मेटाउनुहोस्">
-                        <i class="fas fa-trash-alt"></i>
+
+                    <!-- Delete Button -->
+                    <button type="button" onclick="confirmDeleteMedia({{ m.id }}, '{{ m.title | escape }}')" class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-100 transition" title="मेटाउनुहोस्">
+                        <i class="fas fa-trash-alt text-sm"></i>
                     </button>
                 </div>
             </div>
+
         </div>
         {% else %}
-        <div class="col-span-full bg-white p-8 rounded-xl border text-center text-slate-500 text-xs">
-            हाल कुनै एल्बम सिर्जना गरिएको छैन।
+        <div class="col-span-full bg-white p-12 rounded-2xl border text-center text-slate-500">
+            <i class="fas fa-photo-video text-4xl text-slate-300 mb-3 block"></i>
+            <p class="font-bold text-slate-700 text-sm">हाल कुनै मिडिया प्रविष्टि गरिएको छैन।</p>
+            <p class="text-xs text-slate-400 mt-1">माथिको "+ नयाँ तस्विर / भिडियो थप्नुहोस्" बटन क्लिक गरी तस्विर वा भिडियो अपलोड गर्नुहोस्।</p>
         </div>
         {% endfor %}
     </div>
 
+    <!-- Empty State for Filters -->
+    <div id="filterEmptyState" class="hidden bg-white p-12 rounded-2xl border border-slate-200 text-center text-slate-500">
+        <i class="fas fa-filter text-3xl text-slate-300 mb-2 block"></i>
+        <p class="font-bold text-slate-700 text-sm">तपाईंले खोज्नुभएको फिल्टर अनुसार कुनै तस्विर वा भिडियो फेला परेन।</p>
+        <button onclick="resetFilters()" class="mt-3 text-xs text-instBlue font-bold underline">सबै मिडिया देखाउनुहोस्</button>
+    </div>
+
 </div>
 
-<!-- FACEBOOK PHOTO IMPORT MODAL -->
-<div id="fbModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs">
+<!-- ---------------------------------------------------------------- -->
+<!-- MODAL 1: ADD SINGLE MEDIA (Photo / Video)                         -->
+<!-- ---------------------------------------------------------------- -->
+<div id="addMediaModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 text-xs max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b pb-3">
-            <h3 class="font-bold text-sm text-blue-700 flex items-center gap-2">
-                <i class="fab fa-facebook-f text-base"></i>
-                <span>Facebook बाट फोटो / पोस्ट सिंक तथा आयात</span>
+            <h3 class="font-bold text-base text-instBlue flex items-center gap-2">
+                <i class="fas fa-cloud-upload-alt text-amber-500"></i>
+                <span id="addModalTitle">नयाँ तस्विर वा भिडियो थप्नुहोस् (Add Media)</span>
             </h3>
-            <button onclick="closeFbModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-base"></i></button>
+            <button onclick="closeAddMediaModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-base"></i></button>
         </div>
 
-        <div class="bg-blue-50 p-3 rounded-lg text-slate-700 text-[11px] leading-relaxed">
-            आधिकारिक फेसबुक पेज (ID: 100092258731456) बाट फोटो वा पोस्टको लिंक पेस्ट गरी शीर्षक र क्याटेगरी चयन गर्नुहोस्:
-        </div>
-
-        <form id="fbImportForm" onsubmit="handleFbImport(event)" class="space-y-3">
-            <div>
-                <label class="block font-semibold mb-1 text-slate-700">फेसबुक पोस्ट / फोटो URL *</label>
-                <input type="url" id="fb_url" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none font-mono text-xs" placeholder="https://www.facebook.com/permalink.php?story_fbid=...&id=100092258731456" value="https://www.facebook.com/profile.php?id=100092258731456">
+        <form id="addMediaForm" onsubmit="handleAddMediaSubmit(event)" class="space-y-4">
+            
+            <!-- Type Selector: Photo vs Video -->
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <label class="block font-bold text-slate-700 mb-2">मिडिया प्रकार (Media Type) *</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="cursor-pointer flex items-center gap-2 bg-white p-2.5 rounded-lg border border-slate-300 hover:border-instBlue transition font-bold text-slate-800">
+                        <input type="radio" name="media_type" value="photo" checked onchange="toggleMediaTypeFields()" class="text-instBlue focus:ring-instBlue">
+                        <i class="fas fa-camera text-blue-600"></i>
+                        <span>तस्विर (Photo)</span>
+                    </label>
+                    <label class="cursor-pointer flex items-center gap-2 bg-white p-2.5 rounded-lg border border-slate-300 hover:border-red-600 transition font-bold text-slate-800">
+                        <input type="radio" name="media_type" value="video" onchange="toggleMediaTypeFields()" class="text-red-600 focus:ring-red-600">
+                        <i class="fab fa-youtube text-red-600"></i>
+                        <span>भिडियो (Video / YouTube)</span>
+                    </label>
+                </div>
             </div>
 
+            <!-- Title Field -->
             <div>
-                <label class="block font-semibold mb-1 text-slate-700">ग्यालरी क्याटेगरी (९ मुख्य विधाहरू) *</label>
-                <select id="fb_category" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none">
-                    <option value="विद्यालय कार्यक्रम">विद्यालय कार्यक्रम (School Events)</option>
-                    <option value="शैक्षिक">शैक्षिक (Academic Activities)</option>
-                    <option value="खेलकुद">खेलकुद (Sports & Games)</option>
-                    <option value="सांस्कृतिक">सांस्कृतिक (Cultural Programs)</option>
-                    <option value="अभिभावक">अभिभावक (Parents Day / Meeting)</option>
-                    <option value="पुरस्कार">पुरस्कार (Awards & Honors)</option>
-                    <option value="भ्रमण">भ्रमण (Educational Tour)</option>
-                    <option value="छात्रावास">छात्रावास (Hostel Life)</option>
-                    <option value="अन्य">अन्य (Other Moments)</option>
-                </select>
+                <label class="block font-bold text-slate-700 mb-1">शीर्षक (Title) *</label>
+                <input type="text" id="add_title" required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none text-xs" placeholder="उदा: १६ औं वार्षिकोत्सव तथा पुरस्कार वितरण २०८२...">
             </div>
 
-            <div>
-                <label class="block font-semibold mb-1 text-slate-700">एल्बम / फोटो शीर्षक (नेपालीमा) *</label>
-                <input type="text" id="fb_title" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none" placeholder="उदा: अन्तर-सदन फुटबल प्रतियोगिता तथा पुरस्कार वितरण">
+            <!-- Category & Event Date -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">विधा / क्याटेगरी *</label>
+                    <select id="add_category" required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none text-xs bg-white">
+                        <option value="विद्यालय कार्यक्रम">विद्यालय कार्यक्रम (School Events)</option>
+                        <option value="शैक्षिक">शैक्षिक (Academic Activities)</option>
+                        <option value="खेलकुद">खेलकुद (Sports & Games)</option>
+                        <option value="सांस्कृतिक">सांस्कृतिक (Cultural Programs)</option>
+                        <option value="अभिभावक">अभिभावक (Parents Day / Meeting)</option>
+                        <option value="पुरस्कार">पुरस्कार (Awards & Honors)</option>
+                        <option value="भ्रमण">भ्रमण (Educational Tour)</option>
+                        <option value="छात्रावास">छात्रावास (Hostel Life)</option>
+                        <option value="अन्य">अन्य (Other Moments)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">कार्यक्रम मिति (Event Date)</label>
+                    <input type="text" id="add_event_date" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none text-xs font-mono" placeholder="२०८२/११/२५ वा 2026-03-09">
+                </div>
             </div>
 
-            <div>
-                <label class="block font-semibold mb-1 text-slate-700">फोटो इमेज URL वा पाथ *</label>
+            <!-- Photo Upload Specific Section -->
+            <div id="sectionPhotoUpload" class="space-y-2">
+                <label class="block font-bold text-slate-700">तस्विर अपलोड (कम्प्युटरबाट) वा Image URL *</label>
+                <div class="flex items-center gap-2">
+                    <input type="text" id="add_media_url_photo" required class="flex-1 px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none text-xs font-mono" placeholder="/static/uploads/...">
+                    <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold transition flex-shrink-0">
+                        <i class="fas fa-folder-open text-blue-600"></i> कम्प्युटरबाट छान्नुहोस्
+                        <input type="file" accept="image/*" class="hidden" onchange="uploadSingleImageFile(this, 'add_media_url_photo', 'add_photo_status')">
+                    </label>
+                </div>
+                <div id="add_photo_status" class="text-[11px] text-slate-500"></div>
+            </div>
+
+            <!-- Video Upload / YouTube Section -->
+            <div id="sectionVideoUpload" class="hidden space-y-2">
+                <label class="block font-bold text-slate-700">युट्युब भिडियो लिङ्क वा Video URL *</label>
                 <div class="space-y-1.5">
-                    <input type="text" id="fb_image" required value="/static/images/hero-banner.jpg" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-blue-600 focus:outline-none font-mono text-xs">
-                    <div class="flex items-center gap-2">
-                        <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded text-[11px] font-semibold transition">
-                            <i class="fas fa-upload text-blue-600"></i> कम्प्युटरबाट फोटो छान्नुहोस्
-                            <input type="file" accept="image/*" class="hidden" onchange="window.adminUploadFile(this, 'fb_image', 'fb_img_status')">
-                        </label>
-                        <span id="fb_img_status" class="text-[11px]"></span>
+                    <input type="url" id="add_media_url_video" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none text-xs font-mono" placeholder="https://www.youtube.com/watch?v=...">
+                    <p class="text-[11px] text-slate-500">
+                        <i class="fab fa-youtube text-red-600 mr-1"></i> युट्युब लिंक पेस्ट गर्नासाथ स्वचालित रूपमा थम्बनेल तथा प्लेयर सिंक हुनेछ।
+                    </p>
+                </div>
+            </div>
+
+            <!-- Rich Description Box -->
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">
+                    विस्तृत विवरण (Rich Description Box)
+                    <span class="text-slate-400 font-normal text-[11px] ml-1">(कार्यक्रमको पृष्ठभूमि, अतिथि तथा उपलब्धिहरू)</span>
+                </label>
+                <textarea id="add_description" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none text-xs leading-relaxed" placeholder="यस कार्यक्रम वा तस्विरको विस्तृत विवरण यहाँ प्रविष्ट गर्नुहोस्..."></textarea>
+            </div>
+
+            <!-- External Social Links Embedding -->
+            <div class="bg-blue-50/60 border border-blue-200 p-3.5 rounded-xl space-y-2.5">
+                <div class="flex items-center gap-2 text-blue-900 font-bold text-xs">
+                    <i class="fas fa-share-alt text-blue-600"></i>
+                    <span>बाह्य सामाजिक सञ्जाल लिङ्क (External Links Embedding)</span>
+                </div>
+                <p class="text-[11px] text-slate-600">
+                    फेसबुक पेज पोस्ट, युट्युब भिडियो, लाइभ स्ट्रिम वा गुगल ड्राइभ लिङ्क जोड्न सक्नुहुन्छ:
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-slate-700 font-semibold mb-1 text-[11px]">सामाजिक लिङ्क URL (External URL)</label>
+                        <input type="url" id="add_external_link" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-blue-600 focus:outline-none" placeholder="https://www.facebook.com/... वा https://youtube.com/...">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-semibold mb-1 text-[11px]">लिङ्कको शीर्षक (Custom Label)</label>
+                        <input type="text" id="add_external_link_title" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" placeholder="उदा: फेसबुकमा सम्पूर्ण तस्विरहरू हेर्नुहोस्">
                     </div>
                 </div>
             </div>
 
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeAddMediaModal()" class="px-4 py-2 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-slate-50 transition">रद्द गर्नुहोस्</button>
+                <button type="submit" id="addSubmitBtn" class="px-5 py-2 bg-instBlue hover:bg-instBlue/90 text-white font-bold rounded-xl shadow-md transition">
+                    <i class="fas fa-save mr-1"></i> सुरक्षित गर्नुहोस्
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- ---------------------------------------------------------------- -->
+<!-- MODAL 2: BATCH UPLOAD MULTIPLE HIGH-RESOLUTION PHOTOS            -->
+<!-- ---------------------------------------------------------------- -->
+<div id="batchUploadModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 text-xs max-h-[92vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 class="font-bold text-base text-emerald-800 flex items-center gap-2">
+                <i class="fas fa-layer-group text-emerald-600"></i>
+                <span>एकैपटक धेरै तस्विरहरू आयात गर्नुहोस् (Batch Upload)</span>
+            </h3>
+            <button onclick="closeBatchUploadModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-base"></i></button>
+        </div>
+
+        <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-emerald-900 text-[11px] leading-relaxed">
+            <i class="fas fa-info-circle mr-1"></i> तपाईंले कम्प्युटरबाट एकैपटक धेरै फोटोहरू छानेर साझा क्याटेगरी, मिति र फेसबुक लिङ्क सहित स्वतः ३०० KB भित्र अटो-साइज गरी अपलोड गर्न सक्नुहुन्छ।
+        </div>
+
+        <form id="batchUploadForm" onsubmit="handleBatchUploadSubmit(event)" class="space-y-4">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">साझा विधा / क्याटेगरी *</label>
+                    <select id="batch_category" required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:outline-none text-xs bg-white">
+                        <option value="विद्यालय कार्यक्रम">विद्यालय कार्यक्रम</option>
+                        <option value="शैक्षिक">शैक्षिक</option>
+                        <option value="खेलकुद">खेलकुद</option>
+                        <option value="सांस्कृतिक">सांस्कृतिक</option>
+                        <option value="अभिभावक">अभिभावक</option>
+                        <option value="पुरस्कार">पुरस्कार</option>
+                        <option value="भ्रमण">भ्रमण</option>
+                        <option value="छात्रावास">छात्रावास</option>
+                        <option value="अन्य">अन्य</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">कार्यक्रम मिति (Event Date)</label>
+                    <input type="text" id="batch_event_date" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:outline-none text-xs font-mono" placeholder="२०८२/११/२५">
+                </div>
+            </div>
+
             <div>
-                <label class="block font-semibold mb-1 text-slate-700">संक्षिप्त क्याप्सन / विवरण</label>
-                <textarea id="fb_desc" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none" placeholder="फेसबुकमा उल्लेख गरिएको विस्तृत विवरण..."></textarea>
+                <label class="block font-bold text-slate-700 mb-1">तस्विरहरू छान्नुहोस् (Choose Multiple Files) *</label>
+                <div class="border-2 border-dashed border-emerald-300 hover:border-emerald-500 rounded-2xl p-6 text-center cursor-pointer bg-emerald-50/30 transition" onclick="document.getElementById('batchFileInput').click()">
+                    <i class="fas fa-cloud-upload-alt text-3xl text-emerald-600 mb-2 block"></i>
+                    <p class="font-bold text-slate-800 text-xs">फोटोहरू यहाँ ड्र्याग गर्नुहोस् वा ब्राउज गर्न क्लिक गर्नुहोस्</p>
+                    <p class="text-[11px] text-slate-500 mt-1">JPEG, PNG, WebP (एउटा वा धेरै फोटोहरू एकैसाथ)</p>
+                    <input type="file" id="batchFileInput" accept="image/*" multiple class="hidden" onchange="handleBatchFileSelection(this)">
+                </div>
+            </div>
+
+            <!-- Preview thumbnails container -->
+            <div id="batchPreviewContainer" class="hidden space-y-2">
+                <p class="font-bold text-slate-700 text-xs">छानिएका तस्विरहरू (<span id="batchCountText">0</span>):</p>
+                <div id="batchThumbsList" class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
+                    <!-- Dynamic thumbs -->
+                </div>
+            </div>
+
+            <!-- Optional shared description -->
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">साझा विवरण (Shared Description)</label>
+                <textarea id="batch_description" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none" placeholder="सबै तस्विरहरूका लागि साझा विवरण..."></textarea>
+            </div>
+
+            <!-- Shared Facebook/External Link -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">फेसबुक वा बाह्य लिङ्क</label>
+                    <input type="url" id="batch_external_link" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-mono" placeholder="https://www.facebook.com/...">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">लिङ्कको शीर्षक</label>
+                    <input type="text" id="batch_external_link_title" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs" placeholder="फेसबुकमा एल्बम हेर्नुहोस्">
+                </div>
             </div>
 
             <div class="pt-3 flex justify-end gap-2 border-t">
-                <button type="button" onclick="closeFbModal()" class="px-4 py-2 border rounded-lg font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
-                <button type="submit" id="fbSubmitBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow">फेसबुकबाट ल्याउनुहोस्</button>
+                <button type="button" onclick="closeBatchUploadModal()" class="px-4 py-2 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-slate-50 transition">रद्द गर्नुहोस्</button>
+                <button type="submit" id="batchSubmitBtn" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition">
+                    <i class="fas fa-layer-group mr-1"></i> सबै तस्विरहरू सुरक्षित गर्नुहोस्
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- ---------------------------------------------------------------- -->
+<!-- MODAL 3: REPLACE MEDIA (Swap Photo or Video cleanly)             -->
+<!-- ---------------------------------------------------------------- -->
+<div id="replaceMediaModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 class="font-bold text-base text-amber-800 flex items-center gap-2">
+                <i class="fas fa-exchange-alt text-amber-600"></i>
+                <span>मिडिया प्रतिस्थापन (Replace Media)</span>
+            </h3>
+            <button onclick="closeReplaceMediaModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-base"></i></button>
+        </div>
+
+        <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-amber-900 text-[11px] leading-relaxed">
+            <strong>नोट:</strong> यस विकल्पबाट तस्विर वा भिडियो फाइल मात्र बदलिनेछ। हालको शीर्षक, विस्तृत विवरण तथा कार्यक्रम मिति सुरक्षित रहनेछन्।
+        </div>
+
+        <form id="replaceMediaForm" onsubmit="handleReplaceSubmit(event)" class="space-y-4">
+            <input type="hidden" id="replace_id">
+
+            <!-- Current Item Card Preview -->
+            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <img id="replaceCurrentThumb" src="/static/images/hero-banner.jpg" class="w-16 h-12 object-cover rounded-lg border border-slate-300">
+                <div class="truncate">
+                    <p class="font-bold text-slate-900 truncate" id="replaceCurrentTitle">शीर्षक</p>
+                    <p class="text-[10px] text-slate-500" id="replaceCurrentType">प्रकार: तस्विर</p>
+                </div>
+            </div>
+
+            <!-- New Media Input -->
+            <div id="replacePhotoSection" class="space-y-2">
+                <label class="block font-bold text-slate-700">नयाँ तस्विर छान्नुहोस् वा नयाँ URL *</label>
+                <div class="flex items-center gap-2">
+                    <input type="text" id="replace_photo_url" required class="flex-1 px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none font-mono text-xs" placeholder="/static/uploads/...">
+                    <label class="cursor-pointer inline-flex items-center gap-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold transition flex-shrink-0">
+                        <i class="fas fa-folder-open text-blue-600"></i> छान्नुहोस्
+                        <input type="file" accept="image/*" class="hidden" onchange="uploadSingleImageFile(this, 'replace_photo_url', 'replace_photo_status')">
+                    </label>
+                </div>
+                <div id="replace_photo_status" class="text-[11px]"></div>
+            </div>
+
+            <div id="replaceVideoSection" class="hidden space-y-2">
+                <label class="block font-bold text-slate-700">नयाँ युट्युब भिडियो लिङ्क *</label>
+                <input type="url" id="replace_video_url" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-600 focus:outline-none font-mono text-xs" placeholder="https://www.youtube.com/watch?v=...">
+            </div>
+
+            <div class="pt-3 flex justify-end gap-2 border-t">
+                <button type="button" onclick="closeReplaceMediaModal()" class="px-4 py-2 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-slate-50 transition">रद्द गर्नुहोस्</button>
+                <button type="submit" id="replaceSubmitBtn" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-md transition">
+                    <i class="fas fa-check mr-1"></i> तुरुन्त बदल्नुहोस् (Replace Now)
+                </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- ADD / EDIT ALBUM MODAL -->
-<div id="albumModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
+<!-- ---------------------------------------------------------------- -->
+<!-- MODAL 4: EDIT METADATA (Title, Rich Description, Date, Social)    -->
+<!-- ---------------------------------------------------------------- -->
+<div id="editMediaModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 text-xs max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b pb-3">
-            <h3 id="albumModalTitle" class="font-bold text-sm text-instBlue flex items-center gap-2">
-                <i class="fas fa-images text-amber-500"></i>
-                <span>नयाँ एल्बम थप्नुहोस्</span>
+            <h3 class="font-bold text-base text-blue-800 flex items-center gap-2">
+                <i class="fas fa-edit text-blue-600"></i>
+                <span>मिडिया विवरण सम्पादन (Edit Metadata)</span>
             </h3>
-            <button onclick="closeAlbumModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-base"></i></button>
+            <button onclick="closeEditMediaModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-base"></i></button>
         </div>
 
-        <form id="albumSaveForm" class="space-y-3" onsubmit="handleAlbumSave(event)">
-            <input type="hidden" id="alb_id">
+        <form id="editMediaForm" onsubmit="handleEditSubmit(event)" class="space-y-4">
+            <input type="hidden" id="edit_id">
+
             <div>
-                <label class="block font-semibold mb-1 text-slate-700">एल्बमको नाम *</label>
-                <input type="text" id="alb_title" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="वार्षिकोत्सव २०८२...">
+                <label class="block font-bold text-slate-700 mb-1">शीर्षक *</label>
+                <input type="text" id="edit_title" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none">
             </div>
-            <div>
-                <label class="block font-semibold mb-1 text-slate-700">विधा / क्याटेगरी</label>
-                <select id="alb_cat" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
-                    <option value="विद्यालय कार्यक्रम">विद्यालय कार्यक्रम</option>
-                    <option value="शैक्षिक">शैक्षिक</option>
-                    <option value="खेलकुद">खेलकुद</option>
-                    <option value="सांस्कृतिक">सांस्कृतिक</option>
-                    <option value="अभिभावक">अभिभावक</option>
-                    <option value="पुरस्कार">पुरस्कार</option>
-                    <option value="भ्रमण">भ्रमण</option>
-                    <option value="छात्रावास">छात्रावास</option>
-                    <option value="अन्य">अन्य</option>
-                </select>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">विधा / क्याटेगरी</label>
+                    <select id="edit_category" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                        <option value="विद्यालय कार्यक्रम">विद्यालय कार्यक्रम</option>
+                        <option value="शैक्षिक">शैक्षिक</option>
+                        <option value="खेलकुद">खेलकुद</option>
+                        <option value="सांस्कृतिक">सांस्कृतिक</option>
+                        <option value="अभिभावक">अभिभावक</option>
+                        <option value="पुरस्कार">पुरस्कार</option>
+                        <option value="भ्रमण">भ्रमण</option>
+                        <option value="छात्रावास">छात्रावास</option>
+                        <option value="अन्य">अन्य</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">कार्यक्रम मिति</label>
+                    <input type="text" id="edit_event_date" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                </div>
             </div>
+
             <div>
-                <label class="block font-semibold mb-1 text-slate-700">कभर फोटो URL / Path *</label>
-                <div class="space-y-1.5">
-                    <input type="text" id="alb_cover" required value="/static/images/hero-banner.jpg" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none">
-                    <div class="flex items-center gap-2">
-                        <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded text-[11px] font-semibold transition">
-                            <i class="fas fa-upload text-blue-600"></i> कम्प्युटरबाट फोटो छान्नुहोस्
-                            <input type="file" accept="image/*" class="hidden" onchange="window.adminUploadFile(this, 'alb_cover', 'alb_cover_status')">
-                        </label>
-                        <span id="alb_cover_status" class="text-[11px]"></span>
+                <label class="block font-bold text-slate-700 mb-1">विस्तृत विवरण (Rich Description Box)</label>
+                <textarea id="edit_description" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs leading-relaxed focus:ring-2 focus:ring-blue-600 focus:outline-none"></textarea>
+            </div>
+
+            <!-- External Social Links Embedding -->
+            <div class="bg-blue-50/60 border border-blue-200 p-3 rounded-xl space-y-2">
+                <div class="flex items-center gap-1.5 font-bold text-blue-900 text-xs">
+                    <i class="fas fa-link text-blue-600"></i>
+                    <span>बाह्य सामाजिक सञ्जाल लिङ्क</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-600 text-[11px] mb-1 font-semibold">लिङ्क URL</label>
+                        <input type="url" id="edit_external_link" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-slate-600 text-[11px] mb-1 font-semibold">लिङ्कको शीर्षक</label>
+                        <input type="text" id="edit_external_link_title" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs">
                     </div>
                 </div>
             </div>
-            <div>
-                <label class="block font-semibold mb-1 text-slate-700">विवरण</label>
-                <textarea id="alb_desc" rows="2" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="एल्बमको छोटो जानकारी..."></textarea>
-            </div>
 
             <div class="pt-3 flex justify-end gap-2 border-t">
-                <button type="button" onclick="closeAlbumModal()" class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
-                <button type="submit" class="px-5 py-2 bg-instBlue hover:bg-instBlue/90 text-white font-bold rounded shadow transition">सुरक्षित गर्नुहोस्</button>
+                <button type="button" onclick="closeEditMediaModal()" class="px-4 py-2 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-slate-50 transition">रद्द गर्नुहोस्</button>
+                <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition">
+                    <i class="fas fa-save mr-1"></i> परिवर्तन सुरक्षित गर्नुहोस्
+                </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- ADD PHOTO TO ALBUM MODAL -->
-<div id="addPhotoModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-xs">
-        <div class="flex items-center justify-between border-b pb-3">
-            <h3 class="font-bold text-sm text-instBlue flex items-center gap-2">
-                <i class="fas fa-camera text-emerald-600"></i>
-                <span id="photoModalAlbumName">एल्बममा फोटो थप्नुहोस्</span>
-            </h3>
-            <button onclick="closeAddPhotoModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-base"></i></button>
+<!-- ---------------------------------------------------------------- -->
+<!-- MODAL 5: PREVIEW LIGHTBOX                                        -->
+<!-- ---------------------------------------------------------------- -->
+<div id="previewModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4" onclick="closePreviewModal()">
+    <div class="bg-white rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl relative" onclick="event.stopPropagation()">
+        <button onclick="closePreviewModal()" class="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black transition">
+            <i class="fas fa-times"></i>
+        </button>
+        <div id="previewMediaContainer" class="aspect-video bg-black flex items-center justify-center">
+            <!-- Dynamic Image or YouTube iFrame -->
         </div>
-
-        <form id="photoSaveForm" class="space-y-3" onsubmit="handlePhotoSave(event)">
-            <input type="hidden" id="photo_alb_id">
-            <div>
-                <label class="block font-semibold mb-1 text-slate-700">फोटो URL / कम्प्युटरबाट अपलोड *</label>
-                <div class="space-y-1.5">
-                    <input type="text" id="photo_url" required class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="/static/uploads/...">
-                    <div class="flex items-center gap-2">
-                        <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded text-[11px] font-semibold transition">
-                            <i class="fas fa-upload text-blue-600"></i> कम्प्युटरबाट फोटो छान्नुहोस्
-                            <input type="file" accept="image/*" class="hidden" onchange="window.adminUploadFile(this, 'photo_url', 'photo_upload_status')">
-                        </label>
-                        <span id="photo_upload_status" class="text-[11px]"></span>
-                    </div>
-                </div>
+        <div class="p-5 space-y-2 bg-white">
+            <div class="flex items-center justify-between text-xs">
+                <span id="previewCategory" class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold"></span>
+                <span id="previewDate" class="text-slate-400 font-mono"></span>
             </div>
-            <div>
-                <label class="block font-semibold mb-1 text-slate-700">फोटोको क्याप्सन (वैकल्पिक)</label>
-                <input type="text" id="photo_caption" class="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-instBlue focus:outline-none" placeholder="पुरस्कार वितरणको क्षण...">
-            </div>
-
-            <div class="pt-3 flex justify-end gap-2 border-t">
-                <button type="button" onclick="closeAddPhotoModal()" class="px-4 py-2 border rounded font-semibold text-slate-700 hover:bg-slate-50">रद्द गर्नुहोस्</button>
-                <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded shadow transition">तस्विर सुरक्षित गर्नुहोस्</button>
-            </div>
-        </form>
+            <h2 id="previewTitle" class="text-base font-bold text-slate-900 leading-snug"></h2>
+            <p id="previewDesc" class="text-xs text-slate-600 leading-relaxed"></p>
+            <div id="previewLinkContainer" class="pt-2"></div>
+        </div>
     </div>
 </div>
 
 <script>
-function openFbModal() {
-    document.getElementById('fbModal').classList.remove('hidden');
-}
-function closeFbModal() {
-    document.getElementById('fbModal').classList.add('hidden');
+// Global filter state
+let currentTypeFilter = 'all';
+
+// Initialize tab from URL if present
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam === 'video') {
+        setMediaTypeFilter('video');
+    } else if (tabParam === 'photo') {
+        setMediaTypeFilter('photo');
+    }
+});
+
+// Toggle between All / Photos / Videos tabs
+function setMediaTypeFilter(type) {
+    currentTypeFilter = type;
+    const tabAll = document.getElementById('tabBtnAll');
+    const tabPhoto = document.getElementById('tabBtnPhoto');
+    const tabVideo = document.getElementById('tabBtnVideo');
+
+    [tabAll, tabPhoto, tabVideo].forEach(btn => {
+        btn.className = "px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition";
+    });
+
+    if (type === 'all') {
+        tabAll.className = "px-4 py-2 rounded-lg bg-white text-instBlue shadow-sm transition font-bold";
+    } else if (type === 'photo') {
+        tabPhoto.className = "px-4 py-2 rounded-lg bg-white text-instBlue shadow-sm transition font-bold";
+    } else if (type === 'video') {
+        tabVideo.className = "px-4 py-2 rounded-lg bg-white text-red-600 shadow-sm transition font-bold";
+    }
+
+    applyFilters();
 }
 
-function openAlbumModal() {
-    document.getElementById('alb_id').value = '';
-    document.getElementById('albumModalTitle').innerHTML = '<i class="fas fa-images text-amber-500"></i><span>+ नयाँ एल्बम थप्नुहोस्</span>';
-    document.getElementById('alb_title').value = '';
-    document.getElementById('alb_cover').value = '/static/images/hero-banner.jpg';
-    document.getElementById('alb_desc').value = '';
-    document.getElementById('albumModal').classList.remove('hidden');
+// Live Filter & Search Logic
+function applyFilters() {
+    const cat = document.getElementById('filterCategory').value.trim();
+    const q = document.getElementById('filterSearch').value.trim().toLowerCase();
+
+    const cards = document.querySelectorAll('.media-card');
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+        const cType = card.dataset.type || '';
+        const cCat = card.dataset.category || '';
+        const cTitle = card.dataset.title || '';
+        const cDesc = card.dataset.desc || '';
+
+        const matchesType = (currentTypeFilter === 'all') || (cType === currentTypeFilter);
+        const matchesCat = (!cat) || (cCat === cat);
+        const matchesQ = (!q) || (cTitle.includes(q) || cDesc.includes(q) || cCat.toLowerCase().includes(q));
+
+        if (matchesType && matchesCat && matchesQ) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const emptyBox = document.getElementById('filterEmptyState');
+    if (visibleCount === 0 && cards.length > 0) {
+        emptyBox.classList.remove('hidden');
+    } else {
+        emptyBox.classList.add('hidden');
+    }
 }
 
-function openEditAlbumModal(alb) {
-    document.getElementById('alb_id').value = alb.id;
-    document.getElementById('albumModalTitle').innerHTML = '<i class="fas fa-edit text-blue-600"></i><span>एल्बम सम्पादन गर्नुहोस्</span>';
-    document.getElementById('alb_title').value = alb.title_ne || '';
-    document.getElementById('alb_cat').value = alb.category || 'विद्यालय कार्यक्रम';
-    document.getElementById('alb_cover').value = alb.cover_image || '/static/images/hero-banner.jpg';
-    document.getElementById('alb_desc').value = alb.description_ne || '';
-    document.getElementById('albumModal').classList.remove('hidden');
+function resetFilters() {
+    document.getElementById('filterCategory').value = '';
+    document.getElementById('filterSearch').value = '';
+    setMediaTypeFilter('all');
 }
 
-function closeAlbumModal() {
-    document.getElementById('albumModal').classList.add('hidden');
-}
-
-function openAddPhotoModal(albumId, albumTitle) {
-    document.getElementById('photo_alb_id').value = albumId;
-    document.getElementById('photoModalAlbumName').innerText = `${albumTitle} - तस्विर थप्नुहोस्`;
-    document.getElementById('photo_url').value = '';
-    document.getElementById('photo_caption').value = '';
-    document.getElementById('photo_upload_status').innerText = '';
-    document.getElementById('addPhotoModal').classList.remove('hidden');
-}
-
-function closeAddPhotoModal() {
-    document.getElementById('addPhotoModal').classList.add('hidden');
-}
-
-async function handlePhotoSave(e) {
-    e.preventDefault();
-    const albumId = document.getElementById('photo_alb_id').value;
-    const imageUrl = document.getElementById('photo_url').value.trim();
-    const caption = document.getElementById('photo_caption').value.trim();
+// ----------------------------------------------------
+// Image Upload Helper with Auto Compression
+// ----------------------------------------------------
+async function uploadSingleImageFile(fileInput, targetInputId, statusElId) {
+    if (!fileInput.files || !fileInput.files[0]) return;
+    const file = fileInput.files[0];
+    const statusEl = document.getElementById(statusElId);
+    if (statusEl) {
+        statusEl.innerHTML = '<span class="text-amber-600 font-semibold animate-pulse"><i class="fas fa-spinner fa-spin mr-1"></i> तस्विर अटो-कम्प्रेस तथा अपलोड हुँदैछ...</span>';
+    }
 
     try {
-        const res = await fetch(`/api/content/albums/${albumId}/photos`, {
+        let uploadBlob = file;
+        let dataUrl = null;
+        let sizeText = (file.size / 1024).toFixed(1) + ' KB';
+
+        if (window.compressAndResizeImage && file.type.startsWith('image/')) {
+            const comp = await window.compressAndResizeImage(file, 1200, 300 * 1024);
+            uploadBlob = comp.blob;
+            dataUrl = comp.dataUrl;
+            sizeText = comp.sizeKb + ' KB (अटो-साइज ३०० KB भित्र)';
+            if (targetInputId && dataUrl) {
+                document.getElementById(targetInputId).value = dataUrl;
+            }
+        }
+
+        const formData = new FormData();
+        const safeName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+        formData.append('file', uploadBlob, safeName);
+
+        const res = await fetch('/api/upload', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                image_url: imageUrl,
-                caption_ne: caption
-            })
+            body: formData
         });
         const data = await res.json();
         if (res.ok && data.success) {
-            alert("✓ तस्विर सफलतापूर्वक थपियो!");
-            location.reload();
+            if (targetInputId) document.getElementById(targetInputId).value = data.url;
+            if (statusEl) statusEl.innerHTML = `<span class="text-emerald-600 font-bold">✓ सुरक्षित भयो: ${sizeText}</span>`;
         } else {
-            alert(data.detail || "त्रुटि भयो।");
+            if (statusEl) statusEl.innerHTML = `<span class="text-emerald-600 font-bold">✓ तस्विर तयार भयो (${sizeText})</span>`;
         }
     } catch(err) {
-        alert("सर्भर त्रुटि भयो।");
+        if (statusEl) statusEl.innerHTML = '<span class="text-rose-600 font-bold">अपलोड त्रुटि भयो।</span>';
     }
 }
 
-async function deleteAlbum(id, title) {
-    if (!confirm(`के तपाईं निश्चित हुनुहुन्छ? "${title}" एल्बम र यसभित्रका सबै तस्विरहरू मेटिनेछन्।`)) return;
-    try {
-        const res = await fetch(`/api/content/albums/${id}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (res.ok && data.success) {
-            alert(data.message || "एल्बम सफलतापूर्वक हटाइयो।");
-            location.reload();
-        } else {
-            alert(data.detail || "मेटाउन सकिएन।");
-        }
-    } catch(err) {
-        alert("सर्भर त्रुटि भयो।");
+// ----------------------------------------------------
+// MODAL 1: ADD SINGLE MEDIA
+// ----------------------------------------------------
+function openAddMediaModal() {
+    document.getElementById('addMediaForm').reset();
+    document.getElementById('add_photo_status').innerText = '';
+    toggleMediaTypeFields();
+    document.getElementById('addMediaModal').classList.remove('hidden');
+}
+
+function closeAddMediaModal() {
+    document.getElementById('addMediaModal').classList.add('hidden');
+}
+
+function toggleMediaTypeFields() {
+    const isPhoto = document.querySelector('input[name="media_type"]:checked').value === 'photo';
+    const photoSec = document.getElementById('sectionPhotoUpload');
+    const videoSec = document.getElementById('sectionVideoUpload');
+    const photoUrlInput = document.getElementById('add_media_url_photo');
+    const videoUrlInput = document.getElementById('add_media_url_video');
+
+    if (isPhoto) {
+        photoSec.classList.remove('hidden');
+        videoSec.classList.add('hidden');
+        photoUrlInput.setAttribute('required', 'required');
+        videoUrlInput.removeAttribute('required');
+    } else {
+        photoSec.classList.add('hidden');
+        videoSec.classList.remove('hidden');
+        photoUrlInput.removeAttribute('required');
+        videoUrlInput.setAttribute('required', 'required');
     }
 }
 
-async function handleFbImport(e) {
+async function handleAddMediaSubmit(e) {
     e.preventDefault();
-    const btn = document.getElementById('fbSubmitBtn');
-    const title = document.getElementById('fb_title').value.trim();
-    const cover = document.getElementById('fb_image').value.trim();
-    const cat = document.getElementById('fb_category').value;
-    const desc = document.getElementById('fb_desc').value.trim();
-    const fbUrl = document.getElementById('fb_url').value.trim();
+    const btn = document.getElementById('addSubmitBtn');
+    const isPhoto = document.querySelector('input[name="media_type"]:checked').value === 'photo';
+    const mediaUrl = isPhoto ? document.getElementById('add_media_url_photo').value.trim() : document.getElementById('add_media_url_video').value.trim();
+
+    if (!mediaUrl) {
+        alert(isPhoto ? "कृपया तस्विर अपलोड गर्नुहोस् वा URL प्रविष्ट गर्नुहोस्।" : "कृपया भिडियो वा युट्युब URL प्रविष्ट गर्नुहोस्।");
+        return;
+    }
+
+    const payload = {
+        title: document.getElementById('add_title').value.trim(),
+        media_type: isPhoto ? 'photo' : 'video',
+        category: document.getElementById('add_category').value,
+        media_url: mediaUrl,
+        event_date: document.getElementById('add_event_date').value.trim(),
+        description: document.getElementById('add_description').value.trim(),
+        external_link: document.getElementById('add_external_link').value.trim(),
+        external_link_title: document.getElementById('add_external_link_title').value.trim()
+    };
 
     btn.disabled = true;
-    btn.innerText = 'आयात हुँदैछ...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> सुरक्षित हुँदैछ...';
 
     try {
-        const res = await fetch('/api/content/albums', {
+        const res = await fetch('/api/media-gallery', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                title_ne: title,
-                title_en: title,
-                cover_image: cover,
-                category: cat,
-                description_ne: desc ? `${desc} (फेसबुक पोस्ट: ${fbUrl})` : `फेसबुक पोस्ट: ${fbUrl}`
-            })
-        });
-        const data = await res.json();
-        if (data.success) {
-            alert("✓ फेसबुक फोटो एल्बममा सफलतापूर्वक आयात भयो!");
-            location.reload();
-        } else {
-            alert(data.detail || "त्रुटि भयो।");
-        }
-    } catch(err) {
-        alert("त्रुटि भयो।");
-    } finally {
-        btn.disabled = false;
-        btn.innerText = 'फेसबुकबाट ल्याउनुहोस्';
-    }
-}
-
-async function handleAlbumSave(e) {
-    e.preventDefault();
-    const id = document.getElementById('alb_id').value;
-    const title = document.getElementById('alb_title').value.trim();
-    const cover = document.getElementById('alb_cover').value.trim();
-    const cat = document.getElementById('alb_cat').value;
-    const desc = document.getElementById('alb_desc').value.trim();
-
-    const method = id ? 'PUT' : 'POST';
-    const url = id ? `/api/content/albums/${id}` : '/api/content/albums';
-
-    try {
-        const res = await fetch(url, {
-            method: method,
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                title_ne: title,
-                cover_image: cover,
-                category: cat,
-                description_ne: desc
-            })
+            body: JSON.stringify(payload)
         });
         const data = await res.json();
         if (res.ok && data.success) {
-            alert(data.message || "✓ एल्बम सफलतापूर्वक सुरक्षित भयो!");
-            location.reload();
+            alert("✓ " + (data.message || "सफलतापूर्वक सुरक्षित भयो!"));
+            window.location.reload();
         } else {
-            alert(data.detail || "त्रुटि भयो।");
+            alert("त्रुटि: " + (data.detail || "असफल भयो।"));
         }
     } catch(err) {
-        alert("सर्भर त्रुटि भयो।");
+        alert("सर्भर त्रुटि भयो: " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save mr-1"></i> सुरक्षित गर्नुहोस्';
     }
+}
+
+// ----------------------------------------------------
+// MODAL 2: BATCH UPLOAD PHOTOS
+// ----------------------------------------------------
+let selectedBatchPhotos = [];
+
+function openBatchUploadModal() {
+    selectedBatchPhotos = [];
+    document.getElementById('batchUploadForm').reset();
+    document.getElementById('batchPreviewContainer').classList.add('hidden');
+    document.getElementById('batchThumbsList').innerHTML = '';
+    document.getElementById('batchUploadModal').classList.remove('hidden');
+}
+
+function closeBatchUploadModal() {
+    document.getElementById('batchUploadModal').classList.add('hidden');
+}
+
+async function handleBatchFileSelection(input) {
+    if (!input.files || input.files.length === 0) return;
+    const container = document.getElementById('batchPreviewContainer');
+    const thumbsList = document.getElementById('batchThumbsList');
+    const countText = document.getElementById('batchCountText');
+
+    container.classList.remove('hidden');
+    thumbsList.innerHTML = '<div class="col-span-full py-4 text-center text-slate-500"><i class="fas fa-spinner fa-spin mr-1"></i> तस्विरहरू प्रोसेसिङ हुँदैछ...</div>';
+
+    selectedBatchPhotos = [];
+    const files = Array.from(input.files);
+
+    for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        let dataUrl = null;
+        if (window.compressAndResizeImage && f.type.startsWith('image/')) {
+            const comp = await window.compressAndResizeImage(f, 1200, 300 * 1024);
+            dataUrl = comp.dataUrl;
+        } else {
+            dataUrl = await new Promise(r => {
+                const reader = new FileReader();
+                reader.onload = e => r(e.target.result);
+                reader.readAsDataURL(f);
+            });
+        }
+        selectedBatchPhotos.push({
+            title: f.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " "),
+            media_url: dataUrl
+        });
+    }
+
+    countText.innerText = selectedBatchPhotos.length;
+    thumbsList.innerHTML = '';
+    selectedBatchPhotos.forEach((item, idx) => {
+        const d = document.createElement('div');
+        d.className = 'relative group aspect-square rounded-lg overflow-hidden border border-slate-300';
+        d.innerHTML = `
+            <img src="${item.media_url}" class="w-full h-full object-cover">
+            <span class="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[9px] px-1 py-0.5 truncate text-center">${item.title}</span>
+        `;
+        thumbsList.appendChild(d);
+    });
+}
+
+async function handleBatchUploadSubmit(e) {
+    e.preventDefault();
+    if (selectedBatchPhotos.length === 0) {
+        alert("कृपया कम्तीमा एक वा धेरै तस्विरहरू छान्नुहोस्।");
+        return;
+    }
+
+    const btn = document.getElementById('batchSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> ${selectedBatchPhotos.length} तस्विरहरू अपलोड हुँदैछ...`;
+
+    const payload = {
+        media_type: 'photo',
+        category: document.getElementById('batch_category').value,
+        event_date: document.getElementById('batch_event_date').value.trim(),
+        description: document.getElementById('batch_description').value.trim(),
+        external_link: document.getElementById('batch_external_link').value.trim(),
+        external_link_title: document.getElementById('batch_external_link_title').value.trim(),
+        items: selectedBatchPhotos
+    };
+
+    try {
+        const res = await fetch('/api/media-gallery/batch', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert("✓ " + (data.message || "तस्विरहरू सफलतापूर्वक अपलोड गरियो!"));
+            window.location.reload();
+        } else {
+            alert("त्रुटि: " + (data.detail || "अपलोड असफल भयो।"));
+        }
+    } catch(err) {
+        alert("सर्भर त्रुटि: " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-layer-group mr-1"></i> सबै तस्विरहरू सुरक्षित गर्नुहोस्';
+    }
+}
+
+// ----------------------------------------------------
+// MODAL 3: REPLACE MEDIA
+// ----------------------------------------------------
+function openReplaceMediaModal(m) {
+    document.getElementById('replace_id').value = m.id;
+    document.getElementById('replaceCurrentTitle').innerText = m.title;
+    document.getElementById('replaceCurrentThumb').src = m.thumbnail_url || m.media_url || '/static/images/hero-banner.jpg';
+    document.getElementById('replaceCurrentType').innerText = "प्रकार: " + (m.media_type === 'video' ? 'भिडियो' : 'तस्विर');
+
+    const photoSec = document.getElementById('replacePhotoSection');
+    const videoSec = document.getElementById('replaceVideoSection');
+    document.getElementById('replace_photo_status').innerText = '';
+
+    if (m.media_type === 'video') {
+        photoSec.classList.add('hidden');
+        videoSec.classList.remove('hidden');
+        document.getElementById('replace_video_url').value = m.media_url || '';
+        document.getElementById('replace_photo_url').removeAttribute('required');
+        document.getElementById('replace_video_url').setAttribute('required', 'required');
+    } else {
+        photoSec.classList.remove('hidden');
+        videoSec.classList.add('hidden');
+        document.getElementById('replace_photo_url').value = m.media_url || '';
+        document.getElementById('replace_photo_url').setAttribute('required', 'required');
+        document.getElementById('replace_video_url').removeAttribute('required');
+    }
+
+    document.getElementById('replaceMediaModal').classList.remove('hidden');
+}
+
+function closeReplaceMediaModal() {
+    document.getElementById('replaceMediaModal').classList.add('hidden');
+}
+
+async function handleReplaceSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('replace_id').value;
+    const isVideo = !document.getElementById('replaceVideoSection').classList.contains('hidden');
+    const newUrl = isVideo ? document.getElementById('replace_video_url').value.trim() : document.getElementById('replace_photo_url').value.trim();
+
+    if (!newUrl) {
+        alert("कृपया नयाँ तस्विर वा भिडियो फाइल छान्नुहोस्।");
+        return;
+    }
+
+    const btn = document.getElementById('replaceSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> बदलिँदैछ...';
+
+    try {
+        const res = await fetch(`/api/media-gallery/${id}/replace`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ media_url: newUrl })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert("✓ " + (data.message || "सफलतापूर्वक प्रतिस्थापन भयो!"));
+            window.location.reload();
+        } else {
+            alert("त्रुटि: " + (data.detail || "प्रतिस्थापन हुन सकेन।"));
+        }
+    } catch(err) {
+        alert("सर्भर त्रुटि भयो: " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check mr-1"></i> तुरुन्त बदल्नुहोस् (Replace Now)';
+    }
+}
+
+// ----------------------------------------------------
+// MODAL 4: EDIT METADATA
+// ----------------------------------------------------
+function openEditMediaModal(m) {
+    document.getElementById('edit_id').value = m.id;
+    document.getElementById('edit_title').value = m.title || '';
+    document.getElementById('edit_category').value = m.category || 'विद्यालय कार्यक्रम';
+    document.getElementById('edit_event_date').value = m.event_date || '';
+    document.getElementById('edit_description').value = m.description || '';
+    document.getElementById('edit_external_link').value = m.external_link || '';
+    document.getElementById('edit_external_link_title').value = m.external_link_title || '';
+    document.getElementById('editMediaModal').classList.remove('hidden');
+}
+
+function closeEditMediaModal() {
+    document.getElementById('editMediaModal').classList.add('hidden');
+}
+
+async function handleEditSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit_id').value;
+    const payload = {
+        title: document.getElementById('edit_title').value.trim(),
+        category: document.getElementById('edit_category').value,
+        event_date: document.getElementById('edit_event_date').value.trim(),
+        description: document.getElementById('edit_description').value.trim(),
+        external_link: document.getElementById('edit_external_link').value.trim(),
+        external_link_title: document.getElementById('edit_external_link_title').value.trim()
+    };
+
+    try {
+        const res = await fetch(`/api/media-gallery/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert("✓ " + (data.message || "विवरण सुरक्षित भयो!"));
+            window.location.reload();
+        } else {
+            alert("त्रुटि: " + (data.detail || "सम्पादन हुन सकेन।"));
+        }
+    } catch(err) {
+        alert("सर्भर त्रुटि भयो: " + err.message);
+    }
+}
+
+// ----------------------------------------------------
+// DELETE MEDIA (RBAC: Admin & Principal)
+// ----------------------------------------------------
+async function confirmDeleteMedia(id, title) {
+    if (!confirm(`के तपाईं निश्चित हुनुहुन्छ?\n\n"${title}" लाई सर्भर र डाटाबेसबाट स्थायी रूपमा मेटाउन चाहनुहुन्छ?`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/media-gallery/${id}`, {
+            method: 'DELETE'
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            alert("✓ " + (data.message || "मिडिया सफलतापूर्वक हटाइयो।"));
+            const card = document.getElementById(`mediaCard_${id}`);
+            if (card) card.remove();
+            applyFilters();
+        } else {
+            alert("त्रुटि: " + (data.detail || "मेटाउन सकिएन।"));
+        }
+    } catch(err) {
+        alert("सर्भर त्रुटि: " + err.message);
+    }
+}
+
+// ----------------------------------------------------
+// MODAL 5: PREVIEW LIGHTBOX
+// ----------------------------------------------------
+function previewMedia(m) {
+    const container = document.getElementById('previewMediaContainer');
+    document.getElementById('previewTitle').innerText = m.title || '';
+    document.getElementById('previewCategory').innerText = m.category || 'विद्यालय कार्यक्रम';
+    document.getElementById('previewDate').innerText = m.event_date ? 'मिति: ' + m.event_date : '';
+    document.getElementById('previewDesc').innerText = m.description || 'कुनै विस्तृत विवरण छैन।';
+
+    const linkContainer = document.getElementById('previewLinkContainer');
+    if (m.external_link) {
+        linkContainer.innerHTML = `
+            <a href="${m.external_link}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs border border-blue-200">
+                <i class="fas fa-external-link-alt"></i>
+                <span>${m.external_link_title || 'बाह्य सामाजिक लिङ्क खोल्नुहोस्'}</span>
+            </a>
+        `;
+    } else {
+        linkContainer.innerHTML = '';
+    }
+
+    if (m.media_type === 'video' && m.youtube_id) {
+        container.innerHTML = `
+            <iframe class="w-full h-full" src="https://www.youtube-nocookie.com/embed/${m.youtube_id}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        `;
+    } else if (m.media_type === 'video') {
+        container.innerHTML = `
+            <video controls autoplay class="w-full h-full object-contain">
+                <source src="${m.media_url}" type="video/mp4">
+                तपाईंको ब्राउजरले भिडियो ट्याग समर्थन गर्दैन।
+            </video>
+        `;
+    } else {
+        container.innerHTML = `
+            <img src="${m.media_url || '/static/images/hero-banner.jpg'}" class="w-full h-full object-contain">
+        `;
+    }
+
+    document.getElementById('previewModal').classList.remove('hidden');
+}
+
+function closePreviewModal() {
+    const container = document.getElementById('previewMediaContainer');
+    container.innerHTML = '';
+    document.getElementById('previewModal').classList.add('hidden');
 }
 </script>
 {% endblock %}

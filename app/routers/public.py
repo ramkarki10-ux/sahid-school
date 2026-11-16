@@ -508,40 +508,98 @@ def page_achievements(request: Request):
     })
 
 @router.get("/gallery", response_class=HTMLResponse)
-def page_gallery(request: Request, category: Optional[str] = None):
+@router.get("/gallery/photos", response_class=HTMLResponse)
+def page_gallery(request: Request, category: Optional[str] = None, q: Optional[str] = None):
     settings, ticker_notice = get_school_context()
     conn = get_db()
     cursor = conn.cursor()
-    if category:
-        cursor.execute("SELECT * FROM photo_albums WHERE category = ? ORDER BY id DESC", (category,))
-    else:
-        cursor.execute("SELECT * FROM photo_albums ORDER BY id DESC")
+
+    # Query from media_gallery (photos)
+    where_sql = "media_type = 'photo' AND is_published = 1"
+    params = []
+
+    if category and category.strip():
+        where_sql += " AND category = ?"
+        params.append(category.strip())
+
+    if q and q.strip():
+        where_sql += " AND (title LIKE ? OR description LIKE ? OR category LIKE ?)"
+        params.extend([f"%{q.strip()}%", f"%{q.strip()}%", f"%{q.strip()}%"])
+
+    cursor.execute(f"SELECT * FROM media_gallery WHERE {where_sql} ORDER BY display_order ASC, id DESC", params)
+    photos = [dict(r) for r in cursor.fetchall()]
+
+    # Fetch distinct categories for photos
+    cursor.execute("""
+        SELECT category, COUNT(*) as cnt 
+        FROM media_gallery 
+        WHERE media_type = 'photo' AND is_published = 1 
+        GROUP BY category 
+        ORDER BY cnt DESC
+    """)
+    categories = [dict(r) for r in cursor.fetchall()]
+
+    # Legacy album fallback if media_gallery has no records
+    cursor.execute("SELECT * FROM photo_albums ORDER BY id DESC")
     albums = [dict(a) for a in cursor.fetchall()]
     for alb in albums:
         cursor.execute("SELECT * FROM photos WHERE album_id = ? ORDER BY id ASC", (alb["id"],))
         alb["photos"] = [dict(p) for p in cursor.fetchall()]
+
     conn.close()
     return templates.TemplateResponse(request, "public/gallery.html", {
         "settings": settings,
         "ticker_notice": ticker_notice,
+        "photos": photos,
         "albums": albums,
+        "categories": categories,
         "selected_category": category or "",
-        "active_menu": "gallery"
+        "search_query": q or "",
+        "active_menu": "gallery",
+        "sub_menu": "photos"
     })
 
 @router.get("/videos", response_class=HTMLResponse)
-def page_videos(request: Request):
+@router.get("/gallery/videos", response_class=HTMLResponse)
+def page_videos(request: Request, category: Optional[str] = None, q: Optional[str] = None):
     settings, ticker_notice = get_school_context()
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM videos ORDER BY id DESC")
+
+    where_sql = "media_type = 'video' AND is_published = 1"
+    params = []
+
+    if category and category.strip():
+        where_sql += " AND category = ?"
+        params.append(category.strip())
+
+    if q and q.strip():
+        where_sql += " AND (title LIKE ? OR description LIKE ? OR category LIKE ?)"
+        params.extend([f"%{q.strip()}%", f"%{q.strip()}%", f"%{q.strip()}%"])
+
+    cursor.execute(f"SELECT * FROM media_gallery WHERE {where_sql} ORDER BY display_order ASC, id DESC", params)
     videos = [dict(r) for r in cursor.fetchall()]
+
+    # Categories for videos
+    cursor.execute("""
+        SELECT category, COUNT(*) as cnt 
+        FROM media_gallery 
+        WHERE media_type = 'video' AND is_published = 1 
+        GROUP BY category 
+        ORDER BY cnt DESC
+    """)
+    categories = [dict(r) for r in cursor.fetchall()]
+
     conn.close()
     return templates.TemplateResponse(request, "public/videos.html", {
         "settings": settings,
         "ticker_notice": ticker_notice,
         "videos": videos,
-        "active_menu": "gallery"
+        "categories": categories,
+        "selected_category": category or "",
+        "search_query": q or "",
+        "active_menu": "gallery",
+        "sub_menu": "videos"
     })
 
 @router.get("/facilities", response_class=HTMLResponse)

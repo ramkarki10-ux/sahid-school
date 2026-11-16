@@ -1,127 +1,261 @@
 {% extends "base.html" %}
 
-{% block title %}फोटो ग्यालेरी | {{ settings.name_ne }}{% endblock %}
+{% block title %}फोटो ग्यालेरी (Photo Gallery) | {{ settings.name_ne }}{% endblock %}
 
 {% block content %}
-<div class="bg-slate-100 py-6 border-b border-slate-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-8">
-        <div class="flex items-center gap-2 text-xs text-slate-500">
-            <a href="/" class="hover:text-instBlue">गृहपृष्ठ</a>
-            <i data-lucide="chevron-right" class="w-3 h-3"></i>
-            <span class="text-slate-800 font-semibold">ग्यालेरी</span>
-            <i data-lucide="chevron-right" class="w-3 h-3"></i>
-            <span class="text-instBlue font-semibold">फोटो ग्यालेरी</span>
+<!-- Top Header & Breadcrumb -->
+<div class="bg-gradient-to-r from-slate-900 via-instBlue to-slate-900 text-white py-10 relative overflow-hidden">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.1),transparent_50%)]"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 relative z-10">
+        <div class="flex items-center gap-2 text-xs text-blue-200">
+            <a href="/" class="hover:text-white transition">गृहपृष्ठ</a>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            <span>ग्यालेरी</span>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            <span class="text-amber-300 font-bold">फोटो ग्यालेरी</span>
         </div>
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-3">
+
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-4">
             <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-instBlue">फोटो ग्यालेरी (Photo Gallery)</h1>
-                <p class="text-xs text-slate-600 mt-1">विद्यालयका विभिन्न शैक्षिक, खेलकुद, सांस्कृतिक, छात्रावास तथा वार्षिकोत्सवका स्मृतिहरू</p>
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+                    <i data-lucide="camera" class="w-8 h-8 text-amber-400"></i>
+                    <span>फोटो ग्यालेरी (Photo Gallery)</span>
+                </h1>
+                <p class="text-xs sm:text-sm text-blue-100 mt-1 max-w-2xl leading-relaxed">
+                    सहिद स्मृति आवासीय माध्यमिक विद्यालयका विभिन्न शैक्षिक, खेलकुद, सांस्कृतिक, वार्षिकोत्सव तथा छात्रावास जीवनका मनमोहक तस्विरहरू
+                </p>
             </div>
-            <a href="https://www.facebook.com/profile.php?id=100092258731456" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm transition">
-                <i data-lucide="facebook" class="w-4 h-4"></i>
-                <span>फेसबुकमा ताजा फोटोहरू हेर्नुहोस्</span>
-            </a>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Video Gallery Switch Button -->
+                <a href="/videos" class="inline-flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition">
+                    <i data-lucide="video" class="w-4 h-4"></i>
+                    <span>भिडियो ग्यालेरी हेर्नुहोस्</span>
+                </a>
+
+                <!-- Official Facebook Button -->
+                <a href="https://www.facebook.com/profile.php?id=100092258731456" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-4 py-2.5 rounded-xl border border-white/20 backdrop-blur-sm transition">
+                    <i data-lucide="facebook" class="w-4 h-4 text-blue-300"></i>
+                    <span>फेसबुकमा ताजा फोटोहरू</span>
+                </a>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- Main Body -->
 <div class="py-10 bg-slate-50 min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-8 space-y-8">
         
-        <!-- 9 Category Filter Tabs -->
-        <div class="bg-white border border-slate-200 p-3 rounded-2xl shadow-sm">
+        <!-- Filter Bar & Search -->
+        <div class="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <!-- 9 Category Filter Pills -->
             <div class="flex flex-wrap items-center gap-1.5 text-xs font-bold" id="catFilterContainer">
-                <button type="button" onclick="filterGallery('')" class="cat-pill px-3.5 py-1.5 rounded-lg bg-instBlue text-white shadow-sm" data-category="">
-                    सबै फोटोहरू
+                <button type="button" onclick="filterGalleryByCat('')" class="cat-pill px-3.5 py-1.5 rounded-xl bg-instBlue text-white shadow-sm transition" data-category="">
+                    सबै फोटोहरू ({{ photos | length }})
                 </button>
-                <button type="button" onclick="filterGallery('विद्यालय कार्यक्रम')" class="cat-pill px-3.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-category="विद्यालय कार्यक्रम">
+                <button type="button" onclick="filterGalleryByCat('विद्यालय कार्यक्रम')" class="cat-pill px-3.5 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 transition" data-category="विद्यालय कार्यक्रम">
                     विद्यालय कार्यक्रम
                 </button>
-                <button type="button" onclick="filterGallery('शैक्षिक')" class="cat-pill px-3.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-category="शैक्षिक">
+                <button type="button" onclick="filterGalleryByCat('शैक्षिक')" class="cat-pill px-3.5 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 transition" data-category="शैक्षिक">
                     शैक्षिक
                 </button>
-                <button type="button" onclick="filterGallery('खेलकुद')" class="cat-pill px-3.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-category="खेलकुद">
+                <button type="button" onclick="filterGalleryByCat('खेलकुद')" class="cat-pill px-3.5 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 transition" data-category="खेलकुद">
                     खेलकुद
                 </button>
-                <button type="button" onclick="filterGallery('सांस्कृतिक')" class="cat-pill px-3.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-category="सांस्कृतिक">
+                <button type="button" onclick="filterGalleryByCat('सांस्कृतिक')" class="cat-pill px-3.5 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 transition" data-category="सांस्कृतिक">
                     सांस्कृतिक
                 </button>
-                <button type="button" onclick="filterGallery('अभिभावक')" class="cat-pill px-3.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-category="अभिभावक">
+                <button type="button" onclick="filterGalleryByCat('अभिभावक')" class="cat-pill px-3.5 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 transition" data-category="अभिभावक">
                     अभिभावक
                 </button>
-                <button type="button" onclick="filterGallery('पुरस्कार')" class="cat-pill px-3.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-category="पुरस्कार">
+                <button type="button" onclick="filterGalleryByCat('पुरस्कार')" class="cat-pill px-3.5 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 transition" data-category="पुरस्कार">
                     पुरस्कार
                 </button>
-                <button type="button" onclick="filterGallery('भ्रमण')" class="cat-pill px-3.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-category="भ्रमण">
+                <button type="button" onclick="filterGalleryByCat('भ्रमण')" class="cat-pill px-3.5 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 transition" data-category="भ्रमण">
                     भ्रमण
                 </button>
-                <button type="button" onclick="filterGallery('छात्रावास')" class="cat-pill px-3.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-category="छात्रावास">
+                <button type="button" onclick="filterGalleryByCat('छात्रावास')" class="cat-pill px-3.5 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 transition" data-category="छात्रावास">
                     छात्रावास
                 </button>
-                <button type="button" onclick="filterGallery('अन्य')" class="cat-pill px-3.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100" data-category="अन्य">
+                <button type="button" onclick="filterGalleryByCat('अन्य')" class="cat-pill px-3.5 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 transition" data-category="अन्य">
                     अन्य
                 </button>
             </div>
+
+            <!-- Instant Search Input -->
+            <div class="relative w-full md:w-64">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
+                <input type="text" id="gallerySearchInput" oninput="filterGallerySearch()" placeholder="तस्विर वा कार्यक्रम खोज्नुहोस्..." class="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-instBlue focus:outline-none">
+            </div>
         </div>
 
-        <!-- Albums Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="galleryGrid">
+        <!-- Photos Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="publicPhotosGrid">
+            {% for p in photos %}
+            <div class="photo-card bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer"
+                 data-cat="{{ p.category }}"
+                 data-title="{{ p.title | lower }}"
+                 data-desc="{{ (p.description or '') | lower }}"
+                 onclick='openPhotoLightbox({{ p | tojson | safe }})'>
+                
+                <div>
+                    <!-- Image Card with Zoom -->
+                    <div class="aspect-[4/3] bg-slate-100 overflow-hidden relative group">
+                        <img src="{{ p.media_url or '/static/images/hero-banner.jpg' }}" alt="{{ p.title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108" loading="lazy">
+                        
+                        <!-- Overlay gradient on hover -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 text-white">
+                            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300">
+                                <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                                <span>ठूलो साइजमा हेर्नुहोस्</span>
+                            </span>
+                        </div>
+
+                        <!-- Category Badge -->
+                        <span class="absolute top-3 left-3 bg-instBlue/90 backdrop-blur-md text-white text-[10px] font-black px-2.5 py-0.5 rounded-lg shadow-sm">
+                            {{ p.category }}
+                        </span>
+
+                        <!-- Event Date Badge -->
+                        {% if p.event_date %}
+                        <span class="absolute top-3 right-3 bg-black/70 backdrop-blur-md text-amber-300 text-[10px] font-mono px-2 py-0.5 rounded-lg shadow-sm">
+                            {{ p.event_date }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Text and Rich Description -->
+                    <div class="p-5 space-y-2">
+                        <h2 class="font-bold text-base text-slate-900 group-hover:text-instBlue transition line-clamp-1 leading-snug">
+                            {{ p.title }}
+                        </h2>
+
+                        <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                            {{ p.description or 'सहिद स्मृति आवासीय माध्यमिक विद्यालयको कार्यक्रम तथा शैक्षिक गतिविधि।' }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Footer with External Link -->
+                <div class="p-4 border-t border-slate-100 bg-slate-50/70 flex items-center justify-between text-xs" onclick="event.stopPropagation()">
+                    <span class="text-slate-400 font-medium text-[11px]">स्थापना २०६६</span>
+
+                    {% if p.external_link %}
+                    <a href="{{ p.external_link }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-bold hover:underline transition">
+                        {% if 'facebook' in p.external_link %}
+                        <i data-lucide="facebook" class="w-3.5 h-3.5"></i>
+                        {% else %}
+                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                        {% endif %}
+                        <span>{{ p.external_link_title or 'फेसबुक पोस्ट' }}</span>
+                    </a>
+                    {% else %}
+                    <span class="text-slate-400 text-[11px] font-medium">सहिद स्मृति मा.वि.</span>
+                    {% endif %}
+                </div>
+
+            </div>
+            {% else %}
+            <!-- Legacy fallback albums -->
             {% for alb in albums %}
-            <div class="album-card bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between"
+            <div class="photo-card bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between"
                  data-cat="{{ alb.category or 'विद्यालय कार्यक्रम' }}">
                 <div class="aspect-video bg-slate-200 overflow-hidden relative group">
-                    <img src="{{ alb.cover_image or '/static/images/hero-banner.jpg' }}" alt="{{ alb.title_ne }}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105">
-                    <span class="absolute top-2.5 right-2.5 bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+                    <img src="{{ alb.cover_image or '/static/images/hero-banner.jpg' }}" alt="{{ alb.title_ne }}" class="w-full h-full object-cover">
+                    <span class="absolute top-2.5 right-2.5 bg-slate-900/80 text-white text-[10px] font-bold px-2 py-0.5 rounded">
                         {{ alb.photos|length if alb.photos else 1 }} तस्बिर
                     </span>
-                    <span class="absolute bottom-2.5 left-2.5 bg-instBlue/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+                    <span class="absolute bottom-2.5 left-2.5 bg-instBlue/90 text-white text-[10px] font-bold px-2 py-0.5 rounded">
                         {{ alb.category or 'विद्यालय कार्यक्रम' }}
                     </span>
                 </div>
                 <div class="p-4 space-y-1">
-                    <h3 class="font-bold text-sm text-slate-900 leading-snug">{{ alb.title_ne }}</h3>
-                    {% if alb.title_en %}
-                    <p class="text-[11px] text-slate-400">{{ alb.title_en }}</p>
-                    {% endif %}
-                    {% if alb.description_ne %}
-                    <p class="text-xs text-slate-500 line-clamp-2 mt-1">{{ alb.description_ne }}</p>
-                    {% endif %}
-                </div>
-                <div class="p-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-[11px] text-slate-400">
-                    <span>स्थापना २०६६</span>
-                    <a href="https://www.facebook.com/profile.php?id=100092258731456" target="_blank" rel="noopener" class="text-blue-600 font-semibold hover:underline flex items-center gap-1">
-                        <i data-lucide="facebook" class="w-3 h-3"></i>
-                        <span>फेसबुक पोस्ट</span>
-                    </a>
+                    <h3 class="font-bold text-sm text-slate-900">{{ alb.title_ne }}</h3>
+                    <p class="text-xs text-slate-500 line-clamp-2">{{ alb.description_ne or '' }}</p>
                 </div>
             </div>
             {% endfor %}
+            {% endfor %}
         </div>
 
-        <div id="noAlbumsMsg" class="hidden py-16 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
-            <i data-lucide="images" class="w-12 h-12 mx-auto text-slate-300 mb-2"></i>
-            <p class="font-bold text-slate-700 text-sm">यो विधामा हाल कुनै तस्बिर छैन।</p>
+        <!-- No Results Found -->
+        <div id="noPhotosMsg" class="hidden py-16 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+            <i data-lucide="image-off" class="w-12 h-12 mx-auto text-slate-300 mb-2"></i>
+            <p class="font-bold text-slate-700 text-sm">यस विधामा हाल कुनै तस्बिर फेला परेन।</p>
+            <button onclick="filterGalleryByCat('')" class="mt-2 text-xs text-instBlue font-bold underline">सबै तस्विरहरू हेर्नुहोस्</button>
         </div>
 
     </div>
 </div>
 
+<!-- PUBLIC LIGHTBOX MODAL -->
+<div id="photoLightbox" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-6" onclick="closePhotoLightbox()">
+    <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-2xl relative flex flex-col" onclick="event.stopPropagation()">
+        <!-- Close Button -->
+        <button onclick="closePhotoLightbox()" class="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black transition shadow-lg">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+
+        <!-- Large Image Container -->
+        <div class="bg-slate-950 flex items-center justify-center min-h-[300px] max-h-[60vh] overflow-hidden">
+            <img id="lightboxImg" src="" alt="" class="max-h-[60vh] w-auto max-w-full object-contain">
+        </div>
+
+        <!-- Details Box -->
+        <div class="p-6 space-y-3 bg-white">
+            <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span id="lightboxCategory" class="px-3 py-1 rounded-full bg-blue-100 text-blue-800 font-bold"></span>
+                <span id="lightboxDate" class="text-slate-500 font-mono text-xs"></span>
+            </div>
+
+            <h2 id="lightboxTitle" class="text-xl font-extrabold text-slate-900 leading-snug"></h2>
+
+            <div class="prose max-w-none text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
+                <p id="lightboxDesc" class="whitespace-pre-line"></p>
+            </div>
+
+            <!-- Social Media Link Pill -->
+            <div id="lightboxLinkContainer" class="pt-3 border-t border-slate-100 flex items-center justify-between"></div>
+        </div>
+    </div>
+</div>
+
 <script>
-function filterGallery(category) {
+let currentCategory = '';
+
+function filterGalleryByCat(category) {
+    currentCategory = category;
     const pills = document.querySelectorAll('.cat-pill');
     pills.forEach(p => {
         if (p.dataset.category === category) {
-            p.className = "cat-pill px-3.5 py-1.5 rounded-lg bg-instBlue text-white shadow-sm";
+            p.className = "cat-pill px-3.5 py-1.5 rounded-xl bg-instBlue text-white shadow-sm transition";
         } else {
-            p.className = "cat-pill px-3.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100";
+            p.className = "cat-pill px-3.5 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 transition";
         }
     });
 
-    const cards = document.querySelectorAll('.album-card');
+    applyPublicFilter();
+}
+
+function filterGallerySearch() {
+    applyPublicFilter();
+}
+
+function applyPublicFilter() {
+    const q = (document.getElementById('gallerySearchInput').value || '').trim().toLowerCase();
+    const cards = document.querySelectorAll('.photo-card');
     let count = 0;
+
     cards.forEach(c => {
         const cCat = c.dataset.cat || '';
-        if (!category || cCat.includes(category)) {
+        const cTitle = c.dataset.title || '';
+        const cDesc = c.dataset.desc || '';
+
+        const matchesCat = (!currentCategory) || cCat.includes(currentCategory);
+        const matchesQ = (!q) || (cTitle.includes(q) || cDesc.includes(q) || cCat.toLowerCase().includes(q));
+
+        if (matchesCat && matchesQ) {
             c.style.display = '';
             count++;
         } else {
@@ -129,12 +263,44 @@ function filterGallery(category) {
         }
     });
 
-    const noMsg = document.getElementById('noAlbumsMsg');
+    const noMsg = document.getElementById('noPhotosMsg');
     if (count === 0) {
         noMsg.classList.remove('hidden');
     } else {
         noMsg.classList.add('hidden');
     }
 }
+
+function openPhotoLightbox(photo) {
+    document.getElementById('lightboxImg').src = photo.media_url || '/static/images/hero-banner.jpg';
+    document.getElementById('lightboxTitle').innerText = photo.title || '';
+    document.getElementById('lightboxCategory').innerText = photo.category || 'विद्यालय कार्यक्रम';
+    document.getElementById('lightboxDate').innerText = photo.event_date ? 'कार्यक्रम मिति: ' + photo.event_date : '';
+    document.getElementById('lightboxDesc').innerText = photo.description || 'सहिद स्मृति आवासीय माध्यमिक विद्यालयको कार्यक्रम तथा शैक्षिक गतिविधि।';
+
+    const linkContainer = document.getElementById('lightboxLinkContainer');
+    if (photo.external_link) {
+        linkContainer.innerHTML = `
+            <span class="text-xs text-slate-500 font-semibold">सामाजिक सञ्जालमा हेर्नुहोस्:</span>
+            <a href="${photo.external_link}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow transition">
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                <span>${photo.external_link_title || 'फेसबुक पोस्ट हेर्नुहोस्'}</span>
+            </a>
+        `;
+    } else {
+        linkContainer.innerHTML = '<span class="text-xs text-slate-400">सहिद स्मृति आवासीय माध्यमिक विद्यालय</span>';
+    }
+
+    if (window.lucide) lucide.createIcons();
+    document.getElementById('photoLightbox').classList.remove('hidden');
+}
+
+function closePhotoLightbox() {
+    document.getElementById('photoLightbox').classList.add('hidden');
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePhotoLightbox();
+});
 </script>
 {% endblock %}

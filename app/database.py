@@ -830,6 +830,31 @@ def init_db():
     );
     """)
 
+    # 20. Media Gallery (Dynamic Photo & Video CMS with RBAC & Social Links)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS media_gallery (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        media_type TEXT NOT NULL,
+        category TEXT NOT NULL DEFAULT 'विद्यालय कार्यक्रम',
+        media_url TEXT NOT NULL,
+        thumbnail_url TEXT DEFAULT '',
+        external_link TEXT DEFAULT '',
+        external_link_title TEXT DEFAULT '',
+        youtube_id TEXT DEFAULT '',
+        event_date TEXT DEFAULT '',
+        uploaded_by TEXT DEFAULT 'admin',
+        is_featured INTEGER DEFAULT 0,
+        display_order INTEGER DEFAULT 0,
+        is_published INTEGER DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_media_gallery_type ON media_gallery(media_type);
+    CREATE INDEX IF NOT EXISTS idx_media_gallery_category ON media_gallery(category);
+    """)
+
     # Ensure columns exist in committees if table was created previously
     for tbl in ["school_management_committee", "trustee_committee"]:
         cursor.execute(f"PRAGMA table_info({tbl})")
