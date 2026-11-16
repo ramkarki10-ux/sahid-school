@@ -29,7 +29,7 @@ def _get_target_db_path():
         return SOURCE_DB_PATH
     tmp_path = Path(tempfile.gettempdir()) / "school.db"
     src = _find_source_db()
-    if not tmp_path.exists() or tmp_path.stat().st_size == 0:
+    if not tmp_path.exists() or tmp_path.stat().st_size == 0 or (src.exists() and src.stat().st_mtime > tmp_path.stat().st_mtime):
         if src.exists():
             try:
                 shutil.copy2(src, tmp_path)
@@ -851,9 +851,9 @@ def init_db():
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
-    CREATE INDEX IF NOT EXISTS idx_media_gallery_type ON media_gallery(media_type);
-    CREATE INDEX IF NOT EXISTS idx_media_gallery_category ON media_gallery(category);
     """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_media_gallery_type ON media_gallery(media_type);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_media_gallery_category ON media_gallery(category);")
 
     # Ensure columns exist in committees if table was created previously
     for tbl in ["school_management_committee", "trustee_committee"]:
