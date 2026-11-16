@@ -812,6 +812,24 @@ def init_db():
     );
     """)
 
+    # 19. School Bus Users (विद्यालय बस प्रयोगकर्ता)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS bus_users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_name TEXT NOT NULL,
+        address TEXT NOT NULL,
+        guardian_name TEXT NOT NULL,
+        contact_number TEXT NOT NULL,
+        bus_stop TEXT NOT NULL,
+        bus_number TEXT DEFAULT 'बस नं. १ (को १ ख २०६६)',
+        class_name TEXT DEFAULT '',
+        status TEXT DEFAULT 'सक्रिय',
+        remarks TEXT DEFAULT '',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
     # Ensure columns exist in committees if table was created previously
     for tbl in ["school_management_committee", "trustee_committee"]:
         cursor.execute(f"PRAGMA table_info({tbl})")

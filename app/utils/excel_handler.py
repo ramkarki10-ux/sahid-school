@@ -1280,6 +1280,335 @@ def generate_alumni_template() -> io.BytesIO:
     output.seek(0)
     return output
 
+
+# ==============================================================================
+# 11. SCHOOL BUS USERS (विद्यालय बस प्रयोगकर्ता) EXCEL / CSV UTILITIES
+# ==============================================================================
+
+BUS_USERS_TEMPLATE_HEADERS = [
+    "विद्यार्थीको पूरा नाम, थर *",
+    "ठेगाना *",
+    "अभिभावकको नाम, थर *",
+    "सम्पर्क नम्बर *",
+    "वस चढ्ने स्थान (Bus Stop) *",
+    "बस नम्बर / रुट",
+    "कक्षा (Class)",
+    "कैफियत (Remarks)"
+]
+
+def generate_bus_users_template() -> io.BytesIO:
+    """
+    Generates standard Excel Template for School Bus Users bulk upload.
+    Mandatory columns: विद्यार्थीको नाम, ठेगाना, अभिभावकको नाम, सम्पर्क नम्बर, वस चढ्ने स्थान.
+    """
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Bus_Users_Template"
+
+    # Title Banner
+    ws.merge_cells("A1:H1")
+    title = ws["A1"]
+    title.value = "सहिद स्मृति आवासीय मा.वि. — विद्यालय बस प्रयोगकर्ता आयात ढाँचा (School Bus Users Template)"
+    title.fill = PatternFill(start_color="15305B", end_color="15305B", fill_type="solid")
+    title.font = Font(name="Segoe UI", size=13, bold=True, color="FFFFFF")
+    title.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 36
+
+    # Instruction Note Banner
+    ws.merge_cells("A2:H2")
+    inst = ws["A2"]
+    inst.value = "नोट: ताराङ्कित (*) गरिएका स्तम्भहरू अनिवार्य छन्। Excel (.xlsx) वा CSV (.csv) फाइल सिधै अपलोड गर्न सकिन्छ।"
+    inst.fill = PatternFill(start_color="FEF3C7", end_color="FEF3C7", fill_type="solid")
+    inst.font = Font(name="Segoe UI", size=10, italic=True, color="92400E")
+    inst.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[2].height = 24
+
+    ws.append(BUS_USERS_TEMPLATE_HEADERS)
+    ws.row_dimensions[3].height = 28
+
+    border_thin = Border(
+        left=Side(style='thin', color='CBD5E1'),
+        right=Side(style='thin', color='CBD5E1'),
+        top=Side(style='thin', color='CBD5E1'),
+        bottom=Side(style='thin', color='CBD5E1')
+    )
+
+    for c in range(1, len(BUS_USERS_TEMPLATE_HEADERS) + 1):
+        cell = ws.cell(row=3, column=c)
+        cell.fill = PatternFill(start_color="1E427B", end_color="1E427B", fill_type="solid")
+        cell.font = Font(name="Segoe UI", size=10, bold=True, color="FFFFFF")
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border_thin
+
+    # Sample Demonstration Rows
+    sample_rows = [
+        ["रोहित कार्की", "इटहरी-१९, सुनसरी", "राम बहादुर कार्की", "९८५२०३३१३३", "ब्रह्मपुर चोक", "बस नं. १ (को १ ख २०६६)", "कक्षा १०", "बिहान र दिउँसो"],
+        ["अनिता चौधरी", "इटहरी-२०, तरहरा", "सुरेश चौधरी", "9842000010", "तरहरा बजार", "बस नं. १ (को १ ख २०६६)", "कक्षा ९", "नियमित"],
+        ["सुस्मिता दाहाल", "इटहरी-५, जनता चोक", "हरि दाहाल", "९८४२००००११", "जनता चोक", "बस नं. २ (को १ ख २०८०)", "कक्षा ८", "बिहान ६:४५"]
+    ]
+
+    for s_row in sample_rows:
+        ws.append(s_row)
+        r_num = ws.max_row
+        ws.row_dimensions[r_num].height = 22
+        for col_idx in range(1, len(s_row) + 1):
+            cell = ws.cell(row=r_num, column=col_idx)
+            cell.border = border_thin
+            cell.font = Font(name="Segoe UI", size=9)
+            if col_idx in (4, 7):
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+            else:
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+
+    widths = [24, 24, 22, 18, 22, 26, 14, 20]
+    for idx, w in enumerate(widths, start=1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(idx)].width = w
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output
+
+
+def parse_bus_users_file(content: bytes, filename: str) -> Tuple[List[Dict[str, Any]], List[str]]:
+    """
+    Parses uploaded Excel (.xlsx, .xls) or CSV (.csv) file for bulk bus user registration.
+    Flexible header detection in both Nepali and English.
+    Returns (valid_records, errors).
+    """
+    valid_records: List[Dict[str, Any]] = []
+    errors: List[str] = []
+
+    raw_rows: List[List[Any]] = []
+
+    is_csv = filename.lower().endswith(".csv")
+
+    if is_csv:
+        import csv
+        text_content = None
+        for enc in ["utf-8-sig", "utf-8", "cp1252", "latin1"]:
+            try:
+                text_content = content.decode(enc)
+                break
+            except Exception:
+                continue
+
+        if text_content is None:
+            return [], ["CSV फाइल डिकोड गर्न सकिएन। कृपया UTF-8 ढाँचामा सुरक्षित गर्नुहोस्।"]
+
+        f = io.StringIO(text_content)
+        # Check delimiter (, or ;)
+        sample = text_content[:2048]
+        delimiter = ';' if sample.count(';') > sample.count(',') else ','
+        reader = csv.reader(f, delimiter=delimiter)
+        for row in reader:
+            if any(str(c).strip() for c in row):
+                raw_rows.append([str(c).strip() for c in row])
+    else:
+        # Excel .xlsx or .xls
+        try:
+            wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
+            ws = wb.active
+            for row in ws.iter_rows(values_only=True):
+                if any(r is not None and str(r).strip() for r in row):
+                    raw_rows.append([("" if r is None else str(r).strip()) for r in row])
+        except Exception as e:
+            return [], [f"Excel फाइल खोल्न सकिएन: {str(e)}"]
+
+    if not raw_rows:
+        return [], ["अपलोड गरिएको फाइल खाली छ।"]
+
+    # Detect header row (must contain name / विद्यार्थीको नाम / bus stop / stop / ठेगाना)
+    header_idx = -1
+    col_map: Dict[str, int] = {}
+
+    for idx, row in enumerate(raw_rows[:10]):
+        norm_row = [normalize_header_key(str(c)) for c in row]
+        # check keywords
+        has_name = any(k in c for c in norm_row for k in ["विद्यार्थी", "नाम", "name", "student"])
+        has_stop = any(k in c for c in norm_row for k in ["स्थान", "stop", "वस", "बस", "pickup", "boarding"])
+        if has_name and (has_stop or any(k in c for c in norm_row for k in ["ठेगाना", "address", "phone", "सम्पर्क"])):
+            header_idx = idx
+            for c_idx, raw_val in enumerate(row):
+                norm = normalize_header_key(str(raw_val))
+                if any(k in norm for k in ["विद्यार्थीकोपूरानामर", "विद्यार्थीकोनाम", "पूरानाम", "studentname", "fullname", "name"]):
+                    if "student_name" not in col_map:
+                        col_map["student_name"] = c_idx
+                elif any(k in norm for k in ["ठेगाना", "address", "गाउँ", "टोल", "स्थान"]) and not any(s in norm for s in ["बस", "वस", "stop", "boarding", "pickup"]):
+                    if "address" not in col_map:
+                        col_map["address"] = c_idx
+                elif any(k in norm for k in ["अभिभावक", "guardian", "father", "parent"]):
+                    if "guardian_name" not in col_map:
+                        col_map["guardian_name"] = c_idx
+                elif any(k in norm for k in ["सम्पर्क", "फोन", "phone", "mobile", "contact"]):
+                    if "contact_number" not in col_map:
+                        col_map["contact_number"] = c_idx
+                elif any(k in norm for k in ["वसचढ्नेस्थान", "बसचढ्नेस्थान", "चढ्नेस्थान", "busstop", "boardingpoint", "pickuppoint", "stop"]):
+                    if "bus_stop" not in col_map:
+                        col_map["bus_stop"] = c_idx
+                elif any(k in norm for k in ["बसनम्बर", "बस", "गाडी", "busno", "busnumber", "route", "रुट"]):
+                    if "bus_number" not in col_map:
+                        col_map["bus_number"] = c_idx
+                elif any(k in norm for k in ["कक्षा", "class", "grade"]):
+                    if "class_name" not in col_map:
+                        col_map["class_name"] = c_idx
+                elif any(k in norm for k in ["कैफियत", "remarks", "note"]):
+                    if "remarks" not in col_map:
+                        col_map["remarks"] = c_idx
+            break
+
+    if header_idx == -1:
+        # Fallback to positional mapping if columns match 0: name, 1: address, 2: guardian, 3: contact, 4: stop
+        if len(raw_rows[0]) >= 5:
+            header_idx = 0
+            col_map = {
+                "student_name": 0,
+                "address": 1,
+                "guardian_name": 2,
+                "contact_number": 3,
+                "bus_stop": 4,
+                "bus_number": 5 if len(raw_rows[0]) > 5 else -1,
+                "class_name": 6 if len(raw_rows[0]) > 6 else -1,
+                "remarks": 7 if len(raw_rows[0]) > 7 else -1
+            }
+        else:
+            return [], ["फाइलमा आवश्यक स्तम्भहरू (विद्यार्थीको नाम, ठेगाना, अभिभावक, सम्पर्क, बस स्टप) पहिचान हुन सकेन।"]
+
+    # Parse data rows
+    for r_num, row in enumerate(raw_rows[header_idx + 1:], start=header_idx + 2):
+        if not any(row):
+            continue
+
+        def get_val(key: str) -> str:
+            idx = col_map.get(key, -1)
+            if idx >= 0 and idx < len(row) and row[idx] is not None:
+                return str(row[idx]).strip()
+            return ""
+
+        s_name = get_val("student_name")
+        address = get_val("address")
+        guardian = get_val("guardian_name")
+        contact = get_val("contact_number")
+        bus_stop = get_val("bus_stop")
+        bus_num = get_val("bus_number") or "बस नं. १ (को १ ख २०६६)"
+        c_name = get_val("class_name")
+        remarks = get_val("remarks")
+
+        # Skip headers if repeated in template sample
+        if s_name.startswith("विद्यार्थीको पूरा नाम") or "ताराङ्कित" in s_name:
+            continue
+
+        if not s_name:
+            continue # skip empty row
+
+        row_errors = []
+        if not address:
+            row_errors.append("ठेगाना खाली छ")
+        if not guardian:
+            guardian = "अभिभावक"
+        if not contact:
+            row_errors.append("सम्पर्क नम्बर खाली छ")
+        if not bus_stop:
+            row_errors.append("वस चढ्ने स्थान खाली छ")
+
+        if row_errors:
+            errors.append(f"पङ्क्ति {r_num} ({s_name}): {', '.join(row_errors)}")
+            continue
+
+        valid_records.append({
+            "student_name": s_name,
+            "address": address,
+            "guardian_name": guardian,
+            "contact_number": contact,
+            "bus_stop": bus_stop,
+            "bus_number": bus_num,
+            "class_name": c_name,
+            "status": "सक्रिय",
+            "remarks": remarks
+        })
+
+    return valid_records, errors
+
+
+def export_bus_users_to_excel(records: List[Dict[str, Any]]) -> io.BytesIO:
+    """
+    Exports list of School Bus Users to beautifully formatted Excel file.
+    """
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Bus_Users_List"
+
+    # Title Banner
+    ws.merge_cells("A1:I1")
+    title = ws["A1"]
+    title.value = "सहिद स्मृति आवासीय माध्यमिक विद्यालय — विद्यालय बस प्रयोगकर्ता सूची (School Bus Users)"
+    title.fill = PatternFill(start_color="15305B", end_color="15305B", fill_type="solid")
+    title.font = Font(name="Segoe UI", size=13, bold=True, color="FFFFFF")
+    title.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 36
+
+    headers = [
+        "क्र.सं.",
+        "विद्यार्थीको पूरा नाम, थर",
+        "कक्षा",
+        "ठेगाना",
+        "अभिभावकको नाम",
+        "सम्पर्क नम्बर",
+        "वस चढ्ने स्थान (Bus Stop)",
+        "बस नम्बर / रुट",
+        "स्थिति"
+    ]
+    ws.append(headers)
+    ws.row_dimensions[2].height = 26
+
+    border_thin = Border(
+        left=Side(style='thin', color='CBD5E1'),
+        right=Side(style='thin', color='CBD5E1'),
+        top=Side(style='thin', color='CBD5E1'),
+        bottom=Side(style='thin', color='CBD5E1')
+    )
+
+    for c in range(1, len(headers) + 1):
+        cell = ws.cell(row=2, column=c)
+        cell.fill = PatternFill(start_color="1E427B", end_color="1E427B", fill_type="solid")
+        cell.font = Font(name="Segoe UI", size=10, bold=True, color="FFFFFF")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border_thin
+
+    for idx, u in enumerate(records, start=1):
+        row_vals = [
+            idx,
+            u.get("student_name", ""),
+            u.get("class_name", ""),
+            u.get("address", ""),
+            u.get("guardian_name", ""),
+            u.get("contact_number", ""),
+            u.get("bus_stop", ""),
+            u.get("bus_number", ""),
+            u.get("status", "सक्रिय")
+        ]
+        ws.append(row_vals)
+        r_num = ws.max_row
+        ws.row_dimensions[r_num].height = 20
+
+        for col_idx in range(1, len(row_vals) + 1):
+            cell = ws.cell(row=r_num, column=col_idx)
+            cell.border = border_thin
+            cell.font = Font(name="Segoe UI", size=9)
+            if col_idx in (1, 3, 6, 9):
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+            else:
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+
+    widths = [8, 24, 14, 24, 22, 18, 24, 26, 12]
+    for idx, w in enumerate(widths, start=1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(idx)].width = w
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output
+
 def parse_alumni_excel(file_bytes: bytes) -> Tuple[List[Dict[str, Any]], List[str]]:
     """
     Parses uploaded Excel sheet for alumni data.
@@ -1456,6 +1785,335 @@ def export_alumni_to_excel(alumni_list: List[Dict[str, Any]]) -> io.BytesIO:
                 cell.alignment = Alignment(horizontal="left", vertical="center")
 
     widths = [8, 26, 18, 18, 24, 18, 22, 28]
+    for idx, w in enumerate(widths, start=1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(idx)].width = w
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output
+
+
+# ==============================================================================
+# 11. SCHOOL BUS USERS (विद्यालय बस प्रयोगकर्ता) EXCEL / CSV UTILITIES
+# ==============================================================================
+
+BUS_USERS_TEMPLATE_HEADERS = [
+    "विद्यार्थीको पूरा नाम, थर *",
+    "ठेगाना *",
+    "अभिभावकको नाम, थर *",
+    "सम्पर्क नम्बर *",
+    "वस चढ्ने स्थान (Bus Stop) *",
+    "बस नम्बर / रुट",
+    "कक्षा (Class)",
+    "कैफियत (Remarks)"
+]
+
+def generate_bus_users_template() -> io.BytesIO:
+    """
+    Generates standard Excel Template for School Bus Users bulk upload.
+    Mandatory columns: विद्यार्थीको नाम, ठेगाना, अभिभावकको नाम, सम्पर्क नम्बर, वस चढ्ने स्थान.
+    """
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Bus_Users_Template"
+
+    # Title Banner
+    ws.merge_cells("A1:H1")
+    title = ws["A1"]
+    title.value = "सहिद स्मृति आवासीय मा.वि. — विद्यालय बस प्रयोगकर्ता आयात ढाँचा (School Bus Users Template)"
+    title.fill = PatternFill(start_color="15305B", end_color="15305B", fill_type="solid")
+    title.font = Font(name="Segoe UI", size=13, bold=True, color="FFFFFF")
+    title.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 36
+
+    # Instruction Note Banner
+    ws.merge_cells("A2:H2")
+    inst = ws["A2"]
+    inst.value = "नोट: ताराङ्कित (*) गरिएका स्तम्भहरू अनिवार्य छन्। Excel (.xlsx) वा CSV (.csv) फाइल सिधै अपलोड गर्न सकिन्छ।"
+    inst.fill = PatternFill(start_color="FEF3C7", end_color="FEF3C7", fill_type="solid")
+    inst.font = Font(name="Segoe UI", size=10, italic=True, color="92400E")
+    inst.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[2].height = 24
+
+    ws.append(BUS_USERS_TEMPLATE_HEADERS)
+    ws.row_dimensions[3].height = 28
+
+    border_thin = Border(
+        left=Side(style='thin', color='CBD5E1'),
+        right=Side(style='thin', color='CBD5E1'),
+        top=Side(style='thin', color='CBD5E1'),
+        bottom=Side(style='thin', color='CBD5E1')
+    )
+
+    for c in range(1, len(BUS_USERS_TEMPLATE_HEADERS) + 1):
+        cell = ws.cell(row=3, column=c)
+        cell.fill = PatternFill(start_color="1E427B", end_color="1E427B", fill_type="solid")
+        cell.font = Font(name="Segoe UI", size=10, bold=True, color="FFFFFF")
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border_thin
+
+    # Sample Demonstration Rows
+    sample_rows = [
+        ["रोहित कार्की", "इटहरी-१९, सुनसरी", "राम बहादुर कार्की", "९८५२०३३१३३", "ब्रह्मपुर चोक", "बस नं. १ (को १ ख २०६६)", "कक्षा १०", "बिहान र दिउँसो"],
+        ["अनिता चौधरी", "इटहरी-२०, तरहरा", "सुरेश चौधरी", "9842000010", "तरहरा बजार", "बस नं. १ (को १ ख २०६६)", "कक्षा ९", "नियमित"],
+        ["सुस्मिता दाहाल", "इटहरी-५, जनता चोक", "हरि दाहाल", "९८४२००००११", "जनता चोक", "बस नं. २ (को १ ख २०८०)", "कक्षा ८", "बिहान ६:४५"]
+    ]
+
+    for s_row in sample_rows:
+        ws.append(s_row)
+        r_num = ws.max_row
+        ws.row_dimensions[r_num].height = 22
+        for col_idx in range(1, len(s_row) + 1):
+            cell = ws.cell(row=r_num, column=col_idx)
+            cell.border = border_thin
+            cell.font = Font(name="Segoe UI", size=9)
+            if col_idx in (4, 7):
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+            else:
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+
+    widths = [24, 24, 22, 18, 22, 26, 14, 20]
+    for idx, w in enumerate(widths, start=1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(idx)].width = w
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output
+
+
+def parse_bus_users_file(content: bytes, filename: str) -> Tuple[List[Dict[str, Any]], List[str]]:
+    """
+    Parses uploaded Excel (.xlsx, .xls) or CSV (.csv) file for bulk bus user registration.
+    Flexible header detection in both Nepali and English.
+    Returns (valid_records, errors).
+    """
+    valid_records: List[Dict[str, Any]] = []
+    errors: List[str] = []
+
+    raw_rows: List[List[Any]] = []
+
+    is_csv = filename.lower().endswith(".csv")
+
+    if is_csv:
+        import csv
+        text_content = None
+        for enc in ["utf-8-sig", "utf-8", "cp1252", "latin1"]:
+            try:
+                text_content = content.decode(enc)
+                break
+            except Exception:
+                continue
+
+        if text_content is None:
+            return [], ["CSV फाइल डिकोड गर्न सकिएन। कृपया UTF-8 ढाँचामा सुरक्षित गर्नुहोस्।"]
+
+        f = io.StringIO(text_content)
+        # Check delimiter (, or ;)
+        sample = text_content[:2048]
+        delimiter = ';' if sample.count(';') > sample.count(',') else ','
+        reader = csv.reader(f, delimiter=delimiter)
+        for row in reader:
+            if any(str(c).strip() for c in row):
+                raw_rows.append([str(c).strip() for c in row])
+    else:
+        # Excel .xlsx or .xls
+        try:
+            wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
+            ws = wb.active
+            for row in ws.iter_rows(values_only=True):
+                if any(r is not None and str(r).strip() for r in row):
+                    raw_rows.append([("" if r is None else str(r).strip()) for r in row])
+        except Exception as e:
+            return [], [f"Excel फाइल खोल्न सकिएन: {str(e)}"]
+
+    if not raw_rows:
+        return [], ["अपलोड गरिएको फाइल खाली छ।"]
+
+    # Detect header row (must contain name / विद्यार्थीको नाम / bus stop / stop / ठेगाना)
+    header_idx = -1
+    col_map: Dict[str, int] = {}
+
+    for idx, row in enumerate(raw_rows[:10]):
+        norm_row = [normalize_header_key(str(c)) for c in row]
+        # check keywords
+        has_name = any(k in c for c in norm_row for k in ["विद्यार्थी", "नाम", "name", "student"])
+        has_stop = any(k in c for c in norm_row for k in ["स्थान", "stop", "वस", "बस", "pickup", "boarding"])
+        if has_name and (has_stop or any(k in c for c in norm_row for k in ["ठेगाना", "address", "phone", "सम्पर्क"])):
+            header_idx = idx
+            for c_idx, raw_val in enumerate(row):
+                norm = normalize_header_key(str(raw_val))
+                if any(k in norm for k in ["विद्यार्थीकोपूरानामर", "विद्यार्थीकोनाम", "पूरानाम", "studentname", "fullname", "name"]):
+                    if "student_name" not in col_map:
+                        col_map["student_name"] = c_idx
+                elif any(k in norm for k in ["ठेगाना", "address", "गाउँ", "टोल", "स्थान"]) and not any(s in norm for s in ["बस", "वस", "stop", "boarding", "pickup"]):
+                    if "address" not in col_map:
+                        col_map["address"] = c_idx
+                elif any(k in norm for k in ["अभिभावक", "guardian", "father", "parent"]):
+                    if "guardian_name" not in col_map:
+                        col_map["guardian_name"] = c_idx
+                elif any(k in norm for k in ["सम्पर्क", "फोन", "phone", "mobile", "contact"]):
+                    if "contact_number" not in col_map:
+                        col_map["contact_number"] = c_idx
+                elif any(k in norm for k in ["वसचढ्नेस्थान", "बसचढ्नेस्थान", "चढ्नेस्थान", "busstop", "boardingpoint", "pickuppoint", "stop"]):
+                    if "bus_stop" not in col_map:
+                        col_map["bus_stop"] = c_idx
+                elif any(k in norm for k in ["बसनम्बर", "बस", "गाडी", "busno", "busnumber", "route", "रुट"]):
+                    if "bus_number" not in col_map:
+                        col_map["bus_number"] = c_idx
+                elif any(k in norm for k in ["कक्षा", "class", "grade"]):
+                    if "class_name" not in col_map:
+                        col_map["class_name"] = c_idx
+                elif any(k in norm for k in ["कैफियत", "remarks", "note"]):
+                    if "remarks" not in col_map:
+                        col_map["remarks"] = c_idx
+            break
+
+    if header_idx == -1:
+        # Fallback to positional mapping if columns match 0: name, 1: address, 2: guardian, 3: contact, 4: stop
+        if len(raw_rows[0]) >= 5:
+            header_idx = 0
+            col_map = {
+                "student_name": 0,
+                "address": 1,
+                "guardian_name": 2,
+                "contact_number": 3,
+                "bus_stop": 4,
+                "bus_number": 5 if len(raw_rows[0]) > 5 else -1,
+                "class_name": 6 if len(raw_rows[0]) > 6 else -1,
+                "remarks": 7 if len(raw_rows[0]) > 7 else -1
+            }
+        else:
+            return [], ["फाइलमा आवश्यक स्तम्भहरू (विद्यार्थीको नाम, ठेगाना, अभिभावक, सम्पर्क, बस स्टप) पहिचान हुन सकेन।"]
+
+    # Parse data rows
+    for r_num, row in enumerate(raw_rows[header_idx + 1:], start=header_idx + 2):
+        if not any(row):
+            continue
+
+        def get_val(key: str) -> str:
+            idx = col_map.get(key, -1)
+            if idx >= 0 and idx < len(row) and row[idx] is not None:
+                return str(row[idx]).strip()
+            return ""
+
+        s_name = get_val("student_name")
+        address = get_val("address")
+        guardian = get_val("guardian_name")
+        contact = get_val("contact_number")
+        bus_stop = get_val("bus_stop")
+        bus_num = get_val("bus_number") or "बस नं. १ (को १ ख २०६६)"
+        c_name = get_val("class_name")
+        remarks = get_val("remarks")
+
+        # Skip headers if repeated in template sample
+        if s_name.startswith("विद्यार्थीको पूरा नाम") or "ताराङ्कित" in s_name:
+            continue
+
+        if not s_name:
+            continue # skip empty row
+
+        row_errors = []
+        if not address:
+            row_errors.append("ठेगाना खाली छ")
+        if not guardian:
+            guardian = "अभिभावक"
+        if not contact:
+            row_errors.append("सम्पर्क नम्बर खाली छ")
+        if not bus_stop:
+            row_errors.append("वस चढ्ने स्थान खाली छ")
+
+        if row_errors:
+            errors.append(f"पङ्क्ति {r_num} ({s_name}): {', '.join(row_errors)}")
+            continue
+
+        valid_records.append({
+            "student_name": s_name,
+            "address": address,
+            "guardian_name": guardian,
+            "contact_number": contact,
+            "bus_stop": bus_stop,
+            "bus_number": bus_num,
+            "class_name": c_name,
+            "status": "सक्रिय",
+            "remarks": remarks
+        })
+
+    return valid_records, errors
+
+
+def export_bus_users_to_excel(records: List[Dict[str, Any]]) -> io.BytesIO:
+    """
+    Exports list of School Bus Users to beautifully formatted Excel file.
+    """
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Bus_Users_List"
+
+    # Title Banner
+    ws.merge_cells("A1:I1")
+    title = ws["A1"]
+    title.value = "सहिद स्मृति आवासीय माध्यमिक विद्यालय — विद्यालय बस प्रयोगकर्ता सूची (School Bus Users)"
+    title.fill = PatternFill(start_color="15305B", end_color="15305B", fill_type="solid")
+    title.font = Font(name="Segoe UI", size=13, bold=True, color="FFFFFF")
+    title.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 36
+
+    headers = [
+        "क्र.सं.",
+        "विद्यार्थीको पूरा नाम, थर",
+        "कक्षा",
+        "ठेगाना",
+        "अभिभावकको नाम",
+        "सम्पर्क नम्बर",
+        "वस चढ्ने स्थान (Bus Stop)",
+        "बस नम्बर / रुट",
+        "स्थिति"
+    ]
+    ws.append(headers)
+    ws.row_dimensions[2].height = 26
+
+    border_thin = Border(
+        left=Side(style='thin', color='CBD5E1'),
+        right=Side(style='thin', color='CBD5E1'),
+        top=Side(style='thin', color='CBD5E1'),
+        bottom=Side(style='thin', color='CBD5E1')
+    )
+
+    for c in range(1, len(headers) + 1):
+        cell = ws.cell(row=2, column=c)
+        cell.fill = PatternFill(start_color="1E427B", end_color="1E427B", fill_type="solid")
+        cell.font = Font(name="Segoe UI", size=10, bold=True, color="FFFFFF")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border_thin
+
+    for idx, u in enumerate(records, start=1):
+        row_vals = [
+            idx,
+            u.get("student_name", ""),
+            u.get("class_name", ""),
+            u.get("address", ""),
+            u.get("guardian_name", ""),
+            u.get("contact_number", ""),
+            u.get("bus_stop", ""),
+            u.get("bus_number", ""),
+            u.get("status", "सक्रिय")
+        ]
+        ws.append(row_vals)
+        r_num = ws.max_row
+        ws.row_dimensions[r_num].height = 20
+
+        for col_idx in range(1, len(row_vals) + 1):
+            cell = ws.cell(row=r_num, column=col_idx)
+            cell.border = border_thin
+            cell.font = Font(name="Segoe UI", size=9)
+            if col_idx in (1, 3, 6, 9):
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+            else:
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+
+    widths = [8, 24, 14, 24, 22, 18, 24, 26, 12]
     for idx, w in enumerate(widths, start=1):
         ws.column_dimensions[openpyxl.utils.get_column_letter(idx)].width = w
 

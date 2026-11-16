@@ -106,6 +106,7 @@
                                 <a href="/leave-application" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue"><i data-lucide="calendar" class="w-3.5 h-3.5 text-instBlue"></i><span>अनलाइन बिदा निवेदन</span></a>
                                 <a href="/parent/login" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue"><i data-lucide="calendar-check" class="w-3.5 h-3.5 text-instBlue"></i><span>दैनिक हाजिरी पोर्टल</span></a>
                                 <a href="/homework" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue"><i data-lucide="book-open" class="w-3.5 h-3.5 text-instBlue"></i><span>दैनिक गृहकार्य (Homework)</span></a>
+                                <a href="/bus-users" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue"><i data-lucide="bus" class="w-3.5 h-3.5 text-instGold"></i><span class="font-bold text-instBlue">विद्यालय bus प्रयोगकर्ता</span></a>
                                 <a href="/students" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-blue-50 hover:text-instBlue border-t border-slate-100"><i data-lucide="table" class="w-3.5 h-3.5 text-instBlue"></i><span>विद्यार्थी विवरण</span></a>
                             </div>
                         </div>
@@ -177,6 +178,18 @@
 
         <!-- Drawer Links (Dynamic from get_navigation_menus()) -->
         <div class="p-3 space-y-1 text-sm font-medium">
+            <!-- Mobile Language Switcher Pill -->
+            <div class="flex items-center justify-between p-2 mb-2 rounded-xl bg-white/5 border border-white/10 text-xs">
+                <span class="text-slate-300 font-medium flex items-center gap-1.5">
+                    <i data-lucide="globe" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>भाषा (Language):</span>
+                </span>
+                <div class="inline-flex rounded border border-white/20 overflow-hidden text-xs font-bold">
+                    <button type="button" onclick="window.SchoolI18n.setLanguage('np')" id="langBtnNP_mobile" class="px-3 py-1 bg-amber-400 text-slate-950 font-bold transition">NP</button>
+                    <button type="button" onclick="window.SchoolI18n.setLanguage('en')" id="langBtnEN_mobile" class="px-3 py-1 bg-instBlue text-slate-300 hover:text-white transition">EN</button>
+                </div>
+            </div>
+
             <!-- Mobile App Install Shortcut Card -->
             <a href="/app" onclick="closeMobileDrawer()" class="flex items-center justify-between p-2.5 mb-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-bold text-xs shadow-md">
                 <span class="flex items-center gap-2">

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from typing import Optional
 import json
+import math
 from app.database import get_db
 from app.auth import get_current_user
 from app.routers.api_parent import get_current_parent
@@ -944,6 +945,87 @@ def page_download(request: Request):
         "settings": settings,
         "ticker_notice": ticker_notice,
         "active_menu": "download"
+    })
+
+@router.get("/bus-users", response_class=HTMLResponse)
+def page_bus_users(
+    request: Request,
+    q: Optional[str] = None,
+    bus_stop: Optional[str] = None,
+    bus_number: Optional[str] = None,
+    page: int = 1
+):
+    settings, ticker_notice = get_school_context()
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Distinct stops & buses
+    cursor.execute("SELECT DISTINCT bus_stop FROM bus_users WHERE bus_stop IS NOT NULL AND bus_stop != '' ORDER BY bus_stop ASC")
+    bus_stops = [r[0] for r in cursor.fetchall()]
+
+    cursor.execute("SELECT DISTINCT bus_number FROM bus_users WHERE bus_number IS NOT NULL AND bus_number != '' ORDER BY bus_number ASC")
+    bus_numbers = [r[0] for r in cursor.fetchall()]
+
+    # Stats
+    cursor.execute("SELECT COUNT(*) FROM bus_users")
+    total_users = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(DISTINCT bus_stop) FROM bus_users")
+    total_stops = cursor.fetchone()[0]
+
+    # Filtered records
+    where_clauses = ["1=1"]
+    params = []
+
+    if q and q.strip():
+        term = f"%{q.strip()}%"
+        where_clauses.append("(student_name LIKE ? OR address LIKE ? OR guardian_name LIKE ? OR contact_number LIKE ? OR bus_stop LIKE ? OR bus_number LIKE ? OR class_name LIKE ?)")
+        params.extend([term, term, term, term, term, term, term])
+
+    if bus_stop and bus_stop.strip():
+        where_clauses.append("bus_stop = ?")
+        params.append(bus_stop.strip())
+
+    if bus_number and bus_number.strip():
+        where_clauses.append("bus_number = ?")
+        params.append(bus_number.strip())
+
+    where_sql = " AND ".join(where_clauses)
+    cursor.execute(f"SELECT COUNT(*) FROM bus_users WHERE {where_sql}", params)
+    filtered_count = cursor.fetchone()[0]
+
+    page_size = 10
+    limit = page_size
+    offset = max(0, (page - 1) * limit)
+    total_pages = max(1, math.ceil(filtered_count / limit))
+
+    cursor.execute(f"SELECT * FROM bus_users WHERE {where_sql} ORDER BY id DESC LIMIT ? OFFSET ?", params + [limit, offset])
+    users = [dict(r) for r in cursor.fetchall()]
+
+    # Check if current user is admin
+    user = get_current_user(request)
+    is_admin = bool(user and user.get("role") in ["SUPER_ADMIN", "ADMIN", "PRINCIPAL"])
+
+    conn.close()
+
+    return templates.TemplateResponse(request, "public/bus_users.html", {
+        "settings": settings,
+        "ticker_notice": ticker_notice,
+        "current_user": user,
+        "is_admin": is_admin,
+        "users": users,
+        "bus_stops": bus_stops,
+        "bus_numbers": bus_numbers,
+        "total_users": total_users,
+        "total_stops": total_stops,
+        "filtered_count": filtered_count,
+        "current_page": page,
+        "total_pages": total_pages,
+        "page_size": page_size,
+        "q": q or "",
+        "selected_stop": bus_stop or "",
+        "selected_bus": bus_number or "",
+        "active_menu": "bus_users"
     })
 
 

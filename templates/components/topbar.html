@@ -49,10 +49,10 @@
                 <span>डाउनलोड</span>
             </a>
 
-            <!-- Language Switcher -->
-            <div class="inline-flex rounded border border-instBlue-light overflow-hidden text-[11px] font-bold">
-                <button type="button" class="px-2 py-0.5 bg-instGold text-white">NP</button>
-                <button type="button" class="px-2 py-0.5 bg-instBlue text-slate-300 hover:text-white">EN</button>
+            <!-- Language Switcher (NP / EN) -->
+            <div class="inline-flex rounded border border-instBlue-light overflow-hidden text-[11px] font-bold shadow-sm" id="langSwitcherContainer" title="भाषा परिवर्तन गर्नुहोस् (Switch Language)">
+                <button type="button" onclick="window.SchoolI18n ? window.SchoolI18n.setLanguage('np') : null" id="langBtnNP" class="px-2 py-0.5 bg-instGold text-white font-black transition cursor-pointer">NP</button>
+                <button type="button" onclick="window.SchoolI18n ? window.SchoolI18n.setLanguage('en') : null" id="langBtnEN" class="px-2 py-0.5 bg-instBlue text-slate-300 hover:text-white transition cursor-pointer">EN</button>
             </div>
 
             <!-- Sign Up (नयाँ दर्ता) Button -->

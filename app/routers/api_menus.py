@@ -57,6 +57,7 @@ DEFAULT_MENUS_SEED = [
     {"id": 25, "parent_id": 9, "title_ne": "दैनिक हाजिरी पोर्टल", "title_en": "Daily Attendance Portal", "url": "/parent/login", "icon": "calendar-check", "order_index": 5},
     {"id": 26, "parent_id": 9, "title_ne": "दैनिक गृहकार्य (Homework)", "title_en": "Homework", "url": "/homework", "icon": "book-open-check", "order_index": 6},
     {"id": 27, "parent_id": 9, "title_ne": "विद्यार्थी विवरण", "title_en": "Student Directory", "url": "/students", "icon": "table", "order_index": 7},
+    {"id": 40, "parent_id": 9, "title_ne": "विद्यालय bus प्रयोगकर्ता", "title_en": "School Bus Users", "url": "/bus-users", "icon": "bus", "order_index": 8},
 
     # Submenus for ग्यालेरी (parent_id = 14)
     {"id": 28, "parent_id": 14, "title_ne": "फोटो ग्यालेरी", "title_en": "Photo Gallery", "url": "/gallery", "icon": "images", "order_index": 1},

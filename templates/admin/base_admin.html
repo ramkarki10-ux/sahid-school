@@ -150,6 +150,11 @@
                         <i data-lucide="graduation-cap" class="w-4 h-4 text-amber-300"></i>
                         <span>पूर्व विद्यार्थी (Alumni)</span>
                     </a>
+                    <a href="/admin/bus-users"
+                        class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition hover:bg-instBlue hover:text-white {% if admin_active == 'bus_users' %}bg-instBlue text-white font-bold border-l-2 border-amber-400{% endif %}">
+                        <i data-lucide="bus" class="w-4 h-4 text-amber-400"></i>
+                        <span>बस प्रयोगकर्ता (Bus Users)</span>
+                    </a>
                 </div>
             </div>
 
@@ -427,6 +432,14 @@
 
                 <div class="h-6 w-px bg-slate-200"></div>
 
+                <!-- Language Switcher in Admin Header -->
+                <div class="inline-flex rounded border border-slate-300 overflow-hidden text-[11px] font-bold shadow-sm" id="adminLangSwitcher">
+                    <button type="button" onclick="window.SchoolI18n.setLanguage('np')" id="langBtnNP_admin" class="px-2 py-0.5 bg-instBlue text-white font-bold transition text-[11px] shadow-sm">NP</button>
+                    <button type="button" onclick="window.SchoolI18n.setLanguage('en')" id="langBtnEN_admin" class="px-2 py-0.5 bg-slate-100 text-slate-600 hover:text-slate-900 transition text-[11px] font-bold">EN</button>
+                </div>
+
+                <div class="h-6 w-px bg-slate-200"></div>
+
                 <!-- एकाउन्ट Approval (प्रमुख एडमिनको छेउमा) -->
                 <a href="/admin/registrations"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-sm transition active:scale-95 border border-emerald-500"
@@ -606,6 +619,7 @@
             });
         }
     </script>
+    <script src="/static/js/i18n.js"></script>
     <script src="/static/js/passport_cropper.js"></script>
     <script>
         lucide.createIcons();
